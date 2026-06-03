@@ -1,0 +1,50 @@
+.Text {
+  font-family: var(--font-family-main);
+}
+
+.title { margin: 0 0 var(--space-1); }
+.text  { margin: 0; }
+
+// ── Variants ────────────────────────────────────────────────────────────────
+.primary .title,
+.primary .text   { color: var(--color-text-primary); }
+.secondary .title,
+.secondary .text { color: var(--color-text-secondary); }
+.muted .title,
+.muted .text     { color: var(--color-text-muted); }
+.inverse .title,
+.inverse .text   { color: var(--color-text-inverse); }
+.error .title,
+.error .text     { color: var(--color-error); }
+.accent .title,
+.accent .text    { color: var(--color-accent); }
+
+// ── Align ───────────────────────────────────────────────────────────────────
+.align_left   { text-align: left; }
+.align_center { text-align: center; }
+.align_right  { text-align: right; }
+
+// ── Sizes ───────────────────────────────────────────────────────────────────
+.size_xs  .title { font-size: var(--font-size-s);  font-weight: var(--font-weight-semibold); }
+.size_xs  .text  { font-size: var(--font-size-xs); }
+
+.size_s   .title { font-size: var(--font-size-m);  font-weight: var(--font-weight-semibold); }
+.size_s   .text  { font-size: var(--font-size-s); }
+
+.size_m   .title { font-size: var(--font-size-l);  font-weight: var(--font-weight-bold); }
+.size_m   .text  { font-size: var(--font-size-m); }
+
+.size_l   .title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); }
+.size_l   .text  { font-size: var(--font-size-l); }
+
+.size_xl  .title { font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); letter-spacing: var(--letter-spacing-tight); }
+.size_xl  .text  { font-size: var(--font-size-xl); }
+
+.size_2xl .title { font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); letter-spacing: var(--letter-spacing-tight); }
+.size_2xl .text  { font-size: var(--font-size-xl); }
+
+// ── Weights (override) ──────────────────────────────────────────────────────
+.weight_regular  .title, .weight_regular  .text { font-weight: var(--font-weight-regular); }
+.weight_medium   .title, .weight_medium   .text { font-weight: var(--font-weight-medium); }
+.weight_semibold .title, .weight_semibold .text { font-weight: var(--font-weight-semibold); }
+.weight_bold     .title, .weight_bold     .text { font-weight: var(--font-weight-bold); }

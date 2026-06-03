@@ -1,0 +1,109 @@
+@use 'shared/styles/mixins' as m;
+
+.Modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  opacity: 0;
+  pointer-events: none;
+  transition: var(--transition-opacity);
+}
+
+.content {
+  position: relative;
+  // Внутри Modal Overlay имеет z-index = var(--z-overlay) (400).
+  // Контент должен лежать над ним.
+  z-index: calc(var(--z-overlay) + 1);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: 90vh;
+  background: var(--color-surface-modal);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radii-l);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  transform: scale(0.95);
+  transition: var(--transition-transform);
+}
+
+.opened {
+  opacity: 1;
+  pointer-events: auto;
+
+  .content {
+    transform: scale(1);
+  }
+}
+
+.isClosing {
+  opacity: 0;
+
+  .content {
+    transform: scale(0.92);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.title {
+  @include m.font-l;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.closeBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radii-s);
+  color: var(--color-text-secondary);
+  background: transparent;
+  transition: var(--transition-bg), var(--transition-color);
+
+  @include m.focus-ring;
+
+  &:hover {
+    background: var(--color-accent-muted);
+    color: var(--color-text-primary);
+  }
+}
+
+.body {
+  flex: 1;
+  overflow: auto;
+  padding: var(--space-5);
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+// ── Sizes ───────────────────────────────────────────────────────────────────
+.size_s .content  { max-width: 360px; }
+.size_m .content  { max-width: 520px; }
+.size_l .content  { max-width: 760px; }
+.size_xl .content { max-width: 1080px; }
+
+// На маленьких экранах модалка занимает почти весь экран
+@include m.down(tablet) {
+  .Modal { padding: var(--space-2); }
+  .content { max-height: 95dvh; }
+}

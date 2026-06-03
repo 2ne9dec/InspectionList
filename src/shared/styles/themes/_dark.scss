@@ -1,0 +1,120 @@
+// ============================================================================
+// Dark theme — семантические переменные.
+// Применяется через body[data-theme='dark'].
+// ============================================================================
+
+body[data-theme='dark'] {
+  // Говорим браузеру, что схема тёмная — нативные виджеты (date-picker,
+  // scrollbar, select) автоматически переключатся в тёмный вид.
+  color-scheme: dark;
+
+  // ── Фоны ────────────────────────────────────────────────────────────────
+  --color-bg-page:       #1a1a2e;
+  --color-bg-surface:    #16213e;
+  --color-bg-surface-2:  #1c2a4a;
+  --color-bg-base:       #0f172a;
+  --color-bg-hover:      #334155;
+  --color-bg-inverse:    #e2e8f0;
+
+  // ── Текст ───────────────────────────────────────────────────────────────
+  --color-text-primary:   #e2e8f0;
+  --color-text-secondary: #8892a4;
+  --color-text-muted:     #5b6478;
+  --color-text-inverse:   #1a1a2e;
+  --color-text-on-accent: #fff;
+
+  // ── Акцент ──────────────────────────────────────────────────────────────
+  --color-accent:        #4f8ef7;
+  --color-accent-hover:  #3d7ef0;
+  --color-accent-muted:  rgb(79 142 247 / 15%);
+  --color-accent-soft:   rgb(79 142 247 / 6%);
+
+  // ── Границы ─────────────────────────────────────────────────────────────
+  --color-border:           rgb(255 255 255 / 8%);
+  --color-border-strong:    rgb(255 255 255 / 14%);
+  --color-border-subtle:    rgb(255 255 255 / 5%);
+
+  // ── Поверхности ─────────────────────────────────────────────────────────
+  --color-surface-navbar:   #0f0f23;
+  --color-surface-card:     #16213e;
+  --color-surface-modal:    #1c2a4a;
+  --color-surface-overlay:  rgb(0 0 0 / 65%);
+
+  // ── Строки таблицы ──────────────────────────────────────────────────────
+  --color-row-alt:    rgb(255 255 255 / 2.5%);
+  --color-row-hover:  rgb(255 255 255 / 6%);
+
+  // ── Состояния ───────────────────────────────────────────────────────────
+  --color-error:          #ff6b6b;
+  --color-error-muted:    rgb(255 107 107 / 14%);
+  --color-success:        #51cf66;
+  --color-success-muted:  rgb(81 207 102 / 12%);
+  --color-warning:        #ffa94d;
+  --color-warning-muted:  rgb(255 169 77 / 14%);
+  --color-danger:         #ff6b6b;
+  --color-danger-muted:   rgb(255 107 107 / 14%);
+
+  // ── Статусы листков осмотра ─────────────────────────────────────────────
+  --color-status-draft:   #64748b;
+  --color-status-active:  #7c3aed;
+  --color-status-review:  #d97706;
+  --color-status-done:    #16a34a;
+
+  // ── Карта / FAB-кнопки ──────────────────────────────────────────────────
+  --map-fab-bg:          rgba(13, 20, 35, .88);
+  --map-fab-bg-hover:    rgba(30, 41, 59, .98);
+  --map-fab-border:      rgba(255, 255, 255, .18);
+  --map-fab-border-hover:rgba(255, 255, 255, .28);
+  --map-fab-text:        #e2e8f0;
+  --map-tile-url:        'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+
+  // ── «Кинозал» PhotoGallery lightbox (намеренно всегда тёмный) ──────────
+  --color-cinema-bg:         #0f172a;
+  --color-cinema-bg-deep:    #0a1628;
+  --color-cinema-text:       #e2e8f0;
+  --color-cinema-text-muted: #64748b;
+  --color-cinema-accent:     #60a5fa;
+
+  // ── Скроллбар ───────────────────────────────────────────────────────────
+  --color-scrollbar-track: #1a1a2e;
+  --color-scrollbar-thumb: #2d3561;
+  --color-scrollbar-thumb-hover: #3d4670;
+
+  // ── Тени (глубже для тёмной темы) ───────────────────────────────────────
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 20%);
+  --shadow-s:  0 2px 6px rgb(0 0 0 / 25%);
+  --shadow-m:  0 6px 16px rgb(0 0 0 / 30%);
+  --shadow-l:  0 10px 30px rgb(0 0 0 / 38%);
+  --shadow-xl: 0 20px 50px rgb(0 0 0 / 45%);
+
+  // ── Legacy aliases ──────────────────────────────────────────────────────
+  --colors-bg:                var(--color-bg-page);
+  --colors-bg-inverted:       var(--color-bg-inverse);
+  --colors-primary:           var(--color-text-primary);
+  --colors-primary-inverted:  var(--color-text-inverse);
+  --colors-secondary:         var(--color-text-secondary);
+  --colors-error-light:       var(--color-error);
+  --colors-error-dark:        #e03131;
+  --bg-primary:               var(--color-bg-surface);
+  --bg-secondary:             var(--color-bg-surface-2);
+  --bg-row-alt:               var(--color-row-alt);
+  --bg-row-hover:             var(--color-row-hover);
+  --color-border-tertiary:    var(--color-border-subtle);
+  --navbar-bg:                var(--color-surface-navbar);
+  --navbar-border:            var(--color-border);
+  --scrollbar-track:          var(--color-scrollbar-track);
+  --scrollbar-thumb:          var(--color-scrollbar-thumb);
+  --card-bg:                  var(--color-surface-card);
+  --colors-overlay:           var(--color-surface-overlay);
+  --btn-bg:                   var(--color-accent);
+  --btn-bg-hover:             var(--color-accent-hover);
+  --btn-color:                var(--color-text-on-accent);
+  --btn-border:               rgb(255 255 255 / 20%);
+
+  // ── Короткие алиасы для новых компонентов ───────────────────────────────
+  --color-bg:            var(--color-bg-page);
+  --color-bg-secondary:  var(--color-bg-surface-2);
+  --border:              var(--color-border);
+  --text-primary:        var(--color-text-primary);
+  --text-secondary:      var(--color-text-secondary);
+}

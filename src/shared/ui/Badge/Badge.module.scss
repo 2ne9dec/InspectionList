@@ -1,0 +1,41 @@
+.Badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  border-radius: var(--radii-full);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+// ── Sizes ───────────────────────────────────────────────────────────────────
+.size_s {
+  padding: 2px 8px;
+  font-size: var(--font-size-xs);
+}
+.size_m {
+  padding: 4px 10px;
+  font-size: var(--font-size-s);
+}
+
+// ── Variants ────────────────────────────────────────────────────────────────
+.neutral {
+  background: var(--color-bg-surface-2);
+  color: var(--color-text-secondary);
+}
+.success {
+  background: var(--color-severity-low);
+  color: var(--color-text-on-accent);
+}
+.danger {
+  background: var(--color-error);
+  color: var(--color-text-on-accent);
+}
+.warning {
+  background: var(--color-severity-medium);
+  color: var(--color-text-on-accent);
+}
+.info {
+  background: var(--color-accent);
+  color: var(--color-text-on-accent);
+}

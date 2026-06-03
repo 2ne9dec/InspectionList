@@ -1,0 +1,185 @@
+.row {
+  transition: background 0.12s;
+
+  &:nth-child(even) {
+    background: var(--bg-row-alt);
+  }
+
+  &:hover {
+    background: var(--bg-row-hover);
+  }
+}
+
+.cell {
+  padding: 9px 8px;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  vertical-align: middle;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+
+  &:nth-child(3),
+  &:nth-child(4) {
+    white-space: normal;
+    max-width: 220px;
+  }
+}
+
+.severityBadge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-on-accent);
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.btnFix {
+  padding: 4px 12px;
+  background: var(--severity-low);
+  color: var(--color-text-on-accent);
+  border: none;
+  border-radius: 5px;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+  &:hover { opacity: 0.82; }
+}
+
+.btnCopy {
+  padding: 4px 12px;
+  background: var(--color-accent);
+  color: var(--color-text-on-accent);
+  border: none;
+  border-radius: 5px;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+  &:hover { opacity: 0.82; }
+}
+
+.btnDelete {
+  padding: 4px 9px;
+  background: var(--severity-critical);
+  color: var(--color-text-on-accent);
+  border: none;
+  border-radius: 5px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  &:hover { opacity: 0.8; }
+}
+
+/* ── Заметки к дефекту ─────────────────────────────────────────────────────── */
+.noteRow {
+  background: transparent;
+}
+
+.noteCell {
+  padding: 0 8px 4px 8px;
+  border: none !important;
+}
+
+.noteToggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.15s;
+  &:hover { background: var(--color-row-hover); }
+}
+
+.noteText {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.noteAdd {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  opacity: 0.55;
+  &:hover { opacity: 1; }
+}
+
+.noteEditor {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.noteTextarea {
+  width: 100%;
+  min-height: 52px;
+  padding: 6px 8px;
+  border: 1px solid var(--color-accent);
+  border-radius: 6px;
+  background: var(--color-bg-surface-2);
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.noteEditorBtns {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.noteSaveBtn {
+  padding: 3px 10px;
+  background: var(--color-accent);
+  color: var(--color-text-on-accent);
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  &:disabled { opacity: 0.5; }
+  &:hover:not(:disabled) { background: var(--color-accent-hover); }
+}
+
+.noteCancelBtn {
+  padding: 3px 10px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  &:hover { color: var(--color-text-primary); }
+}
+
+.rowOverdue {
+  background: var(--color-error-muted);
+  border-left: 2px solid var(--color-error);
+}
+
+.overdueBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 5px;
+  font-size: 9px;
+  color: var(--color-error);
+  font-weight: 600;
+  background: var(--color-error-muted);
+  border-radius: 4px;
+  padding: 1px 4px;
+  vertical-align: middle;
+}

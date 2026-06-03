@@ -1,0 +1,46 @@
+// ============================================================================
+// Severity tokens — единый источник правды для критичности дефектов.
+//
+// Структура каждого уровня:
+//   --severity-{level}          → основной цвет текста / иконки
+//   --severity-{level}-bg       → фон бейджа (полупрозрачный)
+//   --severity-{level}-border   → граница бейджа
+//
+// Используйте:
+//   CSS  → var(--severity-critical)
+//   JS   → SEVERITY_LABELS из shared/const/severity.ts
+// ============================================================================
+
+:root {
+  // ── critical ──────────────────────────────────────────────────────────────
+  --severity-critical:        #e03131;
+  --severity-critical-bg:     rgb(224 49 49 / 12%);
+  --severity-critical-border: rgb(224 49 49 / 40%);
+
+  // ── high ──────────────────────────────────────────────────────────────────
+  --severity-high:            #f03e3e;
+  --severity-high-bg:         rgb(240 62 62 / 12%);
+  --severity-high-border:     rgb(240 62 62 / 40%);
+
+  // ── medium ────────────────────────────────────────────────────────────────
+  --severity-medium:          #e67700;
+  --severity-medium-bg:       rgb(230 119 0 / 12%);
+  --severity-medium-border:   rgb(230 119 0 / 40%);
+
+  // ── low ───────────────────────────────────────────────────────────────────
+  --severity-low:             #2f9e44;
+  --severity-low-bg:          rgb(47 158 68 / 12%);
+  --severity-low-border:      rgb(47 158 68 / 40%);
+
+  // ── ok (норма) ────────────────────────────────────────────────────────────
+  --severity-ok:              #2f9e44;
+  --severity-ok-bg:           rgb(47 158 68 / 10%);
+  --severity-ok-border:       rgb(47 158 68 / 35%);
+
+  // ── Алиасы для обратной совместимости ────────────────────────────────────
+  --color-severity-critical:  var(--severity-critical);
+  --color-severity-high:      var(--severity-high);
+  --color-severity-medium:    var(--severity-medium);
+  --color-severity-low:       var(--severity-low);
+  --color-severity-ok:        var(--severity-ok);
+}

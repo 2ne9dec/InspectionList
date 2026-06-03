@@ -1,0 +1,32 @@
+@use 'shared/styles/mixins' as m;
+
+.slot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.search,
+.defectSearch {
+  flex: 1;
+  min-width: 0;
+}
+
+.search       { max-width: clamp(160px, 22vw, 300px); }
+.defectSearch { max-width: clamp(160px, 18vw, 260px); }
+
+@include m.down(tablet) {
+  .title { display: none; }
+  .defectSearch { display: none; }
+  .search { max-width: 160px; }
+}

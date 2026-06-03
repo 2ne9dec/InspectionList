@@ -1,0 +1,27 @@
+// ============================================================================
+// Transitions / animations
+// ============================================================================
+
+:root {
+  // Durations
+  --duration-instant: 0ms;
+  --duration-fast:   100ms;
+  --duration-base:   150ms;
+  --duration-slow:   250ms;
+  --duration-slower: 400ms;
+
+  // Easings
+  --ease-linear:    linear;
+  --ease-standard:  cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --ease-decel:     cubic-bezier(0, 0, 0.2, 1);
+  --ease-accel:     cubic-bezier(0.4, 0, 1, 1);
+
+  // Frequently used composite transitions
+  --transition-color: color var(--duration-base) var(--ease-standard);
+  --transition-bg:    background-color var(--duration-base) var(--ease-standard);
+  --transition-border: border-color var(--duration-base) var(--ease-standard);
+  --transition-opacity: opacity var(--duration-base) var(--ease-standard);
+  --transition-transform: transform var(--duration-base) var(--ease-standard);
+  --transition-shadow: box-shadow var(--duration-base) var(--ease-standard);
+}

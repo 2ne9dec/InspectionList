@@ -1,0 +1,131 @@
+@use 'shared/styles/mixins' as m;
+
+.th {
+  padding: 0 !important;
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background: var(--color-bg-surface-2);
+  border-bottom: 2px solid var(--color-border);
+  text-align: left;
+  cursor: pointer;
+}
+
+.thActive {
+  color: var(--color-accent) !important;
+  background: var(--color-accent-muted) !important;
+}
+
+.wrap {
+  position: relative;
+}
+
+// Кнопка-заголовок: текст + стрелка плотно слева, остаток ширины — просто
+// пустое пространство (не «растягиваем» подпись на всю ширину колонки).
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  padding: var(--space-2) var(--space-2);
+  background: none;
+  border: none;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  color: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: left;
+
+  @include m.focus-ring;
+}
+
+.label {
+  @include m.text-truncate;
+  // Раньше label был flex: 1 и распирал ячейку — стрелка убегала к правому
+  // краю. Теперь подпись по контенту, стрелка стоит вплотную справа.
+}
+
+.arrow {
+  font-size: 8px;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background: var(--color-error);
+  color: var(--color-text-on-accent);
+  border-radius: var(--radii-full);
+  font-size: 9px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.dropdown {
+  position: fixed;
+  z-index: var(--z-popover);
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radii);
+  box-shadow: var(--shadow-l);
+  width: 240px;
+  overflow: hidden;
+}
+
+.search {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-bg-surface);
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-s);
+  outline: none;
+
+  &::placeholder {
+    color: var(--color-text-secondary);
+  }
+}
+
+.list {
+  max-height: 240px;
+  overflow-y: auto;
+  padding: var(--space-1);
+}
+
+.option {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: none;
+  border: none;
+  border-radius: var(--radii-s);
+  text-align: left;
+  font-size: var(--font-size-s);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: var(--transition-bg);
+
+  &:hover {
+    background: var(--color-row-hover);
+  }
+}
+
+.optionActive {
+  background: var(--color-accent-muted);
+  color: var(--color-accent);
+}
+
+.empty {
+  padding: var(--space-3);
+  text-align: center;
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+}

@@ -1,0 +1,18 @@
+.th {
+  padding: var(--space-2) var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-surface-2);
+  border-bottom: 2px solid var(--color-border);
+  white-space: nowrap;
+  text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  isolation: isolate;
+}
+
+.expandCol { width: 32px; }

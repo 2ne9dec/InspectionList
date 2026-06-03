@@ -1,0 +1,76 @@
+@use 'shared/styles/mixins' as m;
+
+.wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+// Высота кнопки выровнена с Button size="s" (var(--control-height-s) = 28px),
+// чтобы в навбаре кнопки «Фильтр по дате», «Выйти», ThemeSwitcher
+// были одинаковой высоты.
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--control-height-s);
+  padding: 0 var(--space-3);
+  background: var(--color-bg-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radii);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-main);
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition-border), var(--transition-color);
+
+  @include m.focus-ring;
+
+  &:hover {
+    border-color: var(--color-accent);
+    color: var(--color-text-primary);
+  }
+}
+
+.btnActive {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-muted);
+}
+
+.clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: var(--color-error);
+  color: var(--color-text-on-accent);
+  border: none;
+  border-radius: var(--radii-full);
+  font-size: 10px;
+  cursor: pointer;
+  opacity: 0.85;
+
+  &:hover { opacity: 1; }
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  left: 0;
+  z-index: var(--z-popover);
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radii-l);
+  box-shadow: var(--shadow-l);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 260px;
+}

@@ -1,0 +1,20 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--control-height-s);
+  padding: 0 var(--space-3);
+  background: var(--color-success);
+  color: var(--color-text-on-accent);
+  border: none;
+  border-radius: var(--radii);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+
+  &:hover:not(:disabled) { opacity: 0.87; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}

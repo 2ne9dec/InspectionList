@@ -1,0 +1,66 @@
+// ============================================================================
+// Responsive mixins — единственный санкционированный способ писать media-queries.
+// Использование:
+//   @use 'shared/styles/mixins/responsive' as r;
+//   @include r.up(tablet)     { ... }   // >= 768px
+//   @include r.down(tablet)   { ... }   // < 768px
+//   @include r.between(tablet, desktop) { ... }  // 768–1023
+//   @include r.only(desktop)  { ... }   // 1024–1919
+// ============================================================================
+
+@use 'sass:list';
+@use 'sass:map';
+@use '../tokens/breakpoints' as bp;
+
+@function _value($name) {
+  @if not map.has-key(bp.$breakpoints, $name) {
+    @error 'Unknown breakpoint `#{$name}`. Available: #{map.keys(bp.$breakpoints)}';
+  }
+  @return map.get(bp.$breakpoints, $name);
+}
+
+@function _next($name) {
+  $keys: map.keys(bp.$breakpoints);
+  // Используем list.index/list.length/list.nth из sass:list вместо
+  // устаревших глобальных index/length/nth (правило scss/no-global-function-names).
+  $i: list.index($keys, $name);
+  @if $i and $i < list.length($keys) {
+    @return list.nth($keys, $i + 1);
+  }
+  @return null;
+}
+
+// >= breakpoint
+@mixin up($name) {
+  $v: _value($name);
+  @if $v == 0 { @content; } @else {
+    @media (min-width: $v) { @content; }
+  }
+}
+
+// < breakpoint
+@mixin down($name) {
+  $v: _value($name);
+  @if $v == 0 {
+    // ничего меньше 0
+  } @else {
+    @media (max-width: #{$v - 0.02px}) { @content; }
+  }
+}
+
+// диапазон [from, to)
+@mixin between($from, $to) {
+  $f: _value($from);
+  $t: _value($to);
+  @media (min-width: $f) and (max-width: #{$t - 0.02px}) { @content; }
+}
+
+// Только этот брейкпоинт (от текущего до следующего)
+@mixin only($name) {
+  $next: _next($name);
+  @if not $next {
+    @include up($name) { @content; }
+  } @else {
+    @include between($name, $next) { @content; }
+  }
+}

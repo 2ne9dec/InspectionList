@@ -1,0 +1,22 @@
+@use 'shared/styles/mixins' as m;
+
+.bar {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-surface-2);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  position: relative;
+  z-index: var(--z-dropdown);
+}
+
+.dateField      { width: clamp(140px, 13vw, 175px); }
+.inspectorField { width: clamp(160px, 16vw, 220px); }
+.poleField      { width: clamp(100px, 10vw, 140px); }
+.phaseField     { width: clamp(120px, 12vw, 170px); }
+
+@include m.down(tablet) {
+  .dateField      { width: 130px; }
+  .inspectorField { width: 100%; flex-basis: 100%; }
+  .poleField      { width: 90px; }
+  .phaseField     { width: 120px; }
+}

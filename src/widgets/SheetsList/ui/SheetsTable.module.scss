@@ -1,0 +1,27 @@
+@use 'shared/styles/mixins' as m;
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px; // горизонтальный скролл на маленьких экранах
+}
+
+.th {
+  padding: var(--space-3) var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-surface-2);
+  border-bottom: 2px solid var(--color-border);
+  white-space: nowrap;
+  text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+}
+
+@include m.between(tablet, desktop) {
+  .table { min-width: 520px; }
+}

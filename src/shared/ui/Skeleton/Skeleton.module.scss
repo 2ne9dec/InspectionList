@@ -1,0 +1,32 @@
+.Skeleton {
+  display: inline-block;
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-surface-2) 0%,
+    var(--color-row-alt)       50%,
+    var(--color-bg-surface-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radii-s);
+}
+
+.rect {
+  // Базовый вариант — параметры берутся из .Skeleton.
+  // Само правило оставлено, чтобы CSS-модули резолвили cls.rect.
+  display: inline-block;
+}
+
+.text {
+  display: block;
+  height: 1em;
+  border-radius: var(--radii-xs);
+}
+.circle {
+  border-radius: var(--radii-full);
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

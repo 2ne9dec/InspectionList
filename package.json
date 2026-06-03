@@ -1,0 +1,43 @@
+{
+  "name": "line-vision",
+  "version": "1.0.0",
+  "description": "Листки осмотра",
+  "scripts": {
+    "start": "concurrently \"vite\" \"yarn server\"",
+    "server": "node ./json-server/index.js",
+    "build": "tsc && vite build",
+    "lint:ts": "eslint \"src/**/*.{ts,tsx}\"",
+    "lint:ts:fix": "eslint --fix \"src/**/*.{ts,tsx}\"",
+    "lint:scss": "stylelint \"src/**/*.scss\"",
+    "lint:scss:fix": "stylelint --fix \"src/**/*.scss\""
+  },
+  "dependencies": {
+    "@reduxjs/toolkit": "^1.9.5",
+    "@vitejs/plugin-react": "^4.0.4",
+    "docx": "^9.7.0",
+    "exceljs": "^4.4.0",
+    "exifr": "^7.1.3",
+    "jszip": "^3.10.1",
+    "multer": "^2.1.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-redux": "^8.1.2",
+    "react-router-dom": "^6.15.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.20",
+    "@types/react-dom": "^18.2.7",
+    "@typescript-eslint/eslint-plugin": "^8",
+    "@typescript-eslint/parser": "^8",
+    "concurrently": "^8.2.0",
+    "eslint": "^8.47.0",
+    "eslint-plugin-react": "^7.33.1",
+    "eslint-plugin-react-hooks": "4.6.0",
+    "json-server": "^0.17.3",
+    "sass": "1.57.1",
+    "stylelint": "^15.10.2",
+    "stylelint-config-standard-scss": "^10.0.0",
+    "typescript": "^5.1.6",
+    "vite": "^4.4.9"
+  }
+}

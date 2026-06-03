@@ -1,0 +1,26 @@
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.info {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-bg-surface);
+  border-radius: var(--radii-s);
+  border-left: 3px solid var(--color-accent);
+
+  strong { color: var(--color-text-primary); }
+}
+
+.filialBadge {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-accent-muted);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radii);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-accent);
+}

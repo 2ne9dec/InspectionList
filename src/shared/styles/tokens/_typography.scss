@@ -1,0 +1,36 @@
+// ============================================================================
+// Typography tokens — шрифтовая система.
+// Размеры fluid: clamp(min, preferred, max).
+// Тонкая настройка под брейкпоинты — в _responsive-tokens.scss.
+// ============================================================================
+
+:root {
+  // Шрифтовое семейство
+  --font-family-main: 'Golos Text', -apple-system, blinkmacsystemfont, 'Segoe UI',
+                      'Helvetica Neue', arial, sans-serif;
+  --font-family-mono: ui-monospace, 'SF Mono', menlo, consolas, monospace;
+
+  // Размеры (desktop baseline; перебиваются медиа-запросами в responsive-tokens)
+  --font-size-xs:  12px;
+  --font-size-s:   13px;
+  --font-size-m:   15px;
+  --font-size-l:   17px;
+  --font-size-xl:  21px;
+  --font-size-2xl: 28px;
+
+  // Веса
+  --font-weight-regular:  400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+
+  // Line-heights — относительные
+  --line-height-tight:    1.2;
+  --line-height-base:     1.5;
+  --line-height-relaxed:  1.7;
+
+  // Letter-spacing
+  --letter-spacing-tight:  -0.01em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide:   0.04em;
+}

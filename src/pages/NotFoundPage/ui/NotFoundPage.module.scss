@@ -1,0 +1,49 @@
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(100vh - var(--navbar-height));
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.code {
+  font-size: 96px;
+  font-weight: 900;
+  color: var(--color-border);
+  line-height: 1;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.btn {
+  margin-top: 12px;
+  padding: 10px 28px;
+  background: var(--color-accent);
+  color: var(--color-text-on-accent);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 0.87;
+  }
+}

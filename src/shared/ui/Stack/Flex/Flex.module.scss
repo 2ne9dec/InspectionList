@@ -1,0 +1,39 @@
+.Flex {
+  display: flex;
+  min-width: 0;
+}
+
+// ── Justify ─────────────────────────────────────────────────────────────────
+.justify_start   { justify-content: flex-start; }
+.justify_center  { justify-content: center; }
+.justify_end     { justify-content: flex-end; }
+.justify_between { justify-content: space-between; }
+.justify_around  { justify-content: space-around; }
+
+// ── Align ───────────────────────────────────────────────────────────────────
+.align_start    { align-items: flex-start; }
+.align_center   { align-items: center; }
+.align_end      { align-items: flex-end; }
+.align_stretch  { align-items: stretch; }
+.align_baseline { align-items: baseline; }
+
+// ── Direction ───────────────────────────────────────────────────────────────
+.direction_row    { flex-direction: row; }
+.direction_column { flex-direction: column; }
+
+// ── Wrap ────────────────────────────────────────────────────────────────────
+.wrap_nowrap { flex-wrap: nowrap; }
+.wrap_wrap   { flex-wrap: wrap; }
+
+// ── Gap (на основе --space-* токенов) ───────────────────────────────────────
+.gap_1 { gap: var(--space-1); }
+.gap_2 { gap: var(--space-2); }
+.gap_3 { gap: var(--space-3); }
+.gap_4 { gap: var(--space-4); }
+.gap_5 { gap: var(--space-5); }
+.gap_6 { gap: var(--space-6); }
+.gap_7 { gap: var(--space-7); }
+.gap_8 { gap: var(--space-8); }
+.gap_9 { gap: var(--space-9); }
+
+.max { width: 100%; }

@@ -1,0 +1,48 @@
+// ============================================================================
+// Базовые стили приложения (.app, .content-page, .page-container).
+// ============================================================================
+
+@use 'mixins' as m;
+
+body {
+  background-color: var(--color-bg-page);
+  color: var(--color-text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.app {
+  font-family: var(--font-family-main);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-base);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-page);
+  min-height: 100vh;
+  min-height: 100dvh; // безопасно на мобильных
+  display: flex;
+  flex-direction: column;
+
+  // Табличные цифры (важно для таблиц с числами)
+  font-feature-settings: 'tnum' 1, 'kern' 1;
+}
+
+.content-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.content-page--with-navbar {
+  padding-top: var(--navbar-height);
+}
+
+.page-container {
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 0 var(--page-padding);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}

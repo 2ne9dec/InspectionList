@@ -1,0 +1,232 @@
+@use 'shared/styles/mixins' as m;
+
+// ── Оболочка навбара ────────────────────────────────────────────────────────
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--navbar-height);
+  background: var(--color-surface-navbar);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-fixed);
+}
+
+.navInner {
+  width: 100%;
+  max-width: var(--content-max-width);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--page-padding);
+  gap: var(--space-3);
+}
+
+.left   { flex-shrink: 0; }
+.center { flex: 1; min-width: 0; overflow: hidden; }
+.right  { flex-shrink: 0; }
+
+// ── Десктопная навигация ─────────────────────────────────────────────────────
+.desktopNav {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+// Обёртка для кнопки + бейджа
+.navItemWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+// Бейдж критических дефектов
+.criticalBadge {
+  position: absolute;
+  top: -7px;
+  right: -8px;
+  background: var(--color-error);
+  color: var(--color-text-on-accent);
+  border-radius: var(--radii-full);
+  font-size: 9px;
+  font-weight: var(--font-weight-bold);
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 1;
+}
+
+// ── Имя пользователя ─────────────────────────────────────────────────────────
+.userName {
+  @include m.text-truncate;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  font-size: var(--font-size-m);
+  font-family: var(--font-family-main);
+  color: var(--color-text-secondary);
+  max-width: 220px;
+  transition: var(--transition-color);
+
+  &:hover { color: var(--color-text-primary); }
+}
+
+// ── Кнопка поиска ────────────────────────────────────────────────────────────
+.searchBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radii-s);
+  cursor: pointer;
+  padding: 0 var(--space-2);
+  height: var(--control-height-s);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+  font-family: var(--font-family-main);
+  transition: var(--transition-bg), var(--transition-border), var(--transition-color);
+
+  &:hover {
+    background: var(--color-accent-muted);
+    border-color: var(--color-accent);
+    color: var(--color-text-primary);
+  }
+}
+
+.searchKbd {
+  font-size: 0.65rem;
+  opacity: 0.65;
+  font-family: var(--font-family-mono);
+}
+
+.logoutDesktop { /* Класс для возможности скрыть на мобиле */ }
+
+// ── Бургер-кнопка ────────────────────────────────────────────────────────────
+.burger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radii-s);
+  cursor: pointer;
+  padding: 6px;
+  flex-shrink: 0;
+  transition: var(--transition-bg), var(--transition-border);
+
+  &:hover { background: var(--color-accent-muted); border-color: var(--color-accent); }
+}
+
+.burgerLine {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--color-text-primary);
+  border-radius: 2px;
+  transition: transform 0.22s var(--ease-standard), opacity 0.22s var(--ease-standard);
+  transform-origin: center;
+}
+.burgerLine1Open { transform: translateY(7px) rotate(45deg); }
+.burgerLine2Open { opacity: 0; transform: scaleX(0); }
+.burgerLine3Open { transform: translateY(-7px) rotate(-45deg); }
+
+// ── Оверлей и мобильное меню ─────────────────────────────────────────────────
+.menuOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-fixed) + 1);
+  background: var(--color-surface-overlay);
+}
+
+.mobileMenu {
+  position: fixed;
+  top: var(--navbar-height);
+  left: 0;
+  right: 0;
+  z-index: calc(var(--z-fixed) + 2);
+  background: var(--color-surface-navbar);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-2) 0 var(--space-3);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-l);
+}
+
+.mobileNavItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3) var(--space-5);
+  background: none;
+  border: none;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-m);
+  font-family: var(--font-family-main);
+  cursor: pointer;
+  text-align: left;
+  transition: var(--transition-bg);
+
+  &:hover { background: var(--color-row-hover); }
+}
+
+.mobileNavItemActive {
+  color: var(--color-accent);
+  font-weight: var(--font-weight-semibold);
+  background: var(--color-accent-muted);
+}
+
+.mobileNavIcon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+// Бейдж в мобильном меню
+.mobileBadge {
+  margin-left: auto;
+  background: var(--color-error);
+  color: var(--color-text-on-accent);
+  border-radius: var(--radii-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  padding: 2px 7px;
+  line-height: 1;
+}
+
+.mobileDivider {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--space-2) 0;
+}
+
+.mobileLogout { color: var(--color-error); }
+
+// ── Брейкпоинты через SCSS-миксины (без magic numbers) ─────────────────────
+@include m.down(tablet) {
+  .desktopNav    { display: none; }
+  .logoutDesktop { display: none; }
+  .burger        { display: flex; }
+  .userName      { display: none; }
+  .navInner      { gap: var(--space-2); }
+}
+
+@include m.between(tablet, desktop) {
+  .userName { max-width: 120px; }
+}

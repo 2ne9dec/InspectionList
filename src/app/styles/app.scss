@@ -1,0 +1,118 @@
+// ============================================================================
+// app.scss — корневая точка входа всех глобальных стилей.
+// Делегирует всю логику в shared/styles (FSD: app потребляет shared).
+// ============================================================================
+
+@use 'shared/styles';
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   @media print — стили для печати листка осмотра (Этап 43)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media print {
+  /* Скрываем всё навигационное и интерактивное */
+  nav,
+  .navbar,
+  [class*="Navbar"],
+  [class*="addDefect"],
+  [class*="AddDefect"],
+  [class*="infoBar"] button,
+  [class*="fixModal"],
+  [class*="DefectSidebar"],
+  [class*="OfflineBanner"],
+  [class*="Toaster"],
+  [class*="priorityList"],
+  button[title*="Печать"],
+  button[title*="Приоритеты"],
+  button[title*="Экспорт"],
+  button[title*="Excel"],
+  button[title*="Word"] {
+    display: none !important;
+  }
+
+  /* Убираем цветной фон, делаем белый */
+  html, body, .app, .content-page {
+    background: #fff !important;
+    color: #000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .content-page--with-navbar {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  /* Шапка листка осмотра */
+  [class*="infoBar"] {
+    border: 1px solid #ccc !important;
+    border-radius: 0 !important;
+    padding: 8px 12px !important;
+    background: #f8f8f8 !important;
+    color: #000 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+    margin-bottom: 12px !important;
+    page-break-after: avoid !important;
+  }
+
+  [class*="lineName"],
+  [class*="metaItem"],
+  [class*="metaSep"] {
+    color: #222 !important;
+    font-size: 11pt !important;
+  }
+
+  /* Таблица дефектов */
+  [class*="tableWrapper"],
+  [class*="body"] {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 9pt !important;
+    page-break-inside: auto !important;
+  }
+
+  thead { display: table-header-group !important; }
+  tfoot { display: table-footer-group !important; }
+
+  th, td {
+    border: 1px solid #ccc !important;
+    padding: 4px 6px !important;
+    color: #000 !important;
+    background: #fff !important;
+  }
+
+  th {
+    background: #f0f0f0 !important;
+    font-weight: bold !important;
+    font-size: 8pt !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+  }
+
+  tr { page-break-inside: avoid !important; }
+
+  /* Бейджи критичности */
+  [class*="sev--critical"],
+  [class*="badge--critical"] { color: #c00 !important; }
+  [class*="sev--medium"],
+  [class*="badge--medium"]   { color: #b45309 !important; }
+  [class*="sev--low"],
+  [class*="badge--low"]      { color: #166534 !important; }
+
+  /* Колонтитул с инфо */
+  @page {
+    margin: 15mm 12mm;
+    @bottom-center {
+      content: "Листок осмотра ВЛ · " counter(page) " / " counter(pages);
+      font-size: 8pt;
+      color: #666;
+    }
+  }
+}

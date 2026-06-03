@@ -1,0 +1,124 @@
+// ============================================================================
+// CSS reset — минимальный, без агрессивности.
+// ============================================================================
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  height: 100%;
+  min-width: var(--min-viewport-width);
+}
+
+body {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizelegibility;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+li {
+  list-style: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+// SVG-иконки (компоненты IconXxx) выравниваем по базовой линии текста.
+// display: block только для автономных SVG (напр. иллюстрации),
+// а не для иконок внутри кнопок/span.
+svg {
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: inherit;
+  font-size: inherit;
+}
+
+// Кросс-браузерные скроллбары (Firefox)
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-scrollbar-thumb, transparent) transparent;
+}
+
+// WebKit-скроллбары
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: var(--color-scrollbar-track);
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-scrollbar-thumb);
+  border-radius: var(--radii-full);
+
+  &:hover {
+    background-color: var(--color-scrollbar-thumb-hover);
+  }
+}
+
+// Иконка-календарик в input[type="date"] / time / datetime-local.
+// В светлой теме — стандартная, в тёмной — инвертируем через filter,
+// чтобы она была видна на тёмном фоне.
+// color-scheme: dark в _dark.scss уже решает это для большинства браузеров,
+// но filter — запасной вариант для Chromium без поддержки color-scheme на input.
+body[data-theme='dark'] input[type='date'],
+body[data-theme='dark'] input[type='time'],
+body[data-theme='dark'] input[type='datetime-local'],
+body[data-theme='dark'] input[type='month'],
+body[data-theme='dark'] input[type='week'] {
+  color-scheme: dark;  // применяем непосредственно к элементу
+}
+
+body[data-theme='dark'] input[type='date']::-webkit-calendar-picker-indicator,
+body[data-theme='dark'] input[type='time']::-webkit-calendar-picker-indicator,
+body[data-theme='dark'] input[type='datetime-local']::-webkit-calendar-picker-indicator,
+body[data-theme='dark'] input[type='month']::-webkit-calendar-picker-indicator,
+body[data-theme='dark'] input[type='week']::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+// Уменьшаем motion для пользователей с настройкой prefers-reduced-motion
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,121 @@
+@use 'shared/styles/mixins' as m;
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: var(--page-padding);
+  overflow: auto;
+}
+
+.filterBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.filterHint {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+}
+
+.tableWrapper {
+  flex: 1;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radii-l);
+  background: var(--color-bg-surface);
+  overflow: auto;
+  min-height: 0;
+}
+
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-9);
+}
+
+.sentinel {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4);
+  opacity: 0.5;
+}
+
+// ── Status filter tabs ──────────────────────────────────────────────────────
+.statusTabs {
+  display: flex;
+  gap: 0.375rem;
+  margin-bottom: var(--space-3);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.statusTab {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.35rem 0.875rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border, #334155);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary, #94a3b8);
+  transition: all 0.15s;
+  white-space: nowrap;
+
+  &:hover {
+    background: var(--color-bg-secondary, #1e293b);
+    color: var(--color-text-primary, #f1f5f9);
+  }
+
+  &__emoji {
+    font-size: 0.85rem;
+    line-height: 1;
+  }
+
+  &__label {
+    font-weight: 500;
+  }
+
+  &__count {
+    font-size: 0.75rem;
+    background: var(--color-bg-secondary, #1e293b);
+    border-radius: 9999px;
+    padding: 0.05rem 0.45rem;
+    min-width: 1.4rem;
+    text-align: center;
+    color: var(--color-text-secondary, #94a3b8);
+  }
+}
+
+.statusTabActive {
+  border-color: transparent;
+  color: var(--color-text-on-accent);
+
+  &[data-status='all'] {
+    background: var(--color-status-draft);
+  }
+
+  &[data-status='active'] {
+    background: var(--color-status-done);
+  }
+
+  &[data-status='archived'] {
+    background: var(--color-status-active);
+  }
+
+  &[data-status='draft'] {
+    background: var(--color-status-review);
+  }
+
+  .statusTab__count {
+    background: rgb(255 255 255 / 20%);
+    color: var(--color-text-on-accent);
+  }
+}

@@ -1,0 +1,42 @@
+@use 'shared/styles/mixins' as m;
+
+.th {
+  padding: var(--space-2) var(--space-2);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background: var(--color-bg-surface-2);
+  border-bottom: 2px solid var(--color-border);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text-secondary);
+  text-align: left;
+  white-space: nowrap;
+  user-select: none;
+  transition: var(--transition-color);
+
+  &:hover {
+    color: var(--color-text-primary);
+  }
+}
+
+.active {
+  color: var(--color-text-primary);
+}
+
+.inner {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.arrow {
+  font-size: 10px;
+}
+
+.arrowInactive {
+  opacity: 0.35;
+}

@@ -1,0 +1,98 @@
+@use 'shared/styles/mixins' as m;
+
+.wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  // Ширину выравниваем с остальными полями бара (clamp 140–220px),
+  // чуть шире, т.к. внутри двусоставный текст «Элемент → Дефект».
+  width: clamp(180px, 18vw, 260px);
+  min-width: 0;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: calc(100% - 28px);
+  min-width: 0;
+  padding: 0 var(--space-3);
+  height: var(--control-height-m);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radii);
+  cursor: pointer;
+  text-align: left;
+  overflow: hidden;
+  font-family: var(--font-family-main);
+  transition: var(--transition-border);
+
+  @include m.focus-ring;
+
+  &:hover { border-color: var(--color-accent); }
+}
+
+.btnSelected {
+  border-color: var(--color-accent);
+  background: var(--color-accent-muted);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.text {
+  @include m.text-truncate;
+  flex: 1;
+  font-size: var(--font-size-m);
+  color: var(--color-text-primary);
+}
+
+.placeholder {
+  flex: 1;
+  font-size: var(--font-size-m);
+  color: var(--color-text-secondary);
+}
+
+.sev {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-bold);
+  flex-shrink: 0;
+}
+
+.arrow {
+  font-size: 9px;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.clearBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: var(--color-error);
+  color: var(--color-text-on-accent);
+  border: none;
+  border-radius: var(--radii-full);
+  font-size: 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0.85;
+  transition: var(--transition-opacity);
+
+  &:hover { opacity: 1; }
+}
+
+@include m.down(tablet) {
+  .wrap {
+    flex: 1 1 100%;
+    max-width: 100%;
+    order: -1;
+  }
+}

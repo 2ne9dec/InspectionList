@@ -1,0 +1,25 @@
+.loader {
+  display: inline-block;
+  position: relative;
+  width: 64px;
+  height: 16px;
+}
+
+.loader span {
+  position: absolute;
+  top: 4px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  animation-timing-function: cubic-bezier(0, 1, 1, 0);
+}
+
+.loader span:nth-child(1) { left: 6px;  animation: e1 0.6s infinite; }
+.loader span:nth-child(2) { left: 6px;  animation: e2 0.6s infinite; }
+.loader span:nth-child(3) { left: 26px; animation: e2 0.6s infinite; }
+.loader span:nth-child(4) { left: 46px; animation: e3 0.6s infinite; }
+
+@keyframes e1 { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+@keyframes e3 { 0% { transform: scale(1); } 100% { transform: scale(0); } }
+@keyframes e2 { 0% { transform: translate(0, 0); } 100% { transform: translate(20px, 0); } }

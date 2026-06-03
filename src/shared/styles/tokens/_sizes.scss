@@ -1,0 +1,23 @@
+// ============================================================================
+// Layout sizes
+// ============================================================================
+
+:root {
+  // Минимальная ширина приложения
+  --min-viewport-width: 320px;
+
+  // Высота навигации (перекрывается в responsive-tokens)
+  --navbar-height: 52px;
+
+  // Базовый padding страницы (перекрывается)
+  --page-padding: 16px;
+
+  // Максимальная ширина контента
+  --content-max-width: 1800px;
+
+  // Высота control-элементов (input/button)
+  --control-height-s: 28px;
+  --control-height-m: 34px;
+  --control-height-l: 40px;
+  --control-height-xl: 48px;
+}

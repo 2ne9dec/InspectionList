@@ -1,0 +1,47 @@
+.badge {
+  display:         inline-flex;
+  align-items:     center;
+  gap:             4px;
+  padding:         2px 8px;
+  border-radius:   4px;
+  font-size:       11px;
+  font-weight:     600;
+  letter-spacing:  0.3px;
+  border:          1px solid transparent;
+  white-space:     nowrap;
+}
+
+.dot {
+  width:         6px;
+  height:        6px;
+  border-radius: 50%;
+  background:    currentColor;
+  flex-shrink:   0;
+}
+
+/* ── Уровни severity — только CSS-переменные ────────────────────────────── */
+.sev_critical {
+  color:            var(--severity-critical);
+  background:       var(--severity-critical-bg);
+  border-color:     var(--severity-critical-border);
+}
+.sev_high {
+  color:            var(--severity-high);
+  background:       var(--severity-high-bg);
+  border-color:     var(--severity-high-border);
+}
+.sev_medium {
+  color:            var(--severity-medium);
+  background:       var(--severity-medium-bg);
+  border-color:     var(--severity-medium-border);
+}
+.sev_low {
+  color:            var(--severity-low);
+  background:       var(--severity-low-bg);
+  border-color:     var(--severity-low-border);
+}
+.sev_ok {
+  color:            var(--severity-ok);
+  background:       var(--severity-ok-bg);
+  border-color:     var(--severity-ok-border);
+}

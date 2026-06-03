@@ -1,0 +1,38 @@
+module.exports = {
+  extends: ['stylelint-config-standard-scss'],
+  ignoreFiles: [
+    '**/node_modules/**',
+    'dist/**',
+    'build/**',
+    'public/**',
+  ],
+  rules: {
+    'no-empty-source': null,
+    'selector-class-pattern': null,
+    'scss/at-import-partial-extension': null,
+    'scss/load-no-partial-leading-underscore': null,
+    'scss/at-import-no-partial-leading-underscore': null,
+    'no-descending-specificity': null,
+    'declaration-block-no-redundant-longhand-properties': null,
+    'media-feature-range-notation': null,
+    'color-function-notation': null,
+    'alpha-value-notation': null,
+    'shorthand-property-no-redundant-values': null,
+    'no-duplicate-selectors': null,
+    'declaration-empty-line-before': null,
+    'comment-empty-line-before': null,
+    'scss/double-slash-comment-empty-line-before': null,
+    'rule-empty-line-before': null,
+    'at-rule-empty-line-before': null,
+    'block-no-empty': null,
+    'scss/comment-no-empty': null,
+    'declaration-block-single-line-max-declarations': null,
+    'keyframes-name-pattern': null,
+    'scss/at-function-pattern': null,
+    // CSS Modules — разрешаем composes и :global
+    'property-no-unknown': [true, { ignoreProperties: ['composes'] }],
+    'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses: ['global', 'local'] }],
+    // Разрешаем значения вроде "actionBtn" в composes
+    'value-keyword-case': null,
+  },
+};

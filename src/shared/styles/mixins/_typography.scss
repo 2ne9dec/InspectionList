@@ -1,0 +1,46 @@
+// Однострочный текст с многоточием
+@mixin text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+// Многострочный текст с ограничением по количеству строк
+@mixin line-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Шрифтовые шорткаты (font-size + font-weight + line-height)
+@mixin font-s {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-base);
+}
+@mixin font-m {
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-base);
+}
+@mixin font-l {
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+}
+@mixin font-xl {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+// Лейбл (uppercase, мелкий, для form-полей)
+@mixin label {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}

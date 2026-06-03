@@ -1,0 +1,43 @@
+@use 'shared/styles/mixins' as m;
+
+.Tabs {
+  display: inline-flex;
+  gap: 3px;
+  background: var(--color-bg-surface-2);
+  padding: 3px;
+  border-radius: var(--radii);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radii-s);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-main);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: var(--transition-bg), var(--transition-color);
+
+  @include m.focus-ring;
+
+  &:hover:not(.disabled, .active) {
+    color: var(--color-text-primary);
+  }
+}
+
+.active {
+  background: var(--color-surface-card);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-xs);
+}
+
+.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.size_s .tab { font-size: var(--font-size-s); padding: var(--space-1) var(--space-3); }
+.size_m .tab { font-size: var(--font-size-m); }

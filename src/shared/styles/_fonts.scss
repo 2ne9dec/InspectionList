@@ -1,0 +1,45 @@
+// ============================================================================
+// Локальное подключение шрифта Golos Text.
+// Файлы лежат в public/fonts/ — раздаются Vite по абсолютному пути /fonts/...
+// Если шрифт не найден — браузер плавно деградирует на системные sans-serif.
+// ============================================================================
+
+@font-face {
+  font-family: 'Golos Text';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/GolosText-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Golos Text';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/GolosText-Medium.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Golos Text';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/GolosText-SemiBold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Golos Text';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/GolosText-Bold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Golos Text';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/GolosText-Black.woff2') format('woff2');
+}

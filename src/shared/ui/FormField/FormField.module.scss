@@ -1,0 +1,35 @@
+@use 'shared/styles/mixins' as m;
+
+.FormField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.label {
+  @include m.label;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.required {
+  color: var(--color-error);
+}
+
+.optional {
+  color: var(--color-text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: var(--font-weight-regular);
+}
+
+.message {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+}
+
+.hasError .message {
+  color: var(--color-error);
+}

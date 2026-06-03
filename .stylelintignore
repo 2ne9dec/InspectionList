@@ -1,0 +1,9 @@
+*.tsx
+*.jsx
+*.ts
+*.js
+*.svg
+/node_modules
+/public
+/build
+README.md

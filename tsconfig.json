@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    /* Базовое */
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "outDir": "./dist/",
+    "noEmit": true,
+    "useDefineForClassFields": true,
+    "skipLibCheck": true,
+
+    /* Совместимость модулей */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowJs": true,
+
+    /* Strictness */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUncheckedSideEffectImports": true,
+
+    /* Алиасы (paths без baseUrl — относительно tsconfig.json, TS 5.x) */
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
+    /* Типы */
+    "types": ["vite/client"]
+  },
+  "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.d.ts"],
+  "exclude": ["node_modules", "dist"]
+}

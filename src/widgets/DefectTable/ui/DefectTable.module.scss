@@ -1,0 +1,52 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.tableWrapper {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  // Фиксированный layout — ширины колонок задаются только заголовком и не «прыгают»
+  // при разворачивании группы (когда меняется набор cell'ов внутри строк).
+  table-layout: fixed;
+}
+
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-9);
+}
+
+.sentinel {
+  // Строка-сентинель для IntersectionObserver.
+  // Не должна влиять на layout таблицы.
+  pointer-events: none;
+}
+
+.sentinelInner {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4) 0;
+  opacity: 0.5;
+}
+
+/* ── Адаптивная вёрстка ──────────────────────────────────────────────────── */
+@media (max-width: 720px) {
+  .table {
+    // На мобильных — горизонтальный скролл, колонки не сжимаются
+    min-width: 600px;
+  }
+  .tableWrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}

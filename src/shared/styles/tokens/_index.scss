@@ -1,0 +1,16 @@
+// ============================================================================
+// Tokens barrel — единая точка входа.
+// ВАЖНО: порядок подключения важен (responsive-tokens переопределяет typography).
+// ============================================================================
+
+@forward 'breakpoints';
+@use 'colors';
+@use 'typography';
+@use 'sizes';
+@use 'spacing';
+@use 'radii';
+@use 'shadows';
+@use 'transitions';
+@use 'z-index';
+@use 'severity';
+@use 'responsive-tokens';

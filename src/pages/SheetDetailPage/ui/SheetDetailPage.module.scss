@@ -1,0 +1,203 @@
+@use 'shared/styles/mixins' as m;
+
+.page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--navbar-height));
+  overflow: hidden;
+}
+
+/* ── Информационная шапка ──────────────────────────────────────────────────── */
+.infoBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+
+  &::-webkit-scrollbar { height: 3px; }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: 3px;
+  }
+}
+
+.infoText {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.lineName {
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.metaItem {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.metaSep {
+  font-size: var(--font-size-s);
+  color: var(--color-text-muted);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+/* ── Кнопки action-bar в шапке ─────────────────────────────────────────────── */
+.actionBtnWrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+/* Кнопка «Приоритеты» — фиолетовый акцент через CSS-переменные */
+.btnPriorities {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: var(--control-height-s);
+  padding: 0 var(--space-3);
+  background: var(--color-priority, #7c3aed);
+  color: var(--color-text-on-accent);
+  border: none;
+  border-radius: var(--radii);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: var(--transition-bg);
+  flex-shrink: 0;
+
+  &:hover:not(:disabled) { background: var(--color-priority-hover, #6d28d9); }
+}
+
+/* Иконочные кнопки (Принт, Клон, Таймлайн) */
+.btnIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--control-height-s);
+  width: var(--control-height-s);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radii);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-m);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--transition-bg), var(--transition-border), var(--transition-color);
+
+  &:hover:not(:disabled) {
+    background: var(--color-accent-muted);
+    border-color: var(--color-accent);
+    color: var(--color-text-primary);
+  }
+}
+
+/* Бейдж критических дефектов */
+.criticalBadge {
+  position: absolute;
+  top: -7px;
+  right: -8px;
+  background: var(--color-error);
+  color: var(--color-text-on-accent);
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: var(--font-weight-bold);
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Основная область ──────────────────────────────────────────────────────── */
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.notFound {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(100vh - var(--navbar-height));
+  font-size: var(--font-size-l);
+  color: var(--color-text-secondary);
+}
+
+/* ── Clone modal content (внутри shared/ui/Modal) ──────────────────────────── */
+.cloneModalBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.cloneModalDesc {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+.cloneModalInput {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radii);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-m);
+  font-family: var(--font-family-main);
+  transition: var(--transition-border);
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+}
+
+.cloneModalActions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+/* ── Адаптивная вёрстка ────────────────────────────────────────────────────── */
+@include m.down(tablet) {
+  .infoBar {
+    padding: var(--space-1) var(--space-2);
+    gap: var(--space-1);
+  }
+
+  .lineName {
+    font-size: var(--font-size-s);
+  }
+
+  .metaItem {
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* Толкает кнопку Excel к правому краю */
+.spacer {
+  flex: 1;
+  min-width: var(--space-2);
+}
