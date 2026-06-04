@@ -26,6 +26,10 @@ interface AddDefectBarProps {
   poleEnd: number;
 }
 
+function getDraftKey(sheetId: number) {
+  return `draft_defect_${sheetId}`;
+}
+
 export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd }: AddDefectBarProps) => {
   const selectedDefectId = useSelector(selectAddDefectSelectedId);
   const selectedPhaseIds = useSelector(selectAddDefectPhaseIds);
@@ -62,7 +66,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd }: AddDefectBarP
     [setSpanRange, setPoleNumber],
   );
 
-  const DRAFT_KEY = `draft_defect_${sheetId}`;
+  const DRAFT_KEY = getDraftKey(sheetId);
   useEffect(() => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY);

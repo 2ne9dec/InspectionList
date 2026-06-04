@@ -1,8 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PoleGroupRow } from '@/entities/DefectRecord';
 import type { DefectRecordFull } from '@/entities/DefectRecord';
-import { copyDefectActions } from '@/features/CopyDefect';
-import { fixDefectActions } from '@/features/FixDefect';
 import { ConfirmModal, EmptyState, Loader } from '@/shared/ui';
 import { useDefectTable } from '../model/useDefectTable';
 import { DefectTableHeader } from './DefectTableHeader';
@@ -12,6 +10,10 @@ import cls from './DefectTable.module.scss';
 interface DefectTableProps {
   sheetId: number;
   onRowClick?: (defect: DefectRecordFull) => void;
+  /** Открыть модал устранения для locationKey */
+  onFix: (locationKey: string) => void;
+  /** Открыть модал копирования для locationKey */
+  onCopy: (locationKey: string) => void;
 }
 
 const INITIAL_POLES = 50;
@@ -24,7 +26,7 @@ const LOAD_MORE_POLES = 50;
  * рендерятся только видимые опоры. Сентинель — div ПОСЛЕ таблицы
  * (не внутри tbody), чтобы не нарушать table-layout: fixed.
  */
-export const DefectTable = memo(({ sheetId, onRowClick }: DefectTableProps) => {
+export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy }: DefectTableProps) => {
   const {
     isLoading,
     groupedByPole,
@@ -53,9 +55,6 @@ export const DefectTable = memo(({ sheetId, onRowClick }: DefectTableProps) => {
     confirmProps,
   } = useDefectTable(sheetId);
 
-  const { openModal: openFixModal } = fixDefectActions.useActions();
-  const { openModal: openCopyModal } = copyDefectActions.useActions();
-
   const [expandedPoles, setExpandedPoles] = useState<Set<string>>(new Set());
   const handleToggleExpand = useCallback((key: string) => {
     setExpandedPoles((prev) => {
@@ -71,7 +70,6 @@ export const DefectTable = memo(({ sheetId, onRowClick }: DefectTableProps) => {
   const tableWrapperRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  // Сброс при смене фильтров/поиска/вкладки/сортировки
   const filtersKey = [tab, search, filterElementId, filterDefectTypeId, filterSeverity, sortDir].join('|');
   useEffect(() => {
     setDisplayCount(INITIAL_POLES);
@@ -82,22 +80,14 @@ export const DefectTable = memo(({ sheetId, onRowClick }: DefectTableProps) => {
   const visibleGroups = groupedByPole.slice(0, displayCount);
   const hasMore = displayCount < groupedByPole.length;
 
-  // Сентинель — div ПОД таблицей (не внутри tbody), root — tableWrapper.
-  // Это позволяет избежать нарушения table-layout: fixed.
   useEffect(() => {
     const sentinel = sentinelRef.current;
     const wrapper = tableWrapperRef.current;
     if (!sentinel || !wrapper || !hasMore) return;
-
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setDisplayCount((prev) => prev + LOAD_MORE_POLES);
-        }
-      },
+      ([entry]) => { if (entry.isIntersecting) setDisplayCount((prev) => prev + LOAD_MORE_POLES); },
       { root: wrapper, threshold: 0 },
     );
-
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [hasMore]);
@@ -122,8 +112,8 @@ export const DefectTable = memo(({ sheetId, onRowClick }: DefectTableProps) => {
 
   const handleFixOne = useCallback((defectId: number) => {
     const key = defectPoleMap.get(defectId);
-    if (key != null) openFixModal(key);
-  }, [defectPoleMap, openFixModal]);
+    if (key != null) onFix(key);
+  }, [defectPoleMap, onFix]);
 
   return (
     <div className={cls.wrapper}>
@@ -181,9 +171,9 @@ export const DefectTable = memo(({ sheetId, onRowClick }: DefectTableProps) => {
                     anyExpanded={anyExpanded}
                     isFixed={isFixedTab}
                     onToggle={handleToggleExpand}
-                    onFix={openFixModal}
+                    onFix={onFix}
                     onFixOne={handleFixOne}
-                    onCopy={openCopyModal}
+                    onCopy={onCopy}
                     onDelete={handleDelete}
                     onDeleteAll={handleDeleteAll}
                     onRowClick={onRowClick}
@@ -191,7 +181,6 @@ export const DefectTable = memo(({ sheetId, onRowClick }: DefectTableProps) => {
                 ))}
               </tbody>
             </table>
-            {/* Сентинель снаружи <table> — не влияет на table-layout: fixed */}
             {hasMore && (
               <div ref={sentinelRef} className={cls.sentinel}>
                 <Loader />

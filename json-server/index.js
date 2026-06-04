@@ -11,7 +11,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const jsonServer = require('json-server');
 const express    = require('express');
-const { PORT }   = require('./lib/upload');
+const { PORT }   = require('./lib/config');
 const { authMiddleware }    = require('./lib/auth');
 const { tenancyMiddleware } = require('./lib/tenancy');
 
@@ -37,7 +37,7 @@ server.use(tenancyMiddleware); // req.allowedLineIds
 server.use(require('./routes/reference'));    // GET /filials /voltages /lines ...
 server.use(require('./routes/auth'));         // POST /login, GET/PATCH /users, POST /changePassword
 server.use(require('./routes/sheets'));       // /inspectionSheets CRUD + clone
-server.use(require('./routes/defects'));      // /defectRecords + /defectCounts + /poleDefectStatus + /defectTrends
+server.use(require('./routes/defects'));      // /defectRecords + /defectCounts
 
 // ── Запуск ────────────────────────────────────────────────────────────────────
 server.listen(PORT);

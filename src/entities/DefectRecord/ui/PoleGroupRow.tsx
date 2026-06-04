@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react';
 import { formatDate } from '@/shared/lib/helpers/formatDate';
 import { KebabMenu } from '@/shared/ui/KebabMenu';
 import { SEVERITY_COLORS, SEVERITY_LABELS } from '@/shared/const/severity';
+import { formatLocationLabel, locationKeyType } from '../lib/locationKey';
 import type { DefectRecordFull } from '../model/types';
 import cls from './PoleGroupRow.module.scss';
 
@@ -35,16 +36,6 @@ interface SubGroup {
   insulatorCount: number | null;
 }
 
-function formatLocation(key: string): string {
-  if (key.startsWith('п:')) return key.slice(2);
-  if (key.startsWith('о:')) return key.slice(2);
-  return key;
-}
-
-function isSpan(key: string): boolean {
-  return key.startsWith('п:');
-}
-
 export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
   const {
     locationKey,
@@ -62,8 +53,8 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
     onRowClick,
   } = props;
 
-  const locationLabel = formatLocation(locationKey);
-  const span = isSpan(locationKey);
+  const locationLabel = formatLocationLabel(locationKey);
+  const span = locationKeyType(locationKey) === 'span';
 
   const maxSeverity = useMemo<'low' | 'medium' | 'critical'>(
     () =>
@@ -79,6 +70,7 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
   const isNoDefectPole = useMemo(() => records.every((r) => r.elementName === NO_DEFECT_ELEMENT), [records]);
 
   const subGroups = useMemo<SubGroup[]>(() => {
+    if (!isExpanded) return [];
     const map = new Map<string, SubGroup>();
     for (const r of records) {
       // Каждая уникальная комбинация (элемент + дефект + фаза + кол-во изол.) — отдельная строка.
@@ -106,7 +98,7 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
       g.phases = g.phaseItems.map((p) => p.name).join(', ');
     }
     return groups;
-  }, [records]);
+  }, [isExpanded, records]);
 
   // +1 за колонку №, +1 за колонку Опора/Пролёты
   const middleEmptyCells = anyExpanded ? (isFixed ? 6 : 4) : 0;

@@ -30,54 +30,38 @@ body[data-theme='dark'] {
   --color-accent-soft:   rgb(79 142 247 / 6%);
 
   // ── Границы ─────────────────────────────────────────────────────────────
-  --color-border:           rgb(255 255 255 / 8%);
-  --color-border-strong:    rgb(255 255 255 / 14%);
-  --color-border-subtle:    rgb(255 255 255 / 5%);
+  --color-border:        rgb(255 255 255 / 8%);
+  --color-border-strong: rgb(255 255 255 / 14%);
+  --color-border-subtle: rgb(255 255 255 / 5%);
 
   // ── Поверхности ─────────────────────────────────────────────────────────
-  --color-surface-navbar:   #0f0f23;
-  --color-surface-card:     #16213e;
-  --color-surface-modal:    #1c2a4a;
-  --color-surface-overlay:  rgb(0 0 0 / 65%);
+  --color-surface-navbar:  #0f0f23;
+  --color-surface-card:    #16213e;
+  --color-surface-modal:   #1c2a4a;
+  --color-surface-overlay: rgb(0 0 0 / 65%);
 
   // ── Строки таблицы ──────────────────────────────────────────────────────
-  --color-row-alt:    rgb(255 255 255 / 2.5%);
-  --color-row-hover:  rgb(255 255 255 / 6%);
+  --color-row-alt:   rgb(255 255 255 / 2.5%);
+  --color-row-hover: rgb(255 255 255 / 6%);
 
   // ── Состояния ───────────────────────────────────────────────────────────
-  --color-error:          #ff6b6b;
-  --color-error-muted:    rgb(255 107 107 / 14%);
-  --color-success:        #51cf66;
-  --color-success-muted:  rgb(81 207 102 / 12%);
-  --color-warning:        #ffa94d;
-  --color-warning-muted:  rgb(255 169 77 / 14%);
-  --color-danger:         #ff6b6b;
-  --color-danger-muted:   rgb(255 107 107 / 14%);
+  --color-error:         #ff6b6b;
+  --color-error-muted:   rgb(255 107 107 / 14%);
+  --color-success:       #51cf66;
+  --color-success-muted: rgb(81 207 102 / 12%);
+  --color-warning:       #ffa94d;
+  --color-warning-muted: rgb(255 169 77 / 14%);
+  --color-danger:        #ff6b6b;
+  --color-danger-muted:  rgb(255 107 107 / 14%);
 
   // ── Статусы листков осмотра ─────────────────────────────────────────────
-  --color-status-draft:   #64748b;
-  --color-status-active:  #7c3aed;
-  --color-status-review:  #d97706;
-  --color-status-done:    #16a34a;
-
-  // ── Карта / FAB-кнопки ──────────────────────────────────────────────────
-  --map-fab-bg:          rgba(13, 20, 35, .88);
-  --map-fab-bg-hover:    rgba(30, 41, 59, .98);
-  --map-fab-border:      rgba(255, 255, 255, .18);
-  --map-fab-border-hover:rgba(255, 255, 255, .28);
-  --map-fab-text:        #e2e8f0;
-  --map-tile-url:        'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-
-  // ── «Кинозал» PhotoGallery lightbox (намеренно всегда тёмный) ──────────
-  --color-cinema-bg:         #0f172a;
-  --color-cinema-bg-deep:    #0a1628;
-  --color-cinema-text:       #e2e8f0;
-  --color-cinema-text-muted: #64748b;
-  --color-cinema-accent:     #60a5fa;
+  --color-status-draft:    #64748b;
+  --color-status-active:   #7c3aed;
+  --color-status-archived: #d97706;
 
   // ── Скроллбар ───────────────────────────────────────────────────────────
-  --color-scrollbar-track: #1a1a2e;
-  --color-scrollbar-thumb: #2d3561;
+  --color-scrollbar-track:       #1a1a2e;
+  --color-scrollbar-thumb:       #2d3561;
   --color-scrollbar-thumb-hover: #3d4670;
 
   // ── Тени (глубже для тёмной темы) ───────────────────────────────────────
@@ -87,34 +71,17 @@ body[data-theme='dark'] {
   --shadow-l:  0 10px 30px rgb(0 0 0 / 38%);
   --shadow-xl: 0 20px 50px rgb(0 0 0 / 45%);
 
-  // ── Legacy aliases ──────────────────────────────────────────────────────
-  --colors-bg:                var(--color-bg-page);
-  --colors-bg-inverted:       var(--color-bg-inverse);
-  --colors-primary:           var(--color-text-primary);
-  --colors-primary-inverted:  var(--color-text-inverse);
-  --colors-secondary:         var(--color-text-secondary);
-  --colors-error-light:       var(--color-error);
-  --colors-error-dark:        #e03131;
-  --bg-primary:               var(--color-bg-surface);
-  --bg-secondary:             var(--color-bg-surface-2);
-  --bg-row-alt:               var(--color-row-alt);
-  --bg-row-hover:             var(--color-row-hover);
-  --color-border-tertiary:    var(--color-border-subtle);
-  --navbar-bg:                var(--color-surface-navbar);
-  --navbar-border:            var(--color-border);
-  --scrollbar-track:          var(--color-scrollbar-track);
-  --scrollbar-thumb:          var(--color-scrollbar-thumb);
-  --card-bg:                  var(--color-surface-card);
-  --colors-overlay:           var(--color-surface-overlay);
-  --btn-bg:                   var(--color-accent);
-  --btn-bg-hover:             var(--color-accent-hover);
-  --btn-color:                var(--color-text-on-accent);
-  --btn-border:               rgb(255 255 255 / 20%);
+  // ── Алиасы (используются в существующих SCSS-модулях) ───────────────────
+  --color-bg:           var(--color-bg-page);
+  --color-bg-secondary: var(--color-bg-surface-2);
+  --border:             var(--color-border);
+  --text-primary:       var(--color-text-primary);
+  --text-secondary:     var(--color-text-secondary);
 
-  // ── Короткие алиасы для новых компонентов ───────────────────────────────
-  --color-bg:            var(--color-bg-page);
-  --color-bg-secondary:  var(--color-bg-surface-2);
-  --border:              var(--color-border);
-  --text-primary:        var(--color-text-primary);
-  --text-secondary:      var(--color-text-secondary);
+  // Используются в GlobalDefectSearch, PoleGroupRow, DefectRow, LoginPage, ThemeSwitcher
+  --colors-bg:    var(--color-bg-page);
+  --bg-primary:   var(--color-bg-surface);
+  --bg-secondary: var(--color-bg-surface-2);
+  --bg-row-alt:   var(--color-row-alt);
+  --bg-row-hover: var(--color-row-hover);
 }
