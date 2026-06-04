@@ -6,6 +6,7 @@
     "start": "concurrently \"vite\" \"yarn server\"",
     "server": "node ./json-server/index.js",
     "build": "tsc && vite build",
+    "deploy": "yarn build && npx cap sync",
     "lint:ts": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:ts:fix": "eslint --fix \"src/**/*.{ts,tsx}\"",
     "lint:scss": "stylelint \"src/**/*.scss\"",
