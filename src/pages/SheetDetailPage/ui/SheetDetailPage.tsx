@@ -111,11 +111,14 @@ const SheetDetailPage = () => {
           <ExportButton sheet={sheetFull} />
         </div>
 
-        {/* Добавление дефекта */}
+        {/* Добавление дефекта — key форсирует пересоздание когда данные листка готовы */}
         <AddDefectBar
+          key={`${sheetId}-${sheetFull.createdDate}-${sheetFull.createdBy}`}
           sheetId={sheetId}
           poleStart={sheetFull.poleStart}
           poleEnd={sheetFull.poleEnd}
+          sheetDate={sheetFull.createdDate}
+          sheetInspector={sheetFull.createdBy}
         />
 
         {/* Таблица дефектов */}

@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useImperativeHandle, useRef, useState, forwardRef } from 'react';
 import type { DefectType, Element } from '@/entities/InspectionLine';
 import { SEVERITY_COLORS, SEVERITY_LABELS } from '@/entities/InspectionLine';
 import { DefectTreePopup } from './DefectTreePopup';
@@ -13,16 +13,22 @@ export interface DefectPickerProps {
   onClear: () => void;
 }
 
+export interface DefectPickerHandle {
+  focus: () => void;
+}
+
 /**
  * Поле выбора «Элемент → Дефект».
  * Управляет состоянием open + позиционированием попапа.
  */
-export const DefectPicker = memo((props: DefectPickerProps) => {
+export const DefectPicker = memo(forwardRef<DefectPickerHandle, DefectPickerProps>((props, ref) => {
   const { elements, defectTypes, selectedDefect, selectedElement, onSelect, onClear } = props;
 
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState({ top: 0, left: 0 });
   const btnRef = useRef<HTMLButtonElement>(null);
+
+  useImperativeHandle(ref, () => ({ focus: () => btnRef.current?.focus() }));
 
   const handleToggle = useCallback(() => {
     const rect = btnRef.current?.getBoundingClientRect();
@@ -98,6 +104,6 @@ export const DefectPicker = memo((props: DefectPickerProps) => {
       )}
     </div>
   );
-});
+}));
 
 DefectPicker.displayName = 'DefectPicker';

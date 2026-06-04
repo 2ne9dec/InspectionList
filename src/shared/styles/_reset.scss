@@ -10,6 +10,14 @@
   margin: 0;
 }
 
+/* Скрыть нативные стрелки у number-инпутов */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+input[type='number'] { appearance: textfield; }
+
 html,
 body {
   height: 100%;

@@ -273,13 +273,44 @@ export async function exportToExcel(params: ExportParams): Promise<void> {
   addSummary('Мест с дефектами',    new Set(defects.map((d) => d.spanRange ?? String(d.poleNumber))).size);
 
   // ── Скачиваем ────────────────────────────────────────────────────────────────
-  const buf  = await wb.xlsx.writeBuffer();
+  const buf      = await wb.xlsx.writeBuffer();
+  const safeName = sheet.lineName.replace(/[<>:"/\\|?*]/g, '_').substring(0, 50);
+  const fileName = `Журнал_${safeName}_${sheet.createdDate}.xlsx`;
+
+  // На Android (Capacitor) — сохраняем во временный кеш и открываем диалог «Поделиться»
+  const isCapacitor = typeof (window as any).Capacitor !== 'undefined' &&
+    (window as any).Capacitor?.isNativePlatform?.();
+
+  if (isCapacitor) {
+    const { Filesystem, Directory } = await import('@capacitor/filesystem');
+    const { Share } = await import('@capacitor/share');
+
+    const base64 = btoa(
+      new Uint8Array(buf as ArrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), ''),
+    );
+
+    // Пишем во временную папку
+    const result = await Filesystem.writeFile({
+      path: fileName,
+      data: base64,
+      directory: Directory.Cache,
+    });
+
+    // Открываем нативный диалог — пользователь сам выбирает куда сохранить
+    await Share.share({
+      title: fileName,
+      url: result.uri,
+      dialogTitle: 'Сохранить или отправить файл',
+    });
+    return;
+  }
+
+  // На вебе — стандартное скачивание через ссылку
   const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  const safeName = sheet.lineName.replace(/[<>:"/\\|?*]/g, '_').substring(0, 50);
   a.href     = url;
-  a.download = `Журнал_${safeName}_${sheet.createdDate}.xlsx`;
+  a.download = fileName;
   a.style.display = 'none';
   document.body.appendChild(a);
   a.click();

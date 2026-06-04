@@ -26,25 +26,33 @@ import { DefectPicker } from './DefectPicker';
 import cls from './AddDefectBar.module.scss';
 
 const GARLAND_OPTIONS   = Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }));
-const INSULATOR_OPTIONS = Array.from({ length: 10 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }));
+const INSULATOR_OPTIONS = Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }));
+
+/** Диапазон вида «1-10» или «1–10» → пролёт, иначе → опора */
+const detectRange = (val: string) => /\d[-–]\d/.test(val.trim());
 
 interface AddDefectBarProps {
   sheetId: number;
   poleStart: number;
   poleEnd: number;
+  sheetDate?: string;
+  sheetInspector?: string;
 }
 
 function getDraftKey(sheetId: number) {
   return `draft_defect_${sheetId}`;
 }
 
-export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd }: AddDefectBarProps) => {
+export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, sheetInspector }: AddDefectBarProps) => {
   const selectedDefectId  = useSelector(selectAddDefectSelectedId);
   const selectedPhaseIds  = useSelector(selectAddDefectPhaseIds);
   const garlandNumber     = useSelector(selectAddDefectGarlandNumber);
   const poleNumber        = useSelector(selectAddDefectPole);
-  const inspector         = useSelector(selectAddDefectInspector);
-  const dateFound         = useSelector(selectAddDefectDate);
+  const inspectorRaw      = useSelector(selectAddDefectInspector);
+  const dateFoundRaw      = useSelector(selectAddDefectDate);
+  // Пока Redux-состояние пустое — используем значения из листка напрямую
+  const inspector  = inspectorRaw  || sheetInspector || '';
+  const dateFound  = dateFoundRaw  || sheetDate      || '';
   const insulatorCount    = useSelector(selectAddDefectInsulatorCount);
   const spanRange         = useSelector(selectAddDefectSpanRange);
 
@@ -61,26 +69,38 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd }: AddDefectBarP
     resetDate,
   } = addDefectSlice.useActions();
 
-  // Всегда ставим сегодняшнюю дату при открытии страницы
-  useEffect(() => { resetDate(); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  // При монтировании подставляем дату и ФИО из листка (key гарантирует что пропсы уже готовы)
+  useEffect(() => {
+    if (sheetDate) setDateFound(sheetDate); else resetDate();
+    if (sheetInspector) setInspector(sheetInspector);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handlePoleChange = useCallback(
+  const handlePoleStep = useCallback(
+    (delta: number) => {
+      const cur = Number.parseInt(poleNumber, 10);
+      const next = Number.isFinite(cur) ? cur + delta : delta > 0 ? poleStart : poleEnd;
+      const clamped = Math.min(poleEnd, Math.max(poleStart, next));
+      setPoleNumber(String(clamped));
+      setSpanRange('');
+    },
+    [poleNumber, poleStart, poleEnd, setPoleNumber, setSpanRange],
+  );
+
+  /** Единый обработчик: диапазон → spanRange, число → poleNumber */
+  const handleLocationChange = useCallback(
     (val: string) => {
-      setPoleNumber(val);
-      if (val) setSpanRange('');
+      if (detectRange(val)) {
+        setSpanRange(val);
+        setPoleNumber('');
+      } else {
+        setPoleNumber(val);
+        setSpanRange('');
+      }
     },
     [setPoleNumber, setSpanRange],
   );
 
-  const handleSpanChange = useCallback(
-    (val: string) => {
-      setSpanRange(val);
-      if (val) setPoleNumber('');
-    },
-    [setSpanRange, setPoleNumber],
-  );
-
-  // ── Draft restore/save ───────────────────────────────────────────────────
+// ── Draft restore/save ───────────────────────────────────────────────────
   const DRAFT_KEY = getDraftKey(sheetId);
   useEffect(() => {
     try {
@@ -229,33 +249,23 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd }: AddDefectBarP
         </FormField>
       </div>
 
-      <div className={cls.poleField}>
-        <FormField label={`Опора (${poleStart}–${poleEnd})`} htmlFor='add-pole'>
-          <Input
-            id='add-pole'
-            name='poleNumber'
-            type='number'
-            min={poleStart}
-            max={poleEnd}
-            placeholder={`${poleStart}–${poleEnd}`}
-            value={poleNumber}
-            onChange={handlePoleChange}
-            invalid={!!poleNumber && !isPoleValid}
-            disabled={!!spanRange.trim()}
-          />
-        </FormField>
-      </div>
-
-      <div className={cls.poleField}>
-        <FormField label='Пролёты' optional htmlFor='add-span-range'>
-          <Input
-            id='add-span-range'
-            name='spanRange'
-            placeholder={`${poleStart}–${poleEnd}`}
-            value={spanRange}
-            onChange={handleSpanChange}
-            disabled={!!poleNumber}
-          />
+      <div className={cls.locationField}>
+        <FormField label='Опора / Пролёт' htmlFor='add-location'>
+          <div className={cls.stepWrap}>
+            <button type='button' className={cls.stepBtn} onClick={() => handlePoleStep(-1)} tabIndex={-1}
+              disabled={!!spanRange}>−</button>
+            <Input
+              id='add-location'
+              name='location'
+              placeholder={`${poleStart}–${poleEnd}`}
+              value={poleNumber || spanRange}
+              onChange={handleLocationChange}
+              invalid={!!poleNumber && !isPoleValid}
+              className={cls.stepInput}
+            />
+            <button type='button' className={cls.stepBtn} onClick={() => handlePoleStep(1)} tabIndex={-1}
+              disabled={!!spanRange}>+</button>
+          </div>
         </FormField>
       </div>
 
@@ -267,19 +277,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd }: AddDefectBarP
         onSelect={handlePickDefect}
         onClear={clearDefectSelection}
       />
-
-      <div className={cls.smallField}>
-        <FormField label='Гирлянда' htmlFor='add-garland'>
-          <Select<string>
-            id='add-garland'
-            options={GARLAND_OPTIONS}
-            value={garlandNumber}
-            onChange={setGarlandNumber}
-            placeholder='—'
-          />
-        </FormField>
-      </div>
-
+      
       {phases.length > 0 && (
         <div className={cls.smallField}>
           <FormField label='Фазы' htmlFor='add-phases'>
@@ -293,6 +291,18 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd }: AddDefectBarP
           </FormField>
         </div>
       )}
+
+      <div className={cls.smallField}>
+        <FormField label='Гирлянда' htmlFor='add-garland'>
+          <Select<string>
+            id='add-garland'
+            options={GARLAND_OPTIONS}
+            value={garlandNumber}
+            onChange={setGarlandNumber}
+            placeholder='—'
+          />
+        </FormField>
+      </div>
 
       <div className={cls.smallField}>
         <FormField label='Изол.' htmlFor='add-insulator-count'>

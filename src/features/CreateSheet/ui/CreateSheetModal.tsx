@@ -11,8 +11,8 @@ import {
 } from '@/entities/InspectionLine';
 import { getUserAuthData, getUserFilialId, getUserIsAdmin } from '@/entities/User';
 import { getRouteSheetDetail } from '@/shared/const/router';
-import { Button, Combobox, FormField, Input, Modal, Select } from '@/shared/ui';
-import type { ComboboxOption, SelectOption } from '@/shared/ui';
+import { Button, FormField, Input, Modal, Select } from '@/shared/ui';
+import type { SelectOption } from '@/shared/ui';
 import { toast } from '@/shared/lib/toast';
 import { logger } from '@/shared/lib/logger';
 import { createSheetActions } from '../model/createSheetSlice';
@@ -43,6 +43,7 @@ export const CreateSheetModal = memo(() => {
 
   const { closeModal, setVoltageId, setLineId, setCreatedBy, setCreatedDate, setFilialId } =
     createSheetActions.useActions();
+
 
   const { data: filials = [] } = useGetFilialsQuery();
   const { data: voltages = [] } = useGetVoltagesQuery();
@@ -78,7 +79,7 @@ export const CreateSheetModal = memo(() => {
     () => filteredVoltages.map((v) => ({ value: v.id, label: v.name })),
     [filteredVoltages],
   );
-  const lineOptions = useMemo<ComboboxOption<number>[]>(
+  const lineOptions = useMemo<SelectOption<number>[]>(
     () => filteredLines.map((l) => ({ value: l.id, label: l.name })),
     [filteredLines],
   );
@@ -88,29 +89,20 @@ export const CreateSheetModal = memo(() => {
   const handleSubmit = useCallback(async () => {
     if (!isValid || !effectiveFilialId || !voltageId || !lineId) return;
     try {
+      const trimmed = createdBy.trim();
       const newSheet = await createSheet({
         filialId: effectiveFilialId,
         voltageId,
         lineId,
-        createdBy: createdBy.trim(),
+        createdBy: trimmed,
         createdDate,
       }).unwrap();
       closeModal();
       // Микро-задержка чтобы модалка успела закрыться перед навигацией
       setTimeout(() => navigate(getRouteSheetDetail(String(newSheet.id))), 50);
     } catch (err: unknown) {
-      const data = (err as { data?: { error?: string; existing?: { createdDate: string; createdBy: string } } })?.data;
-      if (data?.error && data.existing) {
-        // Уже существует — информируем
-        toast.warning(
-          `${data.error} (от ${data.existing.createdDate}, осматривал: ${data.existing.createdBy}). ` +
-            'Создание второго листка на ту же дату и линию запрещено.',
-          { duration: 8000 },
-        );
-      } else {
-        logger.error('CreateSheet failed', err);
-        toast.error('Ошибка при создании листка осмотра');
-      }
+      logger.error('CreateSheet failed', err);
+      toast.error('Ошибка при создании листка осмотра');
     }
   }, [closeModal, createSheet, createdBy, createdDate, effectiveFilialId, isValid, lineId, navigate, voltageId]);
 
@@ -160,11 +152,11 @@ export const CreateSheetModal = memo(() => {
         </FormField>
 
         <FormField label='Линия' htmlFor='cs-line' required>
-          <Combobox<number>
+          <Select<number>
             id='cs-line'
             name='lineId'
             options={lineOptions}
-            placeholder='Начните вводить название линии…'
+            placeholder='— выберите линию —'
             value={(lineId ?? '') as number | ''}
             onChange={(v) => setLineId(v === '' ? 0 : Number(v))}
             disabled={!voltageId}

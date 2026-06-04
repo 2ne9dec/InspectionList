@@ -4,3 +4,13 @@
 /json-server/store
 .idea
 .vscode
+
+# Capacitor
+/android
+/ios
+capacitor.config.ts.bak
+
+# Env
+.env.local
+.env.production.local
+.env.development.local

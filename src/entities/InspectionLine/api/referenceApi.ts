@@ -1,55 +1,63 @@
 import { rtkApi } from '@/shared/api/rtkApi';
 import type { Filial, Voltage, Line, Element, DefectType, Phase } from '../model/types';
 
+// Справочники зашиты прямо в сборку — сервер не нужен
+import filialsData          from '../../../../json-server/seed/filials.json';
+import voltagesData         from '../../../../json-server/seed/voltages.json';
+import linesData            from '../../../../json-server/seed/lines.json';
+import elementsData         from '../../../../json-server/seed/elements.json';
+import defectTypesData      from '../../../../json-server/seed/defectTypes.json';
+import phasesData           from '../../../../json-server/seed/phases.json';
+import phaseElementIdsData  from '../../../../json-server/seed/phaseElementIds.json';
+import garlandElementIdsData from '../../../../json-server/seed/garlandElementIds.json';
+import voltageGarlandCountData from '../../../../json-server/seed/voltageGarlandCount.json';
+import filialVoltageFilterData from '../../../../json-server/seed/filialVoltageFilter.json';
+
 const referenceApi = rtkApi.injectEndpoints({
   endpoints: (build) => ({
     getFilials: build.query<Filial[], void>({
-      query: () => '/filials',
+      queryFn: () => ({ data: filialsData as Filial[] }),
       providesTags: ['References'],
     }),
     getVoltages: build.query<Voltage[], void>({
-      query: () => '/voltages',
+      queryFn: () => ({ data: voltagesData as Voltage[] }),
       providesTags: ['References'],
     }),
     getLines: build.query<Line[], void>({
-      query: () => '/lines',
+      queryFn: () => ({ data: linesData as Line[] }),
       providesTags: ['References'],
     }),
     getElements: build.query<Element[], void>({
-      query: () => '/elements',
+      queryFn: () => ({ data: elementsData as Element[] }),
       providesTags: ['References'],
     }),
     getDefectTypes: build.query<DefectType[], void>({
-      query: () => '/defectTypes',
+      queryFn: () => ({ data: defectTypesData as DefectType[] }),
       providesTags: ['References'],
     }),
-    // Фильтр напряжений по филиалу (для Жлобина — только ВЛ-35, ВЛ-110, ВЛ-330)
     getFilialVoltageFilter: build.query<Record<string, number[]>, void>({
-      query: () => '/filialVoltageFilter',
+      queryFn: () => ({ data: filialVoltageFilterData as Record<string, number[]> }),
       providesTags: ['References'],
     }),
-    // Список фаз/грозотросов для выбора
     getPhases: build.query<Phase[], void>({
-      query: () => '/phases',
+      queryFn: () => ({ data: phasesData as Phase[] }),
       providesTags: ['References'],
     }),
-    // Массив element_id у которых нужен выбор фазы
     getPhaseElementIds: build.query<number[], void>({
-      query: () => '/phaseElementIds',
+      queryFn: () => ({ data: phaseElementIdsData as number[] }),
       providesTags: ['References'],
     }),
-    // Массив element_id у которых нужен выбор номера гирлянды
     getGarlandElementIds: build.query<number[], void>({
-      query: () => '/garlandElementIds',
+      queryFn: () => ({ data: garlandElementIdsData as number[] }),
       providesTags: ['References'],
     }),
-    // Маппинг voltageId → макс. кол-во гирлянд
     getVoltageGarlandCount: build.query<Record<string, number>, void>({
-      query: () => '/voltageGarlandCount',
+      queryFn: () => ({ data: voltageGarlandCountData as Record<string, number> }),
       providesTags: ['References'],
     }),
     updateLine: build.mutation<Line, { id: number; year_built?: number | null; year_last_overhaul?: number | null; pole_type?: string | null; wire_type?: string | null; notes?: string | null }>({
-      query: ({ id, ...body }) => ({ url: '/lines/' + id, method: 'PATCH', body }),
+      // В офлайн-режиме обновление линий не поддерживается
+      queryFn: () => ({ error: { status: 'CUSTOM_ERROR', error: 'Offline mode: line editing not supported' } }),
       invalidatesTags: ['References'],
     }),
   }),

@@ -12,8 +12,14 @@
     "lint:scss:fix": "stylelint --fix \"src/**/*.scss\""
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/cli": "^8.4.0",
+    "@capacitor/core": "^8.4.0",
+    "@capacitor/filesystem": "^8.1.2",
+    "@capacitor/share": "^8.0.1",
     "@reduxjs/toolkit": "^1.9.5",
     "@vitejs/plugin-react": "^4.0.4",
+    "dexie": "^4.4.3",
     "docx": "^9.7.0",
     "exceljs": "^4.4.0",
     "exifr": "^7.1.3",

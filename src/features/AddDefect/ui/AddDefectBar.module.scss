@@ -11,14 +11,48 @@
 
 .dateField      { width: clamp(140px, 13vw, 175px); }
 .inspectorField { width: clamp(130px, 13vw, 175px); }
-.poleField      { width: clamp(100px, 10vw, 140px); }
+.locationField  { width: clamp(115px, 11vw, 150px); }
 .phaseField     { width: clamp(120px, 12vw, 170px); }
 .smallField     { width: 110px; }
+
+.stepWrap {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.stepInput {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  /* hide native number spinners */
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button { appearance: none; margin: 0; }
+  appearance: textfield;
+}
+.stepBtn {
+  width: 28px;
+  height: var(--control-height-m);
+  flex-shrink: 0;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radii);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-m);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-border);
+  user-select: none;
+  &:hover:not(:disabled)  { border-color: var(--color-accent); }
+  &:active:not(:disabled) { background: var(--color-accent-muted); }
+  &:disabled { opacity: 0.35; cursor: default; }
+}
 
 @include m.down(tablet) {
   .dateField      { width: 130px; }
   .inspectorField { width: 100%; flex-basis: 100%; }
-  .poleField      { width: 90px; }
+  .locationField  { width: 115px; }
   .phaseField     { width: 90px; }
   .smallField     { width: 110px; }
 }

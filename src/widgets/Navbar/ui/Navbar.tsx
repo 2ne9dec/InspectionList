@@ -5,6 +5,7 @@ import { getRouteSheets, getRouteLogin } from '@/shared/const/router';
 import { getUserAuthData, getUserDisplayName, userActions } from '@/entities/User';
 import { useAppDispatch } from '@/shared/lib/hooks';
 import { ThemeSwitcher } from '@/features/ThemeSwitcher';
+import { SyncButton } from '@/features/SyncToServer';
 import { Button, HStack } from '@/shared/ui';
 import { IconSheet, IconLogout } from '@/shared/ui/Icons';
 import cls from './Navbar.module.scss';
@@ -50,6 +51,7 @@ export const Navbar = memo(({ centerSlot }: NavbarProps) => {
 
         <HStack gap="2" align="center" className={cls.right}>
           {auth && <span className={cls.userName}>{displayName}</span>}
+          {auth && <SyncButton />}
           <ThemeSwitcher />
           {auth && (
             <Button
