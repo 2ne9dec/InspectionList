@@ -257,6 +257,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
             <Input
               id='add-location'
               name='location'
+              inputMode='tel'
               placeholder={`${poleStart}–${poleEnd}`}
               value={poleNumber || spanRange}
               onChange={handleLocationChange}

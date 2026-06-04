@@ -11,7 +11,7 @@
 
 .dateField      { width: clamp(140px, 13vw, 175px); }
 .inspectorField { width: clamp(130px, 13vw, 175px); }
-.locationField  { width: clamp(115px, 11vw, 150px); }
+.locationField  { width: max-content; }
 .phaseField     { width: clamp(120px, 12vw, 170px); }
 .smallField     { width: 110px; }
 
@@ -21,7 +21,8 @@
   gap: 2px;
 }
 .stepInput {
-  flex: 1;
+  flex: none;
+  width: calc(9ch + 1.2rem);
   min-width: 0;
   text-align: center;
   /* hide native number spinners */
@@ -52,7 +53,6 @@
 @include m.down(tablet) {
   .dateField      { width: 130px; }
   .inspectorField { width: 100%; flex-basis: 100%; }
-  .locationField  { width: 115px; }
   .phaseField     { width: 90px; }
   .smallField     { width: 110px; }
 }
