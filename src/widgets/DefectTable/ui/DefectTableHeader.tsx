@@ -46,7 +46,7 @@ export const DefectTableHeader = memo((props: DefectTableHeaderProps) => {
         </th>
 
         {/* Опора или Пролёты */}
-        <ThSort label='Опора / Пролёты' dir={sortDir} onClick={onSortToggle} width='clamp(100px, 10vw, 140px)' />
+        <ThSort label='Опора / Пролёты' dir={sortDir} onClick={onSortToggle} width='clamp(130px, 13vw, 170px)' />
 
         <ThFilter
           label='Элемент'
