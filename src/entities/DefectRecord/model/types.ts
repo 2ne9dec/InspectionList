@@ -14,6 +14,7 @@ export interface DefectRecord {
   notes?: string | null;
   insulatorCount?: number | null;
   spanRange?: string | null;
+  garlandNumber?: number | null;
 }
 
 export interface DefectRecordFull extends DefectRecord {
@@ -36,6 +37,7 @@ export interface CreateDefectParams {
   notes?: string | null;
   insulatorCount?: number | null;
   spanRange?: string | null;
+  garlandNumber?: number | null;
 }
 
 export interface FixDefectParams {

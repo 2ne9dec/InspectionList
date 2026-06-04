@@ -11,4 +11,5 @@ export const selectAddDefectDate        = (state: StateSchema) => state.addDefec
 export const selectAddDefectIsFormOpen  = (state: StateSchema) => state.addDefect?.isFormOpen        ?? false;
 export const selectAddDefectInsulatorCount = (state: StateSchema) => state.addDefect?.insulatorCount ?? '';
 
-export const selectAddDefectSpanRange = (state: StateSchema) => state.addDefect?.spanRange ?? '';
+export const selectAddDefectSpanRange     = (state: StateSchema) => state.addDefect?.spanRange     ?? '';
+export const selectAddDefectGarlandNumber = (state: StateSchema) => state.addDefect?.garlandNumber ?? '';

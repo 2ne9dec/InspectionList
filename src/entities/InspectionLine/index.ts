@@ -33,6 +33,8 @@ export {
   useGetDefectTypesQuery,
   useGetPhasesQuery,
   useGetPhaseElementIdsQuery,
+  useGetGarlandElementIdsQuery,
+  useGetVoltageGarlandCountQuery,
   useGetFilialVoltageFilterQuery,
   useUpdateLineMutation,
 } from './api/referenceApi';

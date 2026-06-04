@@ -34,6 +34,7 @@ interface SubGroup {
   phases: string;
   phaseItems: { id: number; name: string }[];
   insulatorCount: number | null;
+  garlandNumber: number | null;
 }
 
 export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
@@ -75,9 +76,10 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
     for (const r of records) {
       // Каждая уникальная комбинация (элемент + дефект + фаза + кол-во изол.) — отдельная строка.
       // Это позволяет корректно открывать боковую панель для конкретной записи.
-      const phaseKey = r.phaseId != null ? String(r.phaseId) : 'null';
+      const phaseKey    = r.phaseId        != null ? String(r.phaseId)        : 'null';
       const insulatorKey = r.insulatorCount != null ? String(r.insulatorCount) : 'null';
-      const key = `${r.elementName}||${r.defectName}||${phaseKey}||${insulatorKey}`;
+      const garlandKey  = r.garlandNumber  != null ? String(r.garlandNumber)  : 'null';
+      const key = `${r.elementName}||${r.defectName}||${phaseKey}||${insulatorKey}||${garlandKey}`;
       const existing = map.get(key);
       if (existing) {
         existing.ids.push(r.id);
@@ -89,6 +91,7 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
           phases: '',
           phaseItems: r.phaseName && r.phaseId !== null ? [{ id: r.phaseId, name: r.phaseName }] : [],
           insulatorCount: r.insulatorCount ?? null,
+          garlandNumber:  r.garlandNumber  ?? null,
         });
       }
     }
@@ -193,7 +196,7 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
 
       {isExpanded &&
         subGroups.map((group, idx) => {
-          const { first, ids, phases, insulatorCount } = group;
+          const { first, ids, phases, insulatorCount, garlandNumber: grNum } = group;
           const isNoDefectRecord = first.elementName === NO_DEFECT_ELEMENT;
           const subKebabItems = [
             ...(!isFixed && !isNoDefectRecord
@@ -222,6 +225,7 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
               <td className={cls.subCell}>{first.elementName}</td>
               <td className={cls.subCell}>
                 {first.defectName}
+                {grNum != null && <span className={cls.phaseTag}>гирл. {grNum}</span>}
                 {phases && <span className={cls.phaseTag}>{phases}</span>}
                 {insulatorCount != null && <span className={cls.phaseTag}>{insulatorCount} шт.</span>}
               </td>

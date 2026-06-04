@@ -52,7 +52,7 @@ router.post('/defectRecords', (req, res) => {
   if (!fp) return res.status(400).json({ error: 'Sheet not found' });
   const data = JSON.parse(fs.readFileSync(fp, 'utf8'));
 
-  // Дедупликация: sheetId + (poleNumber или spanRange) + defectId + phaseId + insulatorCount
+  // Дедупликация: sheetId + (poleNumber или spanRange) + defectId + phaseId + insulatorCount + garlandNumber
   const duplicate = (data.defectRecords ?? []).find(
     (r) =>
       r.sheetId === Number(body.sheetId) &&
@@ -61,6 +61,7 @@ router.post('/defectRecords', (req, res) => {
       r.defectId === Number(body.defectId) &&
       (r.phaseId ?? null) === (body.phaseId ? Number(body.phaseId) : null) &&
       (r.insulatorCount ?? null) === (body.insulatorCount != null ? Number(body.insulatorCount) : null) &&
+      (r.garlandNumber ?? null) === (body.garlandNumber != null ? Number(body.garlandNumber) : null) &&
       !r.isFixed &&
       r.status !== 'rejected',
   );

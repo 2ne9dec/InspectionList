@@ -12,12 +12,15 @@ const STATIC_COLS = [
   'defectTypes',
   'phases',
   'phaseElementIds',
+  'garlandElementIds',
+  'voltageGarlandCount',
   'filialVoltageFilter',
 ];
 
 STATIC_COLS.forEach((col) => {
   router.get(`/${col}`, (req, res) => {
-    res.json(seedDb[col] ?? (col === 'filialVoltageFilter' ? {} : []));
+    const isObject = col === 'filialVoltageFilter' || col === 'voltageGarlandCount';
+  res.json(seedDb[col] ?? (isObject ? {} : []));
   });
 });
 

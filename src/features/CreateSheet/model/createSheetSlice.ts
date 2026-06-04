@@ -11,14 +11,14 @@ export interface CreateSheetSchema {
   defectSearch: string;
 }
 
-const today = new Date().toISOString().split('T')[0];
+const getToday = () => new Date().toISOString().split('T')[0];
 
 const initialState: CreateSheetSchema = {
   filialId: null,
   voltageId: null,
   lineId: null,
   createdBy: '',
-  createdDate: today,
+  createdDate: getToday(),
   isOpen: false,
   search: '',
   defectSearch: '',
@@ -30,6 +30,7 @@ export const createSheetSlice = buildSlice({
   reducers: {
     openModal: (state) => {
       state.isOpen = true;
+      state.createdDate = getToday();
     },
     closeModal: (state) => {
       state.isOpen = false;
@@ -37,7 +38,7 @@ export const createSheetSlice = buildSlice({
       state.voltageId = null;
       state.lineId = null;
       state.createdBy = '';
-      state.createdDate = today;
+      state.createdDate = getToday();
     },
     setFilialId: (state, action: { payload: number }) => {
       state.filialId = action.payload;

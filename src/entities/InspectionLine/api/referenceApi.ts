@@ -38,6 +38,16 @@ const referenceApi = rtkApi.injectEndpoints({
       query: () => '/phaseElementIds',
       providesTags: ['References'],
     }),
+    // Массив element_id у которых нужен выбор номера гирлянды
+    getGarlandElementIds: build.query<number[], void>({
+      query: () => '/garlandElementIds',
+      providesTags: ['References'],
+    }),
+    // Маппинг voltageId → макс. кол-во гирлянд
+    getVoltageGarlandCount: build.query<Record<string, number>, void>({
+      query: () => '/voltageGarlandCount',
+      providesTags: ['References'],
+    }),
     updateLine: build.mutation<Line, { id: number; year_built?: number | null; year_last_overhaul?: number | null; pole_type?: string | null; wire_type?: string | null; notes?: string | null }>({
       query: ({ id, ...body }) => ({ url: '/lines/' + id, method: 'PATCH', body }),
       invalidatesTags: ['References'],
@@ -53,6 +63,8 @@ export const {
   useGetDefectTypesQuery,
   useGetPhasesQuery,
   useGetPhaseElementIdsQuery,
+  useGetGarlandElementIdsQuery,
+  useGetVoltageGarlandCountQuery,
   useGetFilialVoltageFilterQuery,
   useUpdateLineMutation,
 } = referenceApi;

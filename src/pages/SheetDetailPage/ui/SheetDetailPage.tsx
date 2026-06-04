@@ -112,7 +112,11 @@ const SheetDetailPage = () => {
         </div>
 
         {/* Добавление дефекта */}
-        <AddDefectBar sheetId={sheetId} poleStart={sheetFull.poleStart} poleEnd={sheetFull.poleEnd} />
+        <AddDefectBar
+          sheetId={sheetId}
+          poleStart={sheetFull.poleStart}
+          poleEnd={sheetFull.poleEnd}
+        />
 
         {/* Таблица дефектов */}
         <div className={cls.body}>

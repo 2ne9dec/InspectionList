@@ -4,6 +4,7 @@ export interface AddDefectSchema {
   selectedDefectId: number | null;
   selectedElementId: number | null;
   selectedPhaseIds: number[];
+  garlandNumber: string;
   poleNumber: string;
   inspector: string;
   dateFound: string;
@@ -18,6 +19,7 @@ const initialState: AddDefectSchema = {
   selectedDefectId: null,
   selectedElementId: null,
   selectedPhaseIds: [],
+  garlandNumber: '',
   poleNumber: '',
   inspector: '',
   dateFound: '',
@@ -32,7 +34,10 @@ export const addDefectSlice = buildSlice({
   reducers: {
     openForm: (state) => {
       state.isFormOpen = true;
-      if (!state.dateFound) state.dateFound = getToday();
+      state.dateFound = getToday();
+    },
+    resetDate: (state) => {
+      state.dateFound = getToday();
     },
     closeForm: (state) => {
       state.isFormOpen = false;
@@ -46,11 +51,13 @@ export const addDefectSlice = buildSlice({
       state.selectedDefectId = action.payload.defectId;
       state.selectedElementId = action.payload.elementId;
       state.selectedPhaseIds = [];
+      state.garlandNumber = '';
     },
     clearDefectSelection: (state) => {
       state.selectedDefectId = null;
       state.selectedElementId = null;
       state.selectedPhaseIds = [];
+      state.garlandNumber = '';
       state.insulatorCount = '';
       state.spanRange = '';
     },
@@ -71,6 +78,9 @@ export const addDefectSlice = buildSlice({
     },
     setSpanRange: (state, action: { payload: string }) => {
       state.spanRange = action.payload;
+    },
+    setGarlandNumber: (state, action: { payload: string }) => {
+      state.garlandNumber = action.payload;
     },
   },
 });

@@ -1,9 +1,13 @@
 import { memo, useCallback, useMemo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useCreateDefectMutation, useGetDefectsBySheetQuery } from '@/entities/DefectRecord';
-import { useGetDefectTypesQuery, useGetElementsQuery, useGetPhasesQuery } from '@/entities/InspectionLine';
+import {
+  useGetDefectTypesQuery,
+  useGetElementsQuery,
+  useGetPhasesQuery,
+} from '@/entities/InspectionLine';
 import type { DefectType } from '@/entities/InspectionLine';
-import { Button, FormField, HStack, Input, MultiSelect } from '@/shared/ui';
+import { Button, FormField, HStack, Input, MultiSelect, Select } from '@/shared/ui';
 import type { SelectOption } from '@/shared/ui';
 import { toast } from '@/shared/lib/toast';
 import { logger } from '@/shared/lib/logger';
@@ -16,9 +20,13 @@ import {
   selectAddDefectSelectedId,
   selectAddDefectInsulatorCount,
   selectAddDefectSpanRange,
+  selectAddDefectGarlandNumber,
 } from '../model/selectors';
 import { DefectPicker } from './DefectPicker';
 import cls from './AddDefectBar.module.scss';
+
+const GARLAND_OPTIONS   = Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }));
+const INSULATOR_OPTIONS = Array.from({ length: 10 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }));
 
 interface AddDefectBarProps {
   sheetId: number;
@@ -31,24 +39,30 @@ function getDraftKey(sheetId: number) {
 }
 
 export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd }: AddDefectBarProps) => {
-  const selectedDefectId = useSelector(selectAddDefectSelectedId);
-  const selectedPhaseIds = useSelector(selectAddDefectPhaseIds);
-  const poleNumber = useSelector(selectAddDefectPole);
-  const inspector = useSelector(selectAddDefectInspector);
-  const dateFound = useSelector(selectAddDefectDate);
-  const insulatorCount = useSelector(selectAddDefectInsulatorCount);
-  const spanRange = useSelector(selectAddDefectSpanRange);
+  const selectedDefectId  = useSelector(selectAddDefectSelectedId);
+  const selectedPhaseIds  = useSelector(selectAddDefectPhaseIds);
+  const garlandNumber     = useSelector(selectAddDefectGarlandNumber);
+  const poleNumber        = useSelector(selectAddDefectPole);
+  const inspector         = useSelector(selectAddDefectInspector);
+  const dateFound         = useSelector(selectAddDefectDate);
+  const insulatorCount    = useSelector(selectAddDefectInsulatorCount);
+  const spanRange         = useSelector(selectAddDefectSpanRange);
 
   const {
     selectDefect,
     clearDefectSelection,
     setPhaseIds,
+    setGarlandNumber,
     setPoleNumber,
     setInspector,
     setDateFound,
     setInsulatorCount,
     setSpanRange,
+    resetDate,
   } = addDefectSlice.useActions();
+
+  // Всегда ставим сегодняшнюю дату при открытии страницы
+  useEffect(() => { resetDate(); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePoleChange = useCallback(
     (val: string) => {
@@ -66,15 +80,16 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd }: AddDefectBarP
     [setSpanRange, setPoleNumber],
   );
 
+  // ── Draft restore/save ───────────────────────────────────────────────────
   const DRAFT_KEY = getDraftKey(sheetId);
   useEffect(() => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
       if (!raw) return;
       const d = JSON.parse(raw);
-      if (d.defectId) selectDefect(d.defectId);
+      if (d.defectId)  selectDefect(d.defectId);
       if (d.poleNumber) setPoleNumber(String(d.poleNumber));
-      if (d.phaseIds) setPhaseIds(d.phaseIds);
+      if (d.phaseIds)  setPhaseIds(d.phaseIds);
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [DRAFT_KEY]);
@@ -83,11 +98,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd }: AddDefectBarP
     try {
       localStorage.setItem(
         DRAFT_KEY,
-        JSON.stringify({
-          defectId: selectedDefectId,
-          poleNumber,
-          phaseIds: selectedPhaseIds,
-        }),
+        JSON.stringify({ defectId: selectedDefectId, poleNumber, phaseIds: selectedPhaseIds }),
       );
     } catch {}
   }, [DRAFT_KEY, selectedDefectId, poleNumber, selectedPhaseIds]);
@@ -96,21 +107,20 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd }: AddDefectBarP
     localStorage.removeItem(DRAFT_KEY);
     clearDefectSelection();
     setPhaseIds([]);
-    // poleNumber и spanRange намеренно не сбрасываем — запоминаем для следующего дефекта
     setInsulatorCount('');
+    // poleNumber и spanRange намеренно не сбрасываем
   }, [DRAFT_KEY, clearDefectSelection, setPhaseIds, setInsulatorCount]);
+  // ────────────────────────────────────────────────────────────────────────
 
-  const { data: elements = [] } = useGetElementsQuery();
+  const { data: elements    = [] } = useGetElementsQuery();
   const { data: defectTypes = [] } = useGetDefectTypesQuery();
-  const { data: phases = [] } = useGetPhasesQuery();
+  const { data: phases      = [] } = useGetPhasesQuery();
   const [createDefect, { isLoading }] = useCreateDefectMutation();
 
   const { data: sheetDefects = [] } = useGetDefectsBySheetQuery(sheetId);
   const topDefects = useMemo(() => {
     const counts: Record<number, number> = {};
-    sheetDefects.forEach((d) => {
-      counts[d.defectId] = (counts[d.defectId] ?? 0) + 1;
-    });
+    sheetDefects.forEach((d) => { counts[d.defectId] = (counts[d.defectId] ?? 0) + 1; });
     return Object.entries(counts)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
@@ -127,6 +137,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd }: AddDefectBarP
     [elements, selectedDefect],
   );
 
+
   const poleNum = Number.parseInt(poleNumber, 10);
   const isPoleValid = Number.isFinite(poleNum) && poleNum >= poleStart && poleNum <= poleEnd;
   const hasLocation = (!!poleNumber && isPoleValid) || !!spanRange.trim();
@@ -140,28 +151,32 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd }: AddDefectBarP
   const handleSubmit = useCallback(async () => {
     if (!isValid || !selectedDefectId) return;
     const phaseIdsToCreate = selectedPhaseIds.length > 0 ? selectedPhaseIds : [null];
-    const insCount = insulatorCount ? Number(insulatorCount) : null;
+    const insCount    = insulatorCount  ? Number(insulatorCount)  : null;
+    const garlandNum  = garlandNumber   ? Number(garlandNumber)   : null;
     try {
       await Promise.all(
         phaseIdsToCreate.map((phaseId) =>
           createDefect({
             sheetId,
-            poleNumber: poleNumber ? poleNum : 0,
-            defectId: selectedDefectId,
-            phaseId: phaseId ?? null,
+            poleNumber:     poleNumber ? poleNum : 0,
+            defectId:       selectedDefectId,
+            phaseId:        phaseId ?? null,
             dateFound,
-            inspectorFind: inspector.trim(),
-            isFixed: false,
-            dateFixed: null,
-            inspectorFix: null,
+            inspectorFind:  inspector.trim(),
+            isFixed:        false,
+            dateFixed:      null,
+            inspectorFix:   null,
             insulatorCount: insCount,
-            spanRange: spanRange || null,
+            spanRange:      spanRange || null,
+            garlandNumber:  garlandNum,
           }).unwrap(),
         ),
       );
       handleClearDraft();
       toast.success(
-        phaseIdsToCreate.length > 1 ? `Дефект добавлен для ${phaseIdsToCreate.length} фаз` : 'Дефект добавлен',
+        phaseIdsToCreate.length > 1
+          ? `Дефект добавлен для ${phaseIdsToCreate.length} фаз`
+          : 'Дефект добавлен',
       );
     } catch (err) {
       logger.error('AddDefect failed', err);
@@ -179,6 +194,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd }: AddDefectBarP
     inspector,
     isValid,
     insulatorCount,
+    garlandNumber,
     poleNumber,
     poleNum,
     selectedDefectId,
@@ -252,9 +268,21 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd }: AddDefectBarP
         onClear={clearDefectSelection}
       />
 
+      <div className={cls.smallField}>
+        <FormField label='Гирлянда' htmlFor='add-garland'>
+          <Select<string>
+            id='add-garland'
+            options={GARLAND_OPTIONS}
+            value={garlandNumber}
+            onChange={setGarlandNumber}
+            placeholder='—'
+          />
+        </FormField>
+      </div>
+
       {phases.length > 0 && (
-        <div className={cls.phaseField}>
-          <FormField label='Фазы' optional htmlFor='add-phases'>
+        <div className={cls.smallField}>
+          <FormField label='Фазы' htmlFor='add-phases'>
             <MultiSelect<number>
               id='add-phases'
               options={phaseOptions}
@@ -266,17 +294,14 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd }: AddDefectBarP
         </div>
       )}
 
-      <div style={{ width: 80 }}>
+      <div className={cls.smallField}>
         <FormField label='Изол.' htmlFor='add-insulator-count'>
-          <Input
+          <Select<string>
             id='add-insulator-count'
-            name='insulatorCount'
-            type='number'
-            min={1}
-            max={99}
-            placeholder='—'
+            options={INSULATOR_OPTIONS}
             value={insulatorCount}
             onChange={setInsulatorCount}
+            placeholder='—'
           />
         </FormField>
       </div>
@@ -309,7 +334,9 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd }: AddDefectBarP
                   fontSize: 11,
                   cursor: 'pointer',
                   background:
-                    selectedDefectId === dt.id ? 'var(--color-accent,#3b82f6)' : 'var(--color-bg-secondary,#1e293b)',
+                    selectedDefectId === dt.id
+                      ? 'var(--color-accent,#3b82f6)'
+                      : 'var(--color-bg-secondary,#1e293b)',
                   color: selectedDefectId === dt.id ? '#fff' : 'var(--color-text-primary)',
                   whiteSpace: 'nowrap',
                   transition: 'all .12s',

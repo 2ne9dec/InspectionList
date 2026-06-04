@@ -127,7 +127,7 @@
   },
   {
     "id": 22,
-    "name": "Отсутствие выпуска контура заземления",
+    "name": "Отсутствие выпуска контура заземления (место присоединения заземляющего спуска не доступно для осмотра)",
     "element_id": 7,
     "severity": "critical"
   },
@@ -682,5 +682,20 @@
     "name": "Провис",
     "element_id": 19,
     "severity": "medium"
-  }
+  },
+  { "id": 121, "name": "Загрязнение птичьим пометом",                       "element_id": 28, "severity": "low"      },
+  { "id": 122, "name": "Разрушен",                                           "element_id": 28, "severity": "critical" },
+  { "id": 123, "name": "Отсутствие замка",                                   "element_id": 28, "severity": "medium"   },
+  { "id": 124, "name": "Следы перекрытия",                                   "element_id": 28, "severity": "critical" },
+  { "id": 125, "name": "Загрязнение от выбросов промышленными предприятиями","element_id": 28, "severity": "medium"   },
+  { "id": 126, "name": "Загрязнение птичьим пометом",                       "element_id": 29, "severity": "low"      },
+  { "id": 127, "name": "Разрушен",                                           "element_id": 29, "severity": "critical" },
+  { "id": 128, "name": "Отсутствие замка",                                   "element_id": 29, "severity": "medium"   },
+  { "id": 129, "name": "Следы перекрытия",                                   "element_id": 29, "severity": "critical" },
+  { "id": 130, "name": "Загрязнение от выбросов промышленными предприятиями","element_id": 29, "severity": "medium"   },
+  { "id": 131, "name": "Загрязнение птичьим пометом",                       "element_id": 30, "severity": "low"      },
+  { "id": 132, "name": "Разрушен",                                           "element_id": 30, "severity": "critical" },
+  { "id": 133, "name": "Отсутствие замка",                                   "element_id": 30, "severity": "medium"   },
+  { "id": 134, "name": "Следы перекрытия",                                   "element_id": 30, "severity": "critical" },
+  { "id": 135, "name": "Загрязнение от выбросов промышленными предприятиями","element_id": 30, "severity": "medium"   }
 ]
