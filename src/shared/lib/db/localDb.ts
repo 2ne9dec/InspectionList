@@ -1,10 +1,11 @@
 import Dexie, { type Table } from 'dexie';
-import type { InspectionSheet } from '@/entities/InspectionSheet';
-import type { DefectRecord } from '@/entities/DefectRecord';
 
+// Используем Record<string, any> чтобы shared-слой не зависел от entities (FSD).
+// Типизация на уровне entity-апи обеспечивается на стороне вызывающего кода.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class LocalDatabase extends Dexie {
-  sheets!: Table<InspectionSheet>;
-  defectRecords!: Table<DefectRecord>;
+  sheets!: Table<any>;
+  defectRecords!: Table<any>;
 
   constructor() {
     super('InspectionListDB');
@@ -39,5 +40,5 @@ export const localDb = new LocalDatabase();
 /** Next free id for a table (mimics json-server auto-increment). */
 export async function nextLocalId(table: Table<any>): Promise<number> {
   const last = await table.orderBy('id').last();
-  return last ? last.id + 1 : 1;
+  return last ? (last.id as number) + 1 : 1;
 }

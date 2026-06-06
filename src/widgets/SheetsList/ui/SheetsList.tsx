@@ -6,7 +6,7 @@ import { useCloneSheetMutation, useMergeSheetsMutation } from '@/entities/Inspec
 import { toast } from '@/shared/lib/toast';
 import { logger } from '@/shared/lib/logger';
 import { useSheetsList } from '../model/useSheetsList';
-import { formatIsoDate } from '../lib/formatIsoDate';
+import { formatDate } from '@/shared/lib/helpers';
 import { DateRangeFilter } from './DateRangeFilter';
 import { SheetsTable } from './SheetsTable';
 import { CloneSheetModal } from './CloneSheetModal';
@@ -181,7 +181,7 @@ export const SheetsList = memo(() => {
         <DateRangeFilter dateFrom={dateFrom} dateTo={dateTo} onChange={handleDateRangeChange} />
         {!!(dateFrom || dateTo) && (
           <span className={cls.filterHint}>
-            Период: {formatIsoDate(dateFrom) || 'начало'} — {formatIsoDate(dateTo) || 'конец'}
+            Период: {formatDate(dateFrom, '') || 'начало'} — {formatDate(dateTo, '') || 'конец'}
           </span>
         )}
         {selectedIds.size >= 2 && (

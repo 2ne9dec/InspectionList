@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
 import type { DefectRecord } from '@/entities/DefectRecord';
 import { useGetAllDefectsQuery } from '@/entities/DefectRecord';
 import { useGetSheetsQuery } from '@/entities/InspectionSheet';
@@ -9,7 +10,9 @@ import {
   useGetPhasesQuery,
   useGetLinesQuery,
   useGetVoltagesQuery,
+  useGetFilialVoltageFilterQuery,
 } from '@/entities/InspectionLine';
+import { getUserFilialId, getUserIsAdmin } from '@/entities/User';
 
 export type StatusFilter = 'all' | 'active' | 'fixed';
 
@@ -25,6 +28,9 @@ export interface JournalRow {
  * UI-компонент получает готовые rows и коллбэки — сам ничего не считает.
  */
 export function useJournalFilters() {
+  const userFilialId = useSelector(getUserFilialId);
+  const isAdmin      = useSelector(getUserIsAdmin);
+
   const { data: defects     = [] } = useGetAllDefectsQuery();
   const { data: sheets      = [] } = useGetSheetsQuery();
   const { data: defectTypes = [] } = useGetDefectTypesQuery();
@@ -32,6 +38,7 @@ export function useJournalFilters() {
   const { data: phases      = [] } = useGetPhasesQuery();
   const { data: lines       = [] } = useGetLinesQuery();
   const { data: voltages    = [] } = useGetVoltagesQuery();
+  const { data: filialVoltageMap = {} } = useGetFilialVoltageFilterQuery();
 
   // ── Фильтры ────────────────────────────────────────────────────────────────
   const [statusFilter,    setStatusFilter]    = useState<StatusFilter>('all');
@@ -45,29 +52,66 @@ export function useJournalFilters() {
   // ── Выбор строк ────────────────────────────────────────────────────────────
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
+  // ── Ручное снятие «ворот» ─────────────────────────────────────────────────
+  const [showAll, setShowAll] = useState(false);
+
+  // ── Листки текущего филиала ────────────────────────────────────────────────
+  // Это главный источник изоляции: все дефекты фильтруются через sheetMap
+  // который уже содержит только листки нужного филиала.
+  const filialSheets = useMemo(
+    () => isAdmin || userFilialId === null
+      ? sheets
+      : sheets.filter((s) => s.filialId === userFilialId),
+    [sheets, userFilialId, isAdmin],
+  );
+
+  // ── Напряжения и линии текущего филиала ──────────────────────────────────
+  // filialVoltageFilter: { "2": [1, 2, 4], ... } — маппинг filialId → voltageId[]
+  // voltages.json.filial_id не несёт смысловой нагрузки — используем только фильтр
+  const filialVoltageIds = useMemo(() => {
+    if (isAdmin || userFilialId === null) return null; // null = нет ограничений
+    const ids = filialVoltageMap[String(userFilialId)];
+    return ids ? new Set(ids) : new Set<number>();
+  }, [filialVoltageMap, userFilialId, isAdmin]);
+
+  const filialVoltages = useMemo(
+    () => filialVoltageIds === null
+      ? voltages
+      : voltages.filter((v) => filialVoltageIds.has(v.id)),
+    [voltages, filialVoltageIds],
+  );
+
+  const filialLines = useMemo(
+    () => filialVoltageIds === null
+      ? lines
+      : lines.filter((l) => filialVoltageIds.has(l.voltage_id)),
+    [lines, filialVoltageIds],
+  );
+
   // ── Предвычисленные Map (O(1) поиск) ──────────────────────────────────────
-  const sheetMap      = useMemo(() => new Map(sheets.map((s) => [s.id, s])),      [sheets]);
-  const defectTypeMap = useMemo(() => new Map(defectTypes.map((d) => [d.id, d])), [defectTypes]);
-  const elementMap    = useMemo(() => new Map(elements.map((e) => [e.id, e])),    [elements]);
-  const phaseMap      = useMemo(() => new Map(phases.map((p) => [p.id, p])),      [phases]);
-  const lineMap       = useMemo(() => new Map(lines.map((l) => [l.id, l])),       [lines]);
-  const voltageMap    = useMemo(() => new Map(voltages.map((v) => [v.id, v])),    [voltages]);
+  const sheetMap      = useMemo(() => new Map(filialSheets.map((s) => [s.id, s])),  [filialSheets]);
+  const defectTypeMap = useMemo(() => new Map(defectTypes.map((d) => [d.id, d])),   [defectTypes]);
+  const elementMap    = useMemo(() => new Map(elements.map((e) => [e.id, e])),       [elements]);
+  const phaseMap      = useMemo(() => new Map(phases.map((p) => [p.id, p])),         [phases]);
+  const lineMap       = useMemo(() => new Map(filialLines.map((l) => [l.id, l])),   [filialLines]);
+  const voltageMap    = useMemo(() => new Map(voltages.map((v) => [v.id, v])),       [voltages]);
 
   const filteredLines = useMemo(() => {
-    if (!voltageFilter) return lines;
-    return lines.filter((l) => String(l.voltage_id) === voltageFilter);
-  }, [lines, voltageFilter]);
+    if (!voltageFilter) return filialLines;
+    return filialLines.filter((l) => String(l.voltage_id) === voltageFilter);
+  }, [filialLines, voltageFilter]);
 
   // ── Вычисление строк ───────────────────────────────────────────────────────
   const rows = useMemo<JournalRow[]>(() => {
     return defects
       .filter((d) => {
+        // Изоляция по филиалу: дефект принадлежит филиалу через листок
+        const sheet = sheetMap.get(d.sheetId);
+        if (!sheet) return false;   // листок чужого филиала — не в sheetMap
         if (statusFilter === 'active' && !!d.isFixed)  return false;
         if (statusFilter === 'fixed'  && !d.isFixed)   return false;
         if (dateFrom && d.dateFound < dateFrom) return false;
         if (dateTo   && d.dateFound > dateTo)   return false;
-        const sheet = sheetMap.get(d.sheetId);
-        if (!sheet) return false;
         if (voltageFilter && String(sheet.voltageId) !== voltageFilter) return false;
         if (lineFilter    && String(sheet.lineId)    !== lineFilter)    return false;
         if (defectFilter) {
@@ -128,6 +172,18 @@ export function useJournalFilters() {
     || defectFilter || inspectorFilter || dateFrom || dateTo,
   );
 
+  /**
+   * «Ворота» — если true, таблица не показывается.
+   * Открываются при выборе линии ИЛИ вводе текста по элементу/дефекту.
+   */
+  const isGated = !showAll && !lineFilter && !defectFilter.trim();
+
+  // Счётчик для empty-state: только дефекты своего филиала
+  const filialDefectCount = useMemo(
+    () => defects.filter((d) => sheetMap.has(d.sheetId)).length,
+    [defects, sheetMap],
+  );
+
   const resetFilters = useCallback(() => {
     setStatusFilter('all');
     setVoltageFilter('');
@@ -136,7 +192,10 @@ export function useJournalFilters() {
     setInspectorFilter('');
     setDateFrom('');
     setDateTo('');
+    setShowAll(false);
   }, []);
+
+  const handleShowAll = useCallback(() => setShowAll(true), []);
 
   /** Сброс фильтра линии при смене напряжения */
   const handleVoltageChange = useCallback((value: string) => {
@@ -146,7 +205,8 @@ export function useJournalFilters() {
 
   return {
     defects,
-    voltages,
+    filialDefectCount,
+    voltages: filialVoltages,   // только напряжения своего филиала
     filteredLines,
     rows,
     // selection
@@ -164,6 +224,8 @@ export function useJournalFilters() {
     dateFrom,
     dateTo,
     hasFilters,
+    isGated,
+    handleShowAll,
     // filter setters
     setStatusFilter,
     handleVoltageChange,

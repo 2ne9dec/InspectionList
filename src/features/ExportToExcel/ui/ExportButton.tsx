@@ -5,8 +5,8 @@ import type { InspectionSheetFull } from '@/entities/InspectionSheet';
 import { toast } from '@/shared/lib/toast';
 import { logger } from '@/shared/lib/logger';
 import { exportToExcel } from '../lib/excelExporter';
+import { Button } from '@/shared/ui';
 import { IconDownload } from '@/shared/ui/Icons';
-import cls from './ExportButton.module.scss';
 
 interface ExportButtonProps {
   sheet: InspectionSheetFull;
@@ -47,10 +47,15 @@ export const ExportButton = memo((props: ExportButtonProps) => {
   };
 
   return (
-    <button className={cls.btn} onClick={handleExport} disabled={isExporting}>
-      <span className={cls.icon}><IconDownload size={14} /></span>
+    <Button
+      variant='secondary'
+      size='s'
+      loading={isExporting}
+      leftIcon={<IconDownload size={14} />}
+      onClick={handleExport}
+    >
       {isExporting ? 'Экспорт...' : 'Экспорт в Excel'}
-    </button>
+    </Button>
   );
 });
 

@@ -1,6 +1,6 @@
-# InspectionList — Листки осмотра ЛЭП
+# InspectionList — Журнал осмотра ЛЭП
 
-Веб-приложение для управления инспекцией воздушных линий электропередачи: листки осмотра, учёт дефектов, экспорт в Excel и Word.
+Веб + Android-приложение для учёта дефектов воздушных линий электропередачи: листки осмотра, журнал дефектов, заключения мастера, экспорт в Excel и Word.
 
 ---
 
@@ -14,7 +14,7 @@ yarn start          # фронтенд :3000 + json-server :8443 одновре�
 **Учётные записи**
 
 | Логин      | Пароль     | Филиал          |
-| ---------- | ---------- | --------------- |
+|------------|------------|-----------------|
 | `admin`    | `admin`    | Все филиалы     |
 | `gomel`    | `gomel`    | Гомельские ЭС   |
 | `zhlobin`  | `zhlobin`  | Жлобинские ЭС   |
@@ -25,50 +25,84 @@ yarn start          # фронтенд :3000 + json-server :8443 одновре�
 
 ## Страницы
 
-| Маршрут      | Страница                                    |
-| ------------ | ------------------------------------------- |
-| `/login`     | Авторизация                                 |
-| `/sheets`    | Список листков осмотра                      |
-| `/sheet/:id` | Детальная страница листка: дефекты, экспорт |
-| `*`          | 404                                         |
+| Маршрут      | Страница                                                  |
+|--------------|-----------------------------------------------------------|
+| `/login`     | Авторизация                                               |
+| `/sheets`    | Список листков осмотра (создание, клонирование, архив)    |
+| `/sheet/:id` | Детальная страница листка: добавление/просмотр дефектов, экспорт Excel/Word |
+| `/journal`   | Журнал дефектов: фильтрация, заключение мастера, отметка устранения |
+| `*`          | 404                                                       |
 
 ---
 
-## Архитектура
+## Стек
 
-Feature-Sliced Design (FSD):
+| Категория  | Технологии                                          |
+|------------|-----------------------------------------------------|
+| Фронтенд   | React 18, TypeScript strict, Vite 4                 |
+| Мобильный  | Capacitor 8 (Android)                               |
+| Стейт      | Redux Toolkit, RTK Query                            |
+| Локальная БД | Dexie 4 (IndexedDB, офлайн-режим)                 |
+| Стили      | SCSS Modules, CSS-переменные, тёмная/светлая тема   |
+| Экспорт    | ExcelJS, docx, JSZip                                |
+| Сервер     | Node.js + Express (json-server-like)                |
+| Качество   | ESLint (TS + React), TypeScript strict              |
+
+---
+
+## Архитектура — Feature-Sliced Design (FSD)
 
 ```
 src/
 ├── app/        # провайдеры: Router, Redux store, ThemeProvider, глобальные стили
-├── pages/      # LoginPage, SheetsListPage, SheetDetailPage, NotFoundPage
-├── widgets/    # Navbar, DefectTable
-├── features/   # AddDefect, DefectSidebar, FixDefect, CopyDefect, ExportExcel, ExportWord, Auth
+├── pages/      # LoginPage, SheetsListPage, SheetDetailPage, JournalPage, NotFoundPage
+├── widgets/    # Navbar, GlobalDefectSearch, SheetsList, DefectTable
+├── features/   # AddDefect, DefectSidebar, DefectTimeline, CreateSheet
+│               # ExportToExcel, ExportToWord, ThemeSwitcher
+│               # MasterConclusion (в составе JournalPage)
 ├── entities/   # InspectionSheet, DefectRecord, InspectionLine, User
-└── shared/     # ui-kit, хуки, api, стили, константы
+└── shared/     # ui-kit, хуки, lib, api, стили, константы
 ```
 
-### Entities
+### Shared UI-kit (`src/shared/ui/`)
 
-| Entity            | Описание                                                           |
-| ----------------- | ------------------------------------------------------------------ |
-| `InspectionSheet` | Листки осмотра                                                     |
-| `DefectRecord`    | Записи дефектов (привязаны к опоре или Пролётыу)                   |
-| `InspectionLine`  | Справочники: филиал, напряжение, линия, элемент, тип дефекта, фаза |
-| `User`            | Пользователи                                                       |
+| Компонент      | Описание                                          |
+|----------------|---------------------------------------------------|
+| `Button`       | Кнопка: primary / secondary / ghost / danger      |
+| `Modal`        | Модальное окно с portal                           |
+| `SelectMenu`   | Кастомный дропдаун (заменяет нативный `<select>`) |
+| `Dropdown`     | Базовый дропдаун с portal и позиционированием     |
+| `Input`        | Текстовый инпут                                   |
 
-### Ключи местоположения
+### Ключевые сущности
 
-Дефекты группируются по строковому ключу:
+| Entity            | Описание                                                            |
+|-------------------|---------------------------------------------------------------------|
+| `InspectionSheet` | Листок осмотра (привязан к линии, филиалу)                          |
+| `DefectRecord`    | Дефект (опора или пролёт, элемент, тип, фаза, степень тяжести)      |
+| `InspectionLine`  | Справочники: филиал, напряжение, линия, элемент, тип дефекта, фаза  |
+| `User`            | Пользователи                                                        |
 
-- `о:253` — опора №253
-- `п:250-300` — Пролёты 250–300
+### Хранение данных
 
-Поля "Опора" и "Пролёты" взаимоисключающие: заполнение одного блокирует другое.
+Приложение работает **офлайн-first**: данные хранятся в IndexedDB (Dexie).  
+Синхронизация с сервером — по кнопке «Синхронизировать» в навбаре.
+
+- `shared/lib/db/localDb.ts` — схема Dexie (`sheets`, `defectRecords`)
+- `entities/*/api/` — RTK Query эндпоинты поверх `baseQuery`, работающего через localDb
 
 ---
 
-## Сервер данных (json-server)
+## Журнал дефектов
+
+- При входе без фильтров — показывается заглушка с общим счётчиком дефектов
+- Таблица открывается при выборе **линии** или вводе **элемента/дефекта** в поиск
+- Это исключает случайную загрузку тысяч записей без контекста
+- Поддерживается выбор нескольких строк → массовое заключение мастера
+
+---
+
+## Сервер данных
 
 ```
 json-server/
@@ -76,7 +110,7 @@ json-server/
 ├── lib/
 │   ├── auth.js           # middleware X-User-Id / X-Filial-Id / X-Is-Admin
 │   ├── tenancy.js        # фильтрация по филиалу
-│   ├── globalStore.js    # users, tasks (глобальные коллекции)
+│   ├── globalStore.js    # users (глобальные коллекции)
 │   ├── lineStore.js      # inspectionSheets, defectRecords (per-line файлы)
 │   ├── pathResolver.js
 │   ├── helpers.js
@@ -89,39 +123,26 @@ json-server/
     └── defects.js        # /defectRecords + /defectCounts
 ```
 
-**Хранение данных:**
-
+**Хранение данных на сервере:**
 - `seed/` — статические справочники (только чтение)
-- `store/data/<collection>/<voltage>/<line>_<lineId>.json` — динамические данные, атомарная запись
-
----
-
-## Стек
-
-| Категория | Технологии                             |
-| --------- | -------------------------------------- |
-| Фронтенд  | React 18, TypeScript, Vite 4           |
-| Стейт     | Redux Toolkit, RTK Query               |
-| Стили     | SCSS Modules, CSS-переменные           |
-| Экспорт   | ExcelJS, docx, JSZip                   |
-| Сервер    | Node.js + Express, multer              |
-| Качество  | ESLint (TS + React), TypeScript strict |
+- `store/data/<collection>/<voltage>/<line>_<lineId>.json` — динамика, атомарная запись
 
 ---
 
 ## Переменные окружения
 
 | Переменная     | Описание        | По умолчанию            |
-| -------------- | --------------- | ----------------------- |
+|----------------|-----------------|-------------------------|
 | `VITE_API_URL` | URL json-server | `http://localhost:8443` |
 
 ---
 
 ## Скрипты
 
-| Команда          | Действие                       |
-| ---------------- | ------------------------------ |
-| `yarn start`     | Фронтенд + сервер одновременно |
-| `yarn build`     | Продакшн-сборка                |
-| `yarn lint:ts`   | Линтинг TypeScript             |
-| `yarn lint:scss` | Линтинг SCSS                   |
+| Команда          | Действие                                       |
+|------------------|------------------------------------------------|
+| `yarn start`     | Фронтенд + сервер одновременно                 |
+| `yarn build`     | Продакшн-сборка (в `dist/`)                    |
+| `yarn deploy`    | Сборка + синхронизация Capacitor Android       |
+| `yarn lint:ts`   | Линтинг TypeScript                             |
+| `yarn lint:scss` | Линтинг SCSS                                   |

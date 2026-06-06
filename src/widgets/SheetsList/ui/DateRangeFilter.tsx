@@ -1,7 +1,7 @@
 import { memo, useRef, useState } from 'react';
 import { Button, FormField, Input } from '@/shared/ui';
 import { useEscape, useOutsideClick } from '@/shared/lib/hooks';
-import { formatIsoDate } from '../lib/formatIsoDate';
+import { formatDate } from '@/shared/lib/helpers';
 import cls from './DateRangeFilter.module.scss';
 
 export interface DateRangeFilterProps {
@@ -23,7 +23,7 @@ export const DateRangeFilter = memo(({ dateFrom, dateTo, onChange }: DateRangeFi
 
   const hasFilter = !!(dateFrom || dateTo);
   const label = hasFilter
-    ? `${formatIsoDate(dateFrom) || '…'} — ${formatIsoDate(dateTo) || '…'}`
+    ? `${formatDate(dateFrom, '') || '…'} — ${formatDate(dateTo, '') || '…'}`
     : 'Фильтр по дате';
 
   return (

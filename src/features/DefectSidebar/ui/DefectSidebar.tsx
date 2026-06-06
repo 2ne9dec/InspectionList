@@ -2,6 +2,7 @@ import { memo, useEffect, useRef } from 'react';
 import { formatDate } from '@/shared/lib/helpers/formatDate';
 import type { DefectRecordFull } from '@/entities/DefectRecord';
 import { SEVERITY_LABELS, SEVERITY_COLORS } from '@/shared/const/severity';
+import { Button } from '@/shared/ui';
 import { IconClose, IconTasks, IconCheck, IconTrash } from '@/shared/ui/Icons';
 import cls from './DefectSidebar.module.scss';
 
@@ -59,9 +60,10 @@ export const DefectSidebar = memo(({ defect, onClose, onFix, onDelete }: DefectS
                 {defect.elementName}
               </div>
             </div>
-            <button className={cls.closeBtn} onClick={onClose} aria-label='Закрыть'>
+            <Button variant='ghost' size='s' square onClick={onClose}
+              aria-label='Закрыть'>
               <IconClose size={15} />
-            </button>
+            </Button>
           </div>
 
           <div className={cls.body}>
@@ -110,18 +112,23 @@ export const DefectSidebar = memo(({ defect, onClose, onFix, onDelete }: DefectS
 
             {!defect.isFixed && (
               <div className={cls.actions}>
-                <button className={cls.btnFix} onClick={() => onFix?.(defect.id)}>
-                  <IconCheck size={13} /> Отметить устранённым
-                </button>
-                <button
-                  className={cls.btnDelete}
+                <Button variant='primary' size='s' fullWidth
+                  leftIcon={<IconCheck size={13} />}
+                  onClick={() => onFix?.(defect.id)}>
+                  Отметить устранённым
+                </Button>
+                <Button
+                  variant='danger'
+                  size='s'
+                  fullWidth
+                  leftIcon={<IconTrash size={13} />}
                   onClick={() => {
                     onDelete?.(defect.id);
                     onClose();
                   }}
                 >
-                  <IconTrash size={13} /> Удалить дефект
-                </button>
+                  Удалить дефект
+                </Button>
               </div>
             )}
           </div>

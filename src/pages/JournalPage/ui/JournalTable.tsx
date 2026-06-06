@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import type { JournalRow } from '../model/useJournalFilters';
-import { fmtDate } from '../lib/fmtDate';
+import { formatDate } from '@/shared/lib/helpers';
 import cls from './JournalPage.module.scss';
 
 interface JournalTableProps {
@@ -40,20 +40,24 @@ const Row = memo(({
       <td className={cls.tdNum}>{index + 1}</td>
       <td className={cls.tdNowrap}>{voltage?.name ?? '—'}</td>
       <td className={cls.tdLine}>{line?.name ?? '—'}</td>
-      <td className={cls.tdDate}>{fmtDate(d.dateFound)}</td>
+      <td className={cls.tdDate}>{formatDate(d.dateFound)}</td>
       <td className={cls.tdNowrap}>{d.inspectorFind}</td>
-      <td className={cls.tdLocation}>{location}</td>
+      <td className={cls.tdLocation}>
+        <div className={cls.clamp} title={location}>{location}</div>
+      </td>
       <td
         className={`${cls.tdConclusion} ${cls.editable}`}
         onClick={() => onEdit(d.id)}
       >
-        {d.masterConclusion || <span className={cls.editHint}>—</span>}
+        {d.masterConclusion
+          ? <div className={cls.clamp} title={d.masterConclusion}>{d.masterConclusion}</div>
+          : <span className={cls.editHint}>—</span>}
       </td>
       <td
         className={`${cls.tdDate} ${cls.editable}`}
         onClick={() => onEdit(d.id)}
       >
-        {fmtDate(d.resolutionDeadline)}
+        {formatDate(d.resolutionDeadline)}
         {d.masterName
           ? <div className={cls.signed}>✍ {d.masterName}</div>
           : <span className={cls.editHint}>—</span>}
@@ -62,13 +66,15 @@ const Row = memo(({
         className={`${cls.tdDate} ${cls.editable}`}
         onClick={() => onEdit(d.id)}
       >
-        {fmtDate(d.dateFixed)}
+        {formatDate(d.dateFixed)}
         {d.fixWorkVolume
-          ? <div className={cls.sub}>{d.fixWorkVolume}</div>
+          ? <div className={cls.clamp} title={d.fixWorkVolume}>{d.fixWorkVolume}</div>
           : (!d.dateFixed && <span className={cls.editHint}>—</span>)}
       </td>
       <td className={cls.editable} onClick={() => onEdit(d.id)}>
-        {d.inspectorFix || <span className={cls.editHint}>—</span>}
+        {d.inspectorFix
+          ? <div className={cls.clamp} title={d.inspectorFix}>{d.inspectorFix}</div>
+          : <span className={cls.editHint}>—</span>}
       </td>
     </tr>
   );

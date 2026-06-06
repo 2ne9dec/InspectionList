@@ -4,6 +4,7 @@ import { useJournalFilters } from '../model/useJournalFilters';
 import { useJournalEdit } from '../model/useJournalEdit';
 import { JournalFilters } from './JournalFilters';
 import { JournalTable } from './JournalTable';
+import { JournalEmptyState } from './JournalEmptyState';
 import { MasterConclusionModal } from './MasterConclusionModal';
 import cls from './JournalPage.module.scss';
 
@@ -20,7 +21,10 @@ export const JournalPage = memo(() => {
 
       <div className={cls.pageHeader}>
         <span className={cls.title}>Журнал дефектов</span>
-        <span className={cls.count}>{filters.rows.length} зап.</span>
+        {filters.isGated
+          ? <span className={cls.count}>{filters.filialDefectCount} зап.</span>
+          : <span className={cls.count}>{filters.rows.length} зап.</span>
+        }
       </div>
 
       <JournalFilters
@@ -57,19 +61,26 @@ export const JournalPage = memo(() => {
             >
               Заключение мастера
             </Button>
-            <button className={cls.clearSelBtn} onClick={filters.clearSelection}>✕</button>
+            <Button variant='ghost' size='s' square
+              onClick={filters.clearSelection}
+              aria-label='Снять выделение'
+            >✕</Button>
           </>
         )}
       </div>
 
-      <JournalTable
-        rows={filters.rows}
-        selectedIds={filters.selectedIds}
-        allSelected={filters.allSelected}
-        onSelectAll={filters.handleSelectAll}
-        onSelect={filters.handleSelect}
-        onEditRow={(id) => edit.openEdit([id])}
-      />
+      {filters.isGated ? (
+<JournalEmptyState totalCount={filters.filialDefectCount} onShowAll={filters.handleShowAll} />
+      ) : (
+        <JournalTable
+          rows={filters.rows}
+          selectedIds={filters.selectedIds}
+          allSelected={filters.allSelected}
+          onSelectAll={filters.handleSelectAll}
+          onSelect={filters.handleSelect}
+          onEditRow={(id) => edit.openEdit([id])}
+        />
+      )}
 
       <MasterConclusionModal
         isOpen={edit.isOpen}

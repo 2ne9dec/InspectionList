@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Button, Input, Modal } from '@/shared/ui';
 import type { InspectionSheetFull } from '@/entities/InspectionSheet';
-import { formatIsoDate } from '../lib/formatIsoDate';
+import { formatDate } from '@/shared/lib/helpers';
 import cls from './SheetModals.module.scss';
 
 interface MergeSheetModalProps {
@@ -39,7 +39,7 @@ export const MergeSheetModal = memo(({
       <p className={cls.hint}>Объединяются листки:</p>
       <ul className={cls.sheetList}>
         {selectedSheets.map((s) => (
-          <li key={s.id}>{s.lineName} · {formatIsoDate(s.createdDate)} · {s.createdBy}</li>
+          <li key={s.id}>{s.lineName} · {formatDate(s.createdDate, '')} · {s.createdBy}</li>
         ))}
       </ul>
       <p className={cls.danger}>

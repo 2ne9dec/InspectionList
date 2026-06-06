@@ -51,8 +51,9 @@
 }
 
 // Ширина триггеров SelectMenu в строке фильтров
-.filterSelect     { width: 150px; }
-.filterSelectLine { width: 500px; }
+.filterSelect     { width: 150px; flex-shrink: 0; }
+// Линия растягивается на доступное место, но не сжимается меньше 160px
+.filterSelectLine { flex: 1 1 auto; min-width: 160px; max-width: 500px; }
 
 .dateInput {
   height: var(--control-height-m);
@@ -63,10 +64,22 @@
   color: var(--color-text-primary);
   font-size: var(--font-size-s);
   width: 130px;
+  min-width: 130px;   // не сжиматься ниже — чтобы показывался формат
   cursor: pointer;
 
-  &::-webkit-calendar-picker-indicator {
-    cursor: pointer;
+  // Псевдоэлементы ввода даты — нужны для Android Chrome:
+  // без явного цвета они могут быть невидимы
+  &::-webkit-datetime-edit            { color: var(--color-text-primary); }
+  &::-webkit-datetime-edit-text       { color: var(--color-text-secondary); }
+  &::-webkit-datetime-edit-day-field,
+  &::-webkit-datetime-edit-month-field,
+  &::-webkit-datetime-edit-year-field { color: var(--color-text-primary); }
+
+  &::-webkit-calendar-picker-indicator { cursor: pointer; }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-accent);
   }
 }
 
@@ -129,16 +142,6 @@
   color: var(--color-text-secondary);
 }
 
-.clearSelBtn {
-  background: transparent;
-  border: none;
-  font-size: var(--font-size-s);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  padding: 0 var(--space-1);
-  line-height: 1;
-  &:hover { color: var(--color-text-primary); }
-}
 
 /* ── Контейнер таблицы ──────────────────────────────────────────────── */
 .tableWrap {
@@ -191,11 +194,11 @@
 
   /* Зебра */
   tbody tr:nth-child(even) td {
-    background: rgba(148, 163, 184, 0.05);
+    background: var(--color-row-alt);
   }
 
   tbody tr:hover td {
-    background: rgba(59, 130, 246, 0.07) !important;
+    background: var(--color-row-hover) !important;
   }
 }
 
@@ -224,8 +227,20 @@
 .tdNum      { text-align: center; color: var(--color-text-secondary); width: 36px; }
 .tdLine     { min-width: 130px; }
 .tdDate     { white-space: nowrap; vertical-align: top; min-width: 95px; }
-.tdLocation { min-width: 200px; white-space: normal; line-height: 1.4; }
-.tdConclusion { min-width: 180px; white-space: normal; line-height: 1.4; }
+.tdLocation   { min-width: 200px; }
+.tdConclusion { min-width: 180px; }
+
+/* Ограничение длинного текста в ячейках — максимум 4 строки */
+.clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+  white-space: normal;
+  line-height: 1.4;
+  cursor: help;        // подсказывает что есть тултип с полным текстом
+}
 
 /* ── Редактируемая ячейка ───────────────────────────────────────────── */
 .editable {
@@ -256,7 +271,7 @@
 
 /* ── Состояния строк ────────────────────────────────────────────────── */
 .rowFixed td    { color: var(--color-text-secondary); }
-.rowSelected td { background: rgba(59,130,246,.08) !important; }
+.rowSelected td { background: var(--color-row-selected) !important; }
 
 /* ── Пустое состояние ───────────────────────────────────────────────── */
 .empty {
@@ -272,8 +287,8 @@
    Адаптив — планшет (≤ 1400px)
    ══════════════════════════════════════════════════════════════════════ */
 @media (max-width: 1400px) {
-  /* Строка фильтров: уменьшаем «Линия» чтобы всё влезло в одну строку */
-  .filterSelectLine { width: 260px; }
+  /* Линия — адаптивная, сжимается до 120px */
+  .filterSelectLine { min-width: 120px; max-width: 260px; }
   /* Убираем невидимую кнопку из потока — иначе она уйдёт на 2-ю строку */
   .resetBtnHidden   { display: none; }
   .filterSelect     { width: 130px; }

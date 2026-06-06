@@ -1,5 +1,6 @@
 import { memo, useEffect, useMemo, useState } from 'react';
 import type { DefectRecordFull } from '@/entities/DefectRecord';
+import { formatDate } from '@/shared/lib/helpers';
 import { IconClose } from '@/shared/ui/Icons';
 import cls from './DefectTimeline.module.scss';
 
@@ -48,11 +49,6 @@ function buildEvents(d: DefectRecordFull): TimelineEvent[] {
   return evts;
 }
 
-function fmtDate(iso: string): string {
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString('ru-RU', { day: '2-digit', month: 'short', year: 'numeric' });
-}
 
 function fmtTime(iso: string | null | undefined): string | null {
   if (!iso) return null;
@@ -132,7 +128,7 @@ export const DefectTimeline = memo(({ defects, onClose }: DefectTimelineProps) =
                           <div className={cls.eventKind}>{KIND_LABEL[ev.kind]}</div>
                           <div className={cls.eventDesc}>{ev.label}</div>
                           <div className={cls.eventMeta}>
-                            {fmtDate(ev.date)}
+                            {formatDate(ev.date)}
                             {ev.createdAt ? ` · ${fmtTime(ev.createdAt)}` : ''}
                             {ev.actor ? ` · ${ev.actor}` : ''}
                           </div>

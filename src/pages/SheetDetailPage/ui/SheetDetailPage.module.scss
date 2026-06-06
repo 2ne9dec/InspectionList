@@ -68,7 +68,7 @@
   gap: var(--space-1);
   height: var(--control-height-s);
   padding: 0 var(--space-3);
-  background: var(--color-priority, #7c3aed);
+  background: var(--color-priority);
   color: var(--color-text-on-accent);
   border: none;
   border-radius: var(--radii);
@@ -79,7 +79,7 @@
   transition: var(--transition-bg);
   flex-shrink: 0;
 
-  &:hover:not(:disabled) { background: var(--color-priority-hover, #6d28d9); }
+  &:hover:not(:disabled) { background: var(--color-priority-hover); }
 }
 
 /* Иконочные кнопки (Принт, Клон, Таймлайн) */
