@@ -8,6 +8,7 @@ type EventKind = 'found' | 'note' | 'fixed';
 interface TimelineEvent {
   kind: EventKind;
   date: string;
+  createdAt?: string | null;
   label: string;
   actor?: string;
 }
@@ -17,10 +18,11 @@ function buildEvents(d: DefectRecordFull): TimelineEvent[] {
 
   // 1. Найден
   evts.push({
-    kind:  'found',
-    date:  d.dateFound,
-    label: `${d.defectName} — опора ${d.poleNumber}`,
-    actor: d.inspectorFind,
+    kind:      'found',
+    date:      d.dateFound,
+    createdAt: d.createdAt,
+    label:     `${d.defectName} — опора ${d.poleNumber}`,
+    actor:     d.inspectorFind,
   });
 
   // 2. Заметки (если есть)
@@ -50,6 +52,13 @@ function fmtDate(iso: string): string {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return iso;
   return d.toLocaleDateString('ru-RU', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function fmtTime(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
+  return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 }
 
 const KIND_LABEL: Record<EventKind, string> = {
@@ -124,6 +133,7 @@ export const DefectTimeline = memo(({ defects, onClose }: DefectTimelineProps) =
                           <div className={cls.eventDesc}>{ev.label}</div>
                           <div className={cls.eventMeta}>
                             {fmtDate(ev.date)}
+                            {ev.createdAt ? ` · ${fmtTime(ev.createdAt)}` : ''}
                             {ev.actor ? ` · ${ev.actor}` : ''}
                           </div>
                         </div>

@@ -13,7 +13,7 @@
 .inspectorField { width: clamp(130px, 13vw, 175px); }
 .locationField  { width: max-content; }
 .phaseField     { width: clamp(120px, 12vw, 170px); }
-.smallField     { width: 110px; }
+.smallField     { width: 90px; }
 
 .stepWrap {
   display: flex;
@@ -50,9 +50,44 @@
   &:disabled { opacity: 0.35; cursor: default; }
 }
 
+/* ── QuickDefectChips ───────────────────────────────────────────────── */
+.quickChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  flex-basis: 100%;
+}
+
+.quickLabel {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.chip {
+  padding: 3px 8px;
+  border: 1px solid var(--color-border, #334155);
+  border-radius: 12px;
+  font-size: 11px;
+  cursor: pointer;
+  background: var(--color-bg-secondary, #1e293b);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  transition: all .12s;
+
+  &:hover { border-color: var(--color-accent); }
+}
+
+.chipActive {
+  background: var(--color-accent, #3b82f6);
+  color: var(--color-text-on-accent);
+  border-color: var(--color-accent, #3b82f6);
+}
+
 @include m.down(tablet) {
   .dateField      { width: 130px; }
   .inspectorField { width: 100%; flex-basis: 100%; }
   .phaseField     { width: 90px; }
-  .smallField     { width: 110px; }
+  .smallField     { width: 90px; }
 }

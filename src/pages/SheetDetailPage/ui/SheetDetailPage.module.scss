@@ -144,41 +144,6 @@
   color: var(--color-text-secondary);
 }
 
-/* ── Clone modal content (внутри shared/ui/Modal) ──────────────────────────── */
-.cloneModalBody {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.cloneModalDesc {
-  font-size: var(--font-size-s);
-  color: var(--color-text-secondary);
-  line-height: var(--line-height-relaxed);
-}
-
-.cloneModalInput {
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radii);
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-page);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-m);
-  font-family: var(--font-family-main);
-  transition: var(--transition-border);
-
-  &:focus {
-    outline: none;
-    border-color: var(--color-accent);
-  }
-}
-
-.cloneModalActions {
-  display: flex;
-  gap: var(--space-2);
-  justify-content: flex-end;
-}
 
 /* ── Адаптивная вёрстка ────────────────────────────────────────────────────── */
 @include m.down(tablet) {

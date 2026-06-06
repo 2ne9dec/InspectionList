@@ -88,6 +88,8 @@ export const DefectRow = memo((props: DefectRowProps) => {
             <div className={cls.noteEditor}>
               <textarea
                 ref={textareaRef}
+                id='defect-note'
+                name='defect-note'
                 className={cls.noteTextarea}
                 value={noteVal}
                 onChange={(e) => setNoteVal(e.target.value)}

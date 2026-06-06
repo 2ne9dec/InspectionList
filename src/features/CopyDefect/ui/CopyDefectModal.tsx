@@ -102,9 +102,6 @@ export const CopyDefectModal = memo((props: CopyDefectModalProps) => {
                 phaseId: d.phaseId,
                 dateFound: d.dateFound,
                 inspectorFind: d.inspectorFind,
-                isFixed: false,
-                dateFixed: null,
-                inspectorFix: null,
               }).unwrap(),
             ),
           );

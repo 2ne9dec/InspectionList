@@ -102,7 +102,6 @@ export function useSheetsList({ dateFrom, dateTo, statusFilter }: UseSheetsListO
       all:      base.length,
       active:   base.filter((s) => s.status === 'active').length,
       archived: base.filter((s) => s.status === 'archived').length,
-      draft:    base.filter((s) => s.status === 'draft').length,
     };
   }, [enriched, isAdmin, userFilialId, search]);
 

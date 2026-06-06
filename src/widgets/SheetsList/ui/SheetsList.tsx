@@ -1,26 +1,20 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ConfirmModal, EmptyState, Loader, Modal, Button, useConfirm } from '@/shared/ui';
+import { ConfirmModal, EmptyState, Loader, Button, useConfirm } from '@/shared/ui';
 import { getRouteSheetDetail } from '@/shared/const/router';
-import { useCloneSheetMutation } from '@/entities/InspectionSheet';
+import { useCloneSheetMutation, useMergeSheetsMutation } from '@/entities/InspectionSheet';
 import { toast } from '@/shared/lib/toast';
 import { logger } from '@/shared/lib/logger';
-import { useSheetsList, StatusFilter } from '../model/useSheetsList';
+import { useSheetsList } from '../model/useSheetsList';
 import { formatIsoDate } from '../lib/formatIsoDate';
 import { DateRangeFilter } from './DateRangeFilter';
 import { SheetsTable } from './SheetsTable';
+import { CloneSheetModal } from './CloneSheetModal';
+import { MergeSheetModal } from './MergeSheetModal';
 import cls from './SheetsList.module.scss';
 
 const INITIAL_SHEETS = 30;
 const LOAD_MORE_SHEETS = 30;
-
-interface StatusTab { key: StatusFilter; label: string; }
-const STATUS_TABS: StatusTab[] = [
-  { key: 'all',      label: 'Все'       },
-  { key: 'active',   label: 'Активные'  },
-  { key: 'archived', label: 'Архив'     },
-  { key: 'draft',    label: 'Черновики' },
-];
 
 export const SheetsList = memo(() => {
   const navigate = useNavigate();
@@ -28,17 +22,15 @@ export const SheetsList = memo(() => {
 
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo,   setDateTo]   = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const { sheets, isLoading, isAdmin, deleteSheet, hasSearch, sortKey, sortDir, toggleSort } =
+    useSheetsList({ dateFrom, dateTo, statusFilter: 'all' });
 
-  const { sheets, isLoading, isAdmin, deleteSheet, hasSearch, sortKey, sortDir, toggleSort, statusCounts } =
-    useSheetsList({ dateFrom, dateTo, statusFilter });
-
-  // ── Infinite scroll ──────────────────────────────────────────────────────
+  // Infinite scroll
   const [displayCount, setDisplayCount] = useState(INITIAL_SHEETS);
   const tableWrapperRef = useRef<HTMLDivElement>(null);
   const sentinelRef     = useRef<HTMLDivElement>(null);
 
-  const filtersKey = [hasSearch, dateFrom, dateTo, statusFilter, sortKey, sortDir].join('|');
+  const filtersKey = [hasSearch, dateFrom, dateTo, sortKey, sortDir].join('|');
   useEffect(() => { setDisplayCount(INITIAL_SHEETS); }, [filtersKey]); // eslint-disable-line
 
   const visibleSheets = sheets.slice(0, displayCount);
@@ -48,42 +40,113 @@ export const SheetsList = memo(() => {
     const sentinel = sentinelRef.current;
     const wrapper  = tableWrapperRef.current;
     if (!sentinel || !wrapper || !hasMore) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setDisplayCount((p) => p + LOAD_MORE_SHEETS); },
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) setDisplayCount((p) => p + LOAD_MORE_SHEETS); },
       { root: wrapper, threshold: 0 },
     );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
+    obs.observe(sentinel);
+    return () => obs.disconnect();
   }, [hasMore]);
 
-  // ── Clone ────────────────────────────────────────────────────────────────
+  // Multi-select for merge
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [mergeOpen,   setMergeOpen]   = useState(false);
+  const [mergeDate,   setMergeDate]   = useState('');
+  const [mergeBy,     setMergeBy]     = useState('');
+  const [mergeSheets, { isLoading: merging }] = useMergeSheetsMutation();
+
+  const mergeLineId = useMemo(
+    () => sheets.find((s) => selectedIds.has(s.id))?.lineId ?? null,
+    [sheets, selectedIds],
+  );
+  const mergeLineName = useMemo(
+    () => sheets.find((s) => selectedIds.has(s.id))?.lineName ?? '',
+    [sheets, selectedIds],
+  );
+
+  const handleSelect = useCallback((id: number, checked: boolean) => {
+    if (checked && mergeLineId !== null) {
+      const sheet = sheets.find((s) => s.id === id);
+      if (sheet && sheet.lineId !== mergeLineId) return;
+    }
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) { next.add(id); } else { next.delete(id); }
+      return next;
+    });
+  }, [sheets, mergeLineId]);
+
+  const handleOpenMerge  = useCallback(() => {
+    setMergeDate(new Date().toISOString().slice(0, 10));
+    setMergeBy('');
+    setMergeOpen(true);
+  }, []);
+  const handleCloseMerge = useCallback(() => setMergeOpen(false), []);
+
+  const handleMerge = useCallback(async () => {
+    if (selectedIds.size < 2 || !mergeDate) return;
+    const ok = await confirm({
+      title: `Объединить ${selectedIds.size} листка?`,
+      description: 'Исходные листки и их дефекты будут удалены. Останется один сводный листок.',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    try {
+      const result = await mergeSheets({
+        ids: Array.from(selectedIds),
+        createdDate: mergeDate,
+        createdBy: mergeBy,
+      }).unwrap();
+      setSelectedIds(new Set());
+      setMergeOpen(false);
+      navigate(getRouteSheetDetail(String(result.id)));
+      toast.success('Сводный листок создан');
+    } catch (err) {
+      logger.error('Merge sheets failed', err);
+      toast.error('Ошибка объединения листков');
+    }
+  }, [selectedIds, mergeDate, mergeBy, mergeSheets, confirm, navigate]);
+
+  const selectedSheets = useMemo(
+    () => sheets.filter((s) => selectedIds.has(s.id)),
+    [sheets, selectedIds],
+  );
+
+  // Clone
   const [cloneTargetId, setCloneTargetId] = useState<number | null>(null);
   const [cloneDate,     setCloneDate]     = useState('');
+  const [cloneBy,       setCloneBy]       = useState('');
   const [cloneSheet, { isLoading: cloning }] = useCloneSheetMutation();
 
   const handleOpenClone = useCallback((id: number) => {
+    const src = sheets.find((s) => s.id === id);
     setCloneTargetId(id);
     setCloneDate(new Date().toISOString().slice(0, 10));
-  }, []);
+    setCloneBy(src?.createdBy ?? '');
+  }, [sheets]);
 
   const handleCloseClone = useCallback(() => {
     setCloneTargetId(null);
     setCloneDate('');
+    setCloneBy('');
   }, []);
 
   const handleClone = useCallback(async () => {
     if (!cloneTargetId || !cloneDate) return;
     try {
-      const result = await cloneSheet({ id: cloneTargetId, newDate: cloneDate }).unwrap();
+      const result = await cloneSheet({
+        id: cloneTargetId,
+        newDate: cloneDate,
+        createdBy: cloneBy,
+      }).unwrap();
       handleCloseClone();
       navigate(getRouteSheetDetail(String(result.id)));
     } catch (err) {
       logger.error('Clone sheet failed', err);
       toast.error('Ошибка клонирования');
     }
-  }, [cloneTargetId, cloneDate, cloneSheet, handleCloseClone, navigate]);
+  }, [cloneTargetId, cloneDate, cloneBy, cloneSheet, handleCloseClone, navigate]);
 
-  // ── Open / Delete ────────────────────────────────────────────────────────
   const handleOpen = useCallback(
     (id: number) => navigate(getRouteSheetDetail(String(id))),
     [navigate],
@@ -110,30 +173,25 @@ export const SheetsList = memo(() => {
     [],
   );
 
-  const countFor = (key: StatusFilter) => statusCounts[key === 'all' ? 'all' : key === 'active' ? 'active' : key === 'archived' ? 'archived' : 'draft'];
   const cloneTarget = sheets.find((s) => s.id === cloneTargetId);
 
   return (
     <div className={cls.wrapper}>
-      <div className={cls.statusTabs}>
-        {STATUS_TABS.map((tab) => (
-          <button
-            key={tab.key}
-            className={[cls.statusTab, statusFilter === tab.key ? cls.statusTabActive : ''].join(' ')}
-            data-status={tab.key}
-            onClick={() => setStatusFilter(tab.key)}
-          >
-            <span className={cls.statusTab__label}>{tab.label}</span>
-            <span className={cls.statusTab__count}>{countFor(tab.key)}</span>
-          </button>
-        ))}
-      </div>
-
       <div className={cls.filterBar}>
         <DateRangeFilter dateFrom={dateFrom} dateTo={dateTo} onChange={handleDateRangeChange} />
         {!!(dateFrom || dateTo) && (
           <span className={cls.filterHint}>
             Период: {formatIsoDate(dateFrom) || 'начало'} — {formatIsoDate(dateTo) || 'конец'}
+          </span>
+        )}
+        {selectedIds.size >= 2 && (
+          <Button variant='primary' size='s' onClick={handleOpenMerge} className={cls.mergeBtn}>
+            Объединить {selectedIds.size} листка
+          </Button>
+        )}
+        {selectedIds.size === 1 && (
+          <span className={`${cls.filterHint} ${cls.mergeHint}`}>
+            Выберите ещё листок линии «{mergeLineName}» для объединения
           </span>
         )}
       </div>
@@ -143,8 +201,8 @@ export const SheetsList = memo(() => {
           <div className={cls.center}><Loader /></div>
         ) : sheets.length === 0 ? (
           <EmptyState
-            title={hasSearch || !!(dateFrom || dateTo) || statusFilter !== 'all' ? 'Ничего не найдено' : 'Нет листков осмотра'}
-            description={hasSearch || !!(dateFrom || dateTo) || statusFilter !== 'all'
+            title={hasSearch || !!(dateFrom || dateTo) ? 'Ничего не найдено' : 'Нет листков осмотра'}
+            description={hasSearch || !!(dateFrom || dateTo)
               ? 'Попробуйте изменить параметры фильтрации.'
               : 'Создайте первый листок осмотра, чтобы начать работу.'}
           />
@@ -159,46 +217,38 @@ export const SheetsList = memo(() => {
               onOpen={handleOpen}
               onDelete={handleDelete}
               onClone={handleOpenClone}
+              selectedIds={selectedIds}
+              onSelect={handleSelect}
+              mergeLineId={mergeLineId}
             />
             {hasMore && <div ref={sentinelRef} className={cls.sentinel}><Loader /></div>}
           </>
         )}
       </div>
 
-      {/* Clone modal */}
-      <Modal
+      <CloneSheetModal
         isOpen={!!cloneTargetId}
+        target={cloneTarget}
+        date={cloneDate}
+        createdBy={cloneBy}
+        loading={cloning}
+        onDateChange={setCloneDate}
+        onCreatedByChange={setCloneBy}
         onClose={handleCloseClone}
-        size="s"
-        title="Копировать листок осмотра"
-        footer={
-          <>
-            <Button variant="secondary" size="m" onClick={handleCloseClone}>Отмена</Button>
-            <Button variant="primary" size="m" onClick={handleClone} disabled={!cloneDate || cloning}
-              loading={cloning}>
-              Создать копию
-            </Button>
-          </>
-        }
-      >
-        <div style={{ display:'flex', flexDirection:'column', gap:'var(--space-4)' }}>
-          {cloneTarget && (
-            <p style={{ fontSize:'var(--font-size-s)', color:'var(--color-text-secondary)', lineHeight:'var(--line-height-relaxed)' }}>
-              Будет создана копия листка «{cloneTarget.lineName}» с новой датой. Дефекты не копируются.
-            </p>
-          )}
-          <input
-            type="date"
-            value={cloneDate}
-            onChange={(e) => setCloneDate(e.target.value)}
-            style={{
-              width:'100%', padding:'var(--space-2) var(--space-3)', borderRadius:'var(--radii)',
-              border:'1px solid var(--color-border)', background:'var(--color-bg-page)',
-              color:'var(--color-text-primary)', fontSize:'var(--font-size-m)', fontFamily:'var(--font-family-main)',
-            }}
-          />
-        </div>
-      </Modal>
+        onConfirm={handleClone}
+      />
+
+      <MergeSheetModal
+        isOpen={mergeOpen}
+        selectedSheets={selectedSheets}
+        date={mergeDate}
+        createdBy={mergeBy}
+        loading={merging}
+        onDateChange={setMergeDate}
+        onCreatedByChange={setMergeBy}
+        onClose={handleCloseMerge}
+        onConfirm={handleMerge}
+      />
 
       <ConfirmModal {...confirmProps} />
     </div>

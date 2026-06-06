@@ -38,6 +38,7 @@ server.use(require('./routes/reference'));    // GET /filials /voltages /lines .
 server.use(require('./routes/auth'));         // POST /login, GET/PATCH /users, POST /changePassword
 server.use(require('./routes/sheets'));       // /inspectionSheets CRUD + clone
 server.use(require('./routes/defects'));      // /defectRecords + /defectCounts
+server.use(require('./routes/sync'));         // POST /sync/batch
 
 // ── Запуск ────────────────────────────────────────────────────────────────────
 server.listen(PORT);

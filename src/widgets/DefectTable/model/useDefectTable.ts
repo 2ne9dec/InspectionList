@@ -39,7 +39,7 @@ export function useDefectTable(sheetId: number) {
   const enriched = useMemo(
     () =>
       enrichDefects(
-        allDefects.filter((d) => d.isFixed === (tab === 'fixed')),
+        allDefects.filter((d) => !!d.isFixed === (tab === 'fixed')),
         defectTypes,
         elements,
         phases,

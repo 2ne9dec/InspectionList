@@ -12,18 +12,39 @@ export interface SheetCardProps {
   onDelete: (id: number) => void;
   onClone: (id: number) => void;
   showFilial?: boolean;
+  selected?: boolean;
+  onSelect?: (id: number, checked: boolean) => void;
+  /** Недоступен для выбора слияния (другая линия) */
+  disabledForMerge?: boolean;
 }
 
 export const SheetCard = memo((props: SheetCardProps) => {
-  const { sheet, index, onOpen, onDelete, onClone, showFilial = true } = props;
+  const { sheet, index, onOpen, onDelete, onClone, showFilial = true, selected, onSelect, disabledForMerge } = props;
 
   const handleRowClick = useCallback(() => onOpen(sheet.id), [onOpen, sheet.id]);
   const stopRowClick   = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
   const handleDelete   = useCallback(() => onDelete(sheet.id), [onDelete, sheet.id]);
   const handleClone    = useCallback(() => onClone(sheet.id), [onClone, sheet.id]);
+  const handleCheck    = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    onSelect?.(sheet.id, e.target.checked);
+  }, [onSelect, sheet.id]);
+
+  const total = sheet.activeCount + sheet.fixedCount;
+  const fixedPct = total > 0 ? Math.round(sheet.fixedCount / total * 100) : 0;
 
   return (
-    <tr className={cls.row} onClick={handleRowClick}>
+    <tr className={`${cls.row} ${disabledForMerge ? cls.rowDisabled : ''}`} onClick={handleRowClick}>
+      {onSelect && (
+        <td className={cls.cellCheck} onClick={stopRowClick}>
+          <input
+            type="checkbox"
+            checked={!!selected}
+            onChange={handleCheck}
+            disabled={disabledForMerge}
+          />
+        </td>
+      )}
       <td className={cls.cell}>{index}</td>
       {showFilial && <td className={cls.cell}>{sheet.filialName}</td>}
       <td className={cls.cell}>{sheet.voltageName}</td>
@@ -36,18 +57,13 @@ export const SheetCard = memo((props: SheetCardProps) => {
         </Badge>
       </td>
       <td className={cls.cell}>
-        <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+        <div className={cls.fixedCell}>
           <Badge variant={sheet.fixedCount > 0 ? 'success' : 'neutral'}>
             {sheet.fixedCount}
           </Badge>
-          {(sheet.activeCount + sheet.fixedCount) > 0 && (
-            <div style={{ width:36, height:4, borderRadius:2, background:'rgba(148,163,184,.2)', overflow:'hidden', flexShrink:0 }}>
-              <div style={{
-                height:'100%',
-                width: `${Math.round(sheet.fixedCount / (sheet.activeCount + sheet.fixedCount) * 100)}%`,
-                background: '#22c55e',
-                transition: 'width .4s ease',
-              }} />
+          {total > 0 && (
+            <div className={cls.progressTrack}>
+              <div className={cls.progressBar} style={{ width: `${fixedPct}%` }} />
             </div>
           )}
         </div>
@@ -62,36 +78,24 @@ export const SheetCard = memo((props: SheetCardProps) => {
               onClick={toggle}
               aria-haspopup="menu"
               aria-expanded={open}
-              aria-label="Действия с листком"
             >
-              ⋮
+              &#8942;
             </button>
           )}
         >
           {({ close }) => (
             <>
-              <button
-                type="button"
-                role="menuitem"
-                className={cls.menuItem}
-                onClick={() => { close(); onOpen(sheet.id); }}
-              >
+              <button type="button" role="menuitem" className={cls.menuItem}
+                onClick={() => { close(); onOpen(sheet.id); }}>
                 Открыть
               </button>
-              <button
-                type="button"
-                role="menuitem"
-                className={cls.menuItem}
-                onClick={() => { close(); handleClone(); }}
-              >
+              <button type="button" role="menuitem" className={cls.menuItem}
+                onClick={() => { close(); handleClone(); }}>
                 Копировать с новой датой
               </button>
-              <button
-                type="button"
-                role="menuitem"
+              <button type="button" role="menuitem"
                 className={`${cls.menuItem} ${cls.menuItemDanger}`}
-                onClick={() => { close(); handleDelete(); }}
-              >
+                onClick={() => { close(); handleDelete(); }}>
                 <IconTrash size={13} /> Удалить
               </button>
             </>

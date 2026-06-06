@@ -11,8 +11,7 @@ import {
 } from '@/entities/InspectionLine';
 import { getUserAuthData, getUserFilialId, getUserIsAdmin } from '@/entities/User';
 import { getRouteSheetDetail } from '@/shared/const/router';
-import { Button, FormField, Input, Modal, Select } from '@/shared/ui';
-import type { SelectOption } from '@/shared/ui';
+import { Button, FormField, Input, Modal, SelectMenu } from '@/shared/ui';
 import { toast } from '@/shared/lib/toast';
 import { logger } from '@/shared/lib/logger';
 import { createSheetActions } from '../model/createSheetSlice';
@@ -44,7 +43,6 @@ export const CreateSheetModal = memo(() => {
   const { closeModal, setVoltageId, setLineId, setCreatedBy, setCreatedDate, setFilialId } =
     createSheetActions.useActions();
 
-
   const { data: filials = [] } = useGetFilialsQuery();
   const { data: voltages = [] } = useGetVoltagesQuery();
   const { data: lines = [] } = useGetLinesQuery();
@@ -71,16 +69,22 @@ export const CreateSheetModal = memo(() => {
 
   const isValid = !!effectiveFilialId && !!voltageId && !!lineId && createdBy.trim().length > 0 && !!createdDate;
 
-  const filialOptions = useMemo<SelectOption<number>[]>(
-    () => filials.map((f) => ({ value: f.id, label: f.name })),
+  const filialOptions = useMemo(
+    () => filials.map((f) => ({ value: String(f.id), label: f.name })),
     [filials],
   );
-  const voltageOptions = useMemo<SelectOption<number>[]>(
-    () => filteredVoltages.map((v) => ({ value: v.id, label: v.name })),
+  const voltageOptions = useMemo(
+    () => [
+      { value: '', label: '— выберите напряжение —' },
+      ...filteredVoltages.map((v) => ({ value: String(v.id), label: v.name })),
+    ],
     [filteredVoltages],
   );
-  const lineOptions = useMemo<SelectOption<number>[]>(
-    () => filteredLines.map((l) => ({ value: l.id, label: l.name })),
+  const lineOptions = useMemo(
+    () => [
+      { value: '', label: '— выберите линию —' },
+      ...filteredLines.map((l) => ({ value: String(l.id), label: l.name })),
+    ],
     [filteredLines],
   );
 
@@ -98,7 +102,6 @@ export const CreateSheetModal = memo(() => {
         createdDate,
       }).unwrap();
       closeModal();
-      // Микро-задержка чтобы модалка успела закрыться перед навигацией
       setTimeout(() => navigate(getRouteSheetDetail(String(newSheet.id))), 50);
     } catch (err: unknown) {
       logger.error('CreateSheet failed', err);
@@ -126,13 +129,11 @@ export const CreateSheetModal = memo(() => {
       <div className={cls.fields}>
         {isAdmin ? (
           <FormField label='Филиал' htmlFor='cs-filial' required>
-            <Select<number>
-              id='cs-filial'
-              name='filialId'
+            <SelectMenu
               options={filialOptions}
-              placeholder='— выберите филиал —'
-              value={(effectiveFilialId ?? '') as number | ''}
+              value={String(effectiveFilialId ?? '')}
               onChange={(v) => v !== '' && setFilialId(Number(v))}
+              placeholder='— выберите филиал —'
             />
           </FormField>
         ) : (
@@ -140,26 +141,20 @@ export const CreateSheetModal = memo(() => {
         )}
 
         <FormField label='Напряжение' htmlFor='cs-voltage' required>
-          <Select<number>
-            id='cs-voltage'
-            name='voltageId'
+          <SelectMenu
             options={voltageOptions}
-            placeholder='— выберите напряжение —'
-            value={(voltageId ?? '') as number | ''}
+            value={String(voltageId ?? '')}
             onChange={(v) => setVoltageId(v === '' ? 0 : Number(v))}
-            disabled={!effectiveFilialId}
+            placeholder='— выберите напряжение —'
           />
         </FormField>
 
         <FormField label='Линия' htmlFor='cs-line' required>
-          <Select<number>
-            id='cs-line'
-            name='lineId'
+          <SelectMenu
             options={lineOptions}
-            placeholder='— выберите линию —'
-            value={(lineId ?? '') as number | ''}
+            value={String(lineId ?? '')}
             onChange={(v) => setLineId(v === '' ? 0 : Number(v))}
-            disabled={!voltageId}
+            placeholder='— выберите линию —'
           />
         </FormField>
 

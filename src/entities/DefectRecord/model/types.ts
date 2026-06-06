@@ -15,6 +15,11 @@ export interface DefectRecord {
   insulatorCount?: number | null;
   spanRange?: string | null;
   garlandNumber?: number | null;
+  createdAt?: string | null;
+  masterConclusion?: string | null;
+  resolutionDeadline?: string | null;
+  masterName?: string | null;
+  fixWorkVolume?: string | null;
 }
 
 export interface DefectRecordFull extends DefectRecord {
@@ -31,9 +36,6 @@ export interface CreateDefectParams {
   phaseId: number | null;
   dateFound: string;
   inspectorFind: string;
-  isFixed: boolean;
-  dateFixed: null;
-  inspectorFix: null;
   notes?: string | null;
   insulatorCount?: number | null;
   spanRange?: string | null;
@@ -44,7 +46,11 @@ export interface FixDefectParams {
   id: number;
   dateFixed: string;
   inspectorFix: string;
-  isFixed: true;
+  isFixed: boolean;
+  masterConclusion?: string | null;
+  resolutionDeadline?: string | null;
+  masterName?: string | null;
+  fixWorkVolume?: string | null;
 }
 
 export interface DefectCount {

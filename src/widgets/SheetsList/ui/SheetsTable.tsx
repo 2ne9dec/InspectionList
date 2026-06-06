@@ -14,14 +14,19 @@ export interface SheetsTableProps {
   onOpen: (id: number) => void;
   onDelete: (id: number) => void;
   onClone: (id: number) => void;
+  selectedIds?: ReadonlySet<number>;
+  onSelect?: (id: number, checked: boolean) => void;
+  /** lineId of the first selected sheet — disables other lines */
+  mergeLineId?: number | null;
 }
 
 export const SheetsTable = memo((props: SheetsTableProps) => {
-  const { sheets, showFilial, sortKey, sortDir, onSort, onOpen, onDelete, onClone } = props;
+  const { sheets, showFilial, sortKey, sortDir, onSort, onOpen, onDelete, onClone, selectedIds, onSelect, mergeLineId } = props;
   return (
     <table className={cls.table}>
       <thead>
         <tr>
+          {onSelect && <th className={cls.th} style={{ width: 32 }} />}
           <th className={cls.th}>#</th>
           {showFilial && <th className={cls.th}>Филиал</th>}
           <ThSort label="Напряжение" dir={sortKey === 'voltage' ? sortDir : undefined} onClick={() => onSort('voltage')} />
@@ -43,6 +48,9 @@ export const SheetsTable = memo((props: SheetsTableProps) => {
             onDelete={onDelete}
             onClone={onClone}
             showFilial={showFilial}
+            selected={selectedIds?.has(sheet.id)}
+            onSelect={onSelect}
+            disabledForMerge={mergeLineId != null && sheet.lineId !== mergeLineId}
           />
         ))}
       </tbody>

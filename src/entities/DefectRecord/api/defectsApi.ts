@@ -4,7 +4,7 @@ import type { DefectRecord, DefectCount, CreateDefectParams, FixDefectParams } f
 
 const DEFECT_COUNT_TAG = { type: 'DefectCount' as const, id: 'LIST' };
 
-const NO_DEFECT_ID = 117; // «Дефекты отсутствуют»
+const NO_DEFECT_ID = 117;
 
 const defectsApi = rtkApi.injectEndpoints({
   endpoints: (build) => ({
@@ -54,7 +54,6 @@ const defectsApi = rtkApi.injectEndpoints({
 
     createDefect: build.mutation<DefectRecord, CreateDefectParams>({
       queryFn: async (body) => {
-        // Дедупликация
         const existing = await localDb.defectRecords.where('sheetId').equals(Number(body.sheetId)).toArray();
         const duplicate = existing.find(
           (r) =>
@@ -70,8 +69,7 @@ const defectsApi = rtkApi.injectEndpoints({
         if (duplicate) {
           return { error: { status: 409, error: 'duplicate', data: duplicate } };
         }
-
-        const id = await localDb.defectRecords.add(body as DefectRecord);
+        const id = await localDb.defectRecords.add({ ...body, createdAt: new Date().toISOString() } as DefectRecord);
         const created = await localDb.defectRecords.get(id as number);
         return { data: created! };
       },
@@ -141,6 +139,33 @@ const defectsApi = rtkApi.injectEndpoints({
       ],
     }),
 
+    patchDefectMaster: build.mutation<DefectRecord, {
+      id: number;
+      masterConclusion?: string | null;
+      resolutionDeadline?: string | null;
+      masterName?: string | null;
+      dateFixed?: string | null;
+      fixWorkVolume?: string | null;
+      inspectorFix?: string | null;
+    }>({
+      queryFn: async ({ id, dateFixed, inspectorFix, ...rest }) => {
+        const patch: Partial<DefectRecord> = { ...rest } as any;
+        if (dateFixed) {
+          (patch as any).dateFixed    = dateFixed;
+          (patch as any).inspectorFix = inspectorFix ?? null;
+          (patch as any).isFixed      = true;
+        }
+        await localDb.defectRecords.update(id, patch);
+        const updated = await localDb.defectRecords.get(id);
+        return { data: updated! };
+      },
+      invalidatesTags: (_result, _err, { id }) => [
+        { type: 'Defect' as const, id },
+        { type: 'Defect' as const, id: 'LIST' },
+        DEFECT_COUNT_TAG,
+      ],
+    }),
+
     deleteDefectsBySheet: build.mutation<void, number>({
       queryFn: async (sheetId) => {
         await localDb.defectRecords.where('sheetId').equals(sheetId).delete();
@@ -160,5 +185,6 @@ export const {
   useDeleteDefectMutation,
   usePatchDefectNotesMutation,
   usePatchDefectStatusMutation,
+  usePatchDefectMasterMutation,
   useDeleteDefectsBySheetMutation,
 } = defectsApi;

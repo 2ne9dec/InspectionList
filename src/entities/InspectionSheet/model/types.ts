@@ -8,6 +8,8 @@ export interface InspectionSheet {
   createdDate: string; // ISO: "2026-05-11"
   createdBy: string;
   status: SheetStatus;
+  /** ID листков, из которых был создан этот сводный листок */
+  mergedFromIds?: number[] | null;
 }
 
 // Обогащённая версия с именами из справочников (для отображения)

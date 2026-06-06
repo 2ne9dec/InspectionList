@@ -1,0 +1,315 @@
+@use 'shared/styles/mixins' as m;
+
+/* ── Основной layout ────────────────────────────────────────────────── */
+.page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--navbar-height));
+  overflow: hidden;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  width: 100%;
+  padding: var(--page-padding);
+  box-sizing: border-box;
+}
+
+@media (max-width: 720px) {
+  .page {
+    height: auto;
+    min-height: calc(100vh - var(--navbar-height));
+    overflow: visible;
+  }
+}
+
+/* ── Заголовок страницы ─────────────────────────────────────────────── */
+.pageHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: var(--font-size-l);
+  font-weight: 600;
+}
+
+.count {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+}
+
+/* ── Фильтры + выбор (одна строка) ─────────────────────────────────── */
+.filterBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding-bottom: var(--space-2);
+  flex-shrink: 0;
+}
+
+// Ширина триггеров SelectMenu в строке фильтров
+.filterSelect     { width: 150px; }
+.filterSelectLine { width: 500px; }
+
+.dateInput {
+  height: var(--control-height-m);
+  padding: 0 var(--space-2);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radii);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-s);
+  width: 130px;
+  cursor: pointer;
+
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+  }
+}
+
+.textInput {
+  height: var(--control-height-m);
+  padding: 0 var(--space-2);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radii);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-s);
+  width: 130px;
+  &::placeholder { color: var(--color-text-secondary); }
+}
+
+.dateSep {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+}
+
+/* Группа дат — никогда не разрывается на разные строки */
+.dateGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.resetBtn {
+  height: var(--control-height-m);
+  padding: 0 var(--space-3);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radii);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+  cursor: pointer;
+  &:hover { border-color: var(--color-accent); color: var(--color-accent); }
+}
+
+/* Скрытая кнопка сброса — резервируем место на десктопе, скрываем на планшете */
+.resetBtnHidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ── Строка выбора — фиксированная высота, таблица не прыгает ──────── */
+.selectionRow {
+  height: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding-bottom: var(--space-1);
+}
+
+.selectionCount {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+}
+
+.clearSelBtn {
+  background: transparent;
+  border: none;
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 0 var(--space-1);
+  line-height: 1;
+  &:hover { color: var(--color-text-primary); }
+}
+
+/* ── Контейнер таблицы ──────────────────────────────────────────────── */
+.tableWrap {
+  flex: 1;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radii-l);
+  background: var(--color-bg-surface);
+  overflow: auto;
+  min-height: 0;
+  isolation: isolate; /* sticky th z-index остаётся локальным, не перекрывает модалку */
+}
+
+/* ── Таблица ────────────────────────────────────────────────────────── */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th, td {
+    padding: 7px 10px;
+    text-align: left;
+    border: 1px solid var(--color-border);
+    vertical-align: middle;
+  }
+
+  thead tr:first-child th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--color-bg-surface-2);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    white-space: normal;
+    line-height: 1.35;
+    vertical-align: middle;
+    text-align: center;
+  }
+
+  thead tr:nth-child(2) th {
+    background: var(--color-bg-surface-2);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    white-space: normal;
+    line-height: 1.35;
+    vertical-align: middle;
+    text-align: center;
+  }
+
+  /* Зебра */
+  tbody tr:nth-child(even) td {
+    background: rgba(148, 163, 184, 0.05);
+  }
+
+  tbody tr:hover td {
+    background: rgba(59, 130, 246, 0.07) !important;
+  }
+}
+
+/* ── Заголовки групп ─────────────────────────────────────────────────── */
+.thGroup {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.thCheck { width: 32px; text-align: center; }
+.thNum   { width: 36px; text-align: center; }
+.thLocation {
+  min-width: 200px;
+  white-space: normal;
+}
+.thSub {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  opacity: .65;
+  margin-top: 2px;
+}
+
+/* ── Ячейки данных ──────────────────────────────────────────────────── */
+.tdCheck    { text-align: center; width: 32px; }
+.tdNum      { text-align: center; color: var(--color-text-secondary); width: 36px; }
+.tdLine     { min-width: 130px; }
+.tdDate     { white-space: nowrap; vertical-align: top; min-width: 95px; }
+.tdLocation { min-width: 200px; white-space: normal; line-height: 1.4; }
+.tdConclusion { min-width: 180px; white-space: normal; line-height: 1.4; }
+
+/* ── Редактируемая ячейка ───────────────────────────────────────────── */
+.editable {
+  cursor: pointer;
+  vertical-align: top;
+  min-width: 110px;
+}
+
+.editHint {
+  color: var(--color-text-muted, rgba(148,163,184,.4));
+  font-size: 12px;
+}
+
+/* ── Электронная подпись ─────────────────────────────────────────────── */
+.signed {
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--color-success, #22c55e);
+  font-style: italic;
+}
+
+/* ── Вторичный текст ────────────────────────────────────────────────── */
+.sub {
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+/* ── Состояния строк ────────────────────────────────────────────────── */
+.rowFixed td    { color: var(--color-text-secondary); }
+.rowSelected td { background: rgba(59,130,246,.08) !important; }
+
+/* ── Пустое состояние ───────────────────────────────────────────────── */
+.empty {
+  text-align: center;
+  padding: var(--space-8) !important;
+  color: var(--color-text-secondary);
+}
+
+/* ── Ячейка без переноса ────────────────────────────────────────────── */
+.tdNowrap { white-space: nowrap; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   Адаптив — планшет (≤ 1400px)
+   ══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1400px) {
+  /* Строка фильтров: уменьшаем «Линия» чтобы всё влезло в одну строку */
+  .filterSelectLine { width: 260px; }
+  /* Убираем невидимую кнопку из потока — иначе она уйдёт на 2-ю строку */
+  .resetBtnHidden   { display: none; }
+  .filterSelect     { width: 130px; }
+  .textInput        { width: 110px; }
+  .dateInput        { width: 138px; }
+
+  /* Таблица: более компактные отступы */
+  .table {
+    font-size: 12px;
+
+    th, td {
+      padding: 5px 8px;
+    }
+  }
+
+  .tdLocation   { min-width: 160px; }
+  .tdConclusion { min-width: 140px; }
+  .tdLine       { min-width: 110px; }
+  .tdDate       { min-width: 80px; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Адаптив — маленький планшет / большой телефон (≤ 900px)
+   ══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .filterSelectLine { width: 100%; flex: 1 1 100%; }
+  .filterSelect     { width: calc(50% - var(--space-1)); flex: 1 1 auto; }
+
+  /* Скрываем «Обнаружил» — экономим место */
+  .textInput:last-of-type { display: none; }
+
+  .table {
+    font-size: 11px;
+
+    th, td {
+      padding: 4px 6px;
+    }
+  }
+}

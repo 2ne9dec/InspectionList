@@ -46,76 +46,11 @@
   opacity: 0.5;
 }
 
-// ── Status filter tabs ──────────────────────────────────────────────────────
-.statusTabs {
-  display: flex;
-  gap: 0.375rem;
-  margin-bottom: var(--space-3);
-  flex-shrink: 0;
-  flex-wrap: wrap;
+
+.mergeBtn {
+  margin-left: auto;
 }
 
-.statusTab {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.35rem 0.875rem;
-  border-radius: 9999px;
-  border: 1px solid var(--color-border, #334155);
-  background: transparent;
-  cursor: pointer;
-  font-size: 0.8rem;
-  color: var(--color-text-secondary, #94a3b8);
-  transition: all 0.15s;
-  white-space: nowrap;
-
-  &:hover {
-    background: var(--color-bg-secondary, #1e293b);
-    color: var(--color-text-primary, #f1f5f9);
-  }
-
-  &__emoji {
-    font-size: 0.85rem;
-    line-height: 1;
-  }
-
-  &__label {
-    font-weight: 500;
-  }
-
-  &__count {
-    font-size: 0.75rem;
-    background: var(--color-bg-secondary, #1e293b);
-    border-radius: 9999px;
-    padding: 0.05rem 0.45rem;
-    min-width: 1.4rem;
-    text-align: center;
-    color: var(--color-text-secondary, #94a3b8);
-  }
-}
-
-.statusTabActive {
-  border-color: transparent;
-  color: var(--color-text-on-accent);
-
-  &[data-status='all'] {
-    background: var(--color-text-muted);
-  }
-
-  &[data-status='active'] {
-    background: var(--color-success);
-  }
-
-  &[data-status='archived'] {
-    background: var(--color-status-archived);
-  }
-
-  &[data-status='draft'] {
-    background: var(--color-status-draft);
-  }
-
-  .statusTab__count {
-    background: rgb(255 255 255 / 20%);
-    color: var(--color-text-on-accent);
-  }
+.mergeHint {
+  margin-left: auto;
 }

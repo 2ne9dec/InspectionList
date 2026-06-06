@@ -98,3 +98,6 @@ export { ConfirmModal, useConfirm } from './ConfirmModal';
 export type { ConfirmModalProps, ConfirmVariant, UseConfirmOptions } from './ConfirmModal';
 
 export * from './Icons';
+
+export { SelectMenu } from './SelectMenu';
+export type { SelectMenuOption } from './SelectMenu';

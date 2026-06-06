@@ -23,6 +23,26 @@
   max-width: 320px;
 }
 
+.mergedBadge {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 11px;
+  background: var(--color-accent-muted, rgba(99,102,241,.15));
+  color: var(--color-accent, #6366f1);
+  cursor: default;
+  white-space: nowrap;
+}
+
+.cellCheck {
+  padding: var(--space-2) var(--space-2);
+  vertical-align: middle;
+  border-bottom: 1px solid var(--color-border);
+  width: 32px;
+  text-align: center;
+}
+
 .menuBtn {
   display: flex;
   align-items: center;
@@ -68,4 +88,30 @@
 .menuItemDanger {
   color: var(--color-error);
   &:hover { background: var(--color-error-muted); }
+}
+
+.rowDisabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.fixedCell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.progressTrack {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-border);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.progressBar {
+  height: 100%;
+  background: var(--color-success);
+  transition: width 0.4s ease;
 }

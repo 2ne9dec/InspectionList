@@ -16,6 +16,7 @@ export {
   usePatchDefectNotesMutation,
   usePatchDefectStatusMutation,
   useDeleteDefectsBySheetMutation,
+  usePatchDefectMasterMutation,
 } from './api/defectsApi';
 
 export { DefectRow } from './ui/DefectRow';

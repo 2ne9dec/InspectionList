@@ -17,14 +17,15 @@ export interface DropdownProps {
   panelClassName?: string;
   /** Ширина панели (по-умолчанию по контенту). */
   panelWidth?: number | string;
+  /** Класс для обёртки триггера (triggerWrap). */
+  wrapperClassName?: string;
 }
 
 /**
  * Универсальный dropdown с порталом, позиционированием и закрытием по клику вне/Esc.
- * Заменяет 4+ копий ручного `useEffect(addEventListener)` по проекту.
  */
 export const Dropdown = memo((props: DropdownProps) => {
-  const { trigger, children, placement = 'bottom-start', panelClassName, panelWidth } = props;
+  const { trigger, children, placement = 'bottom-start', panelClassName, panelWidth, wrapperClassName } = props;
 
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
@@ -38,15 +39,13 @@ export const Dropdown = memo((props: DropdownProps) => {
 
   const pos: FloatingPosition = useFloatingPosition(triggerRef, { isOpen: open, placement });
 
-  // Передаём в style только определённые координаты — иначе position:fixed
-  // с одновременным left и right растягивает контейнер на всю ширину viewport.
   const panelStyle: React.CSSProperties = { top: pos.top, width: panelWidth };
   if (pos.right !== undefined) panelStyle.right = pos.right;
   if (pos.left !== undefined) panelStyle.left = pos.left;
 
   return (
     <>
-      <div ref={triggerRef} className={cls.triggerWrap}>
+      <div ref={triggerRef} className={classNames(cls.triggerWrap, {}, [wrapperClassName])}>
         {trigger({ open, toggle, close })}
       </div>
       {open && (

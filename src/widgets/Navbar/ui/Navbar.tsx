@@ -1,13 +1,13 @@
 import { memo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { getRouteSheets, getRouteLogin } from '@/shared/const/router';
+import { getRouteSheets, getRouteLogin, getRouteJournal } from '@/shared/const/router';
 import { getUserAuthData, getUserDisplayName, userActions } from '@/entities/User';
 import { useAppDispatch } from '@/shared/lib/hooks';
 import { ThemeSwitcher } from '@/features/ThemeSwitcher';
 import { SyncButton } from '@/features/SyncToServer';
 import { Button, HStack } from '@/shared/ui';
-import { IconSheet, IconLogout } from '@/shared/ui/Icons';
+import { IconSheet, IconLogout, IconClipboard } from '@/shared/ui/Icons';
 import cls from './Navbar.module.scss';
 
 interface NavbarProps {
@@ -21,7 +21,8 @@ export const Navbar = memo(({ centerSlot }: NavbarProps) => {
   const displayName = useSelector(getUserDisplayName);
   const auth        = useSelector(getUserAuthData);
 
-  const isSheets = location.pathname === getRouteSheets();
+  const isSheets  = location.pathname === getRouteSheets();
+  const isJournal = location.pathname === getRouteJournal();
 
   const handleLogout = useCallback(() => {
     dispatch(userActions.logout());
@@ -43,6 +44,16 @@ export const Navbar = memo(({ centerSlot }: NavbarProps) => {
               Листки
             </Button>
           )}
+          {auth && (
+            <Button
+              variant={isJournal ? 'primary' : 'secondary'}
+              size="s"
+              onClick={() => navigate(getRouteJournal())}
+              leftIcon={<IconClipboard size={14} />}
+            >
+              Журнал
+            </Button>
+          )}
         </HStack>
 
         {centerSlot && (
@@ -52,18 +63,19 @@ export const Navbar = memo(({ centerSlot }: NavbarProps) => {
         <HStack gap="2" align="center" className={cls.right}>
           {auth && <span className={cls.userName}>{displayName}</span>}
           {auth && <SyncButton />}
-          <ThemeSwitcher />
+          {auth && <ThemeSwitcher />}
           {auth && (
             <Button
               variant="secondary"
               size="s"
-              onClick={handleLogout}
               leftIcon={<IconLogout size={14} />}
+              onClick={handleLogout}
             >
-              Выйти
+              Выход
             </Button>
           )}
         </HStack>
+
       </div>
     </nav>
   );
