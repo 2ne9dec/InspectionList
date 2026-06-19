@@ -50,7 +50,7 @@ export const GlobalDefectSearch = memo(({ query }: GlobalDefectSearchProps) => {
     for (const [, defs] of defectsBySheet) {
       count += defs.filter((d) => {
         const dt   = defTypes.find((t) => t.id === d.defectId);
-        const elem = elements.find((e) => e.id === dt?.element_id)?.name ?? '';
+        const elem = elements.find((e) => e.id === dt?.elementId)?.name ?? '';
         return (
           (dt?.name ?? '').toLowerCase().includes(q) ||
           elem.toLowerCase().includes(q) ||

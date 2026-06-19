@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 import type { NavigateFunction } from 'react-router-dom';
 import type { DefectRecord } from '@/entities/DefectRecord';
 import type { DefectType, Element, Severity } from '@/entities/InspectionLine';
-import { SEVERITY_COLORS, SEVERITY_LABELS } from '@/entities/InspectionLine';
+import { SEVERITY_LABELS } from '@/entities/InspectionLine';
 import { getRouteSheetDetail } from '@/shared/const/router';
 import { formatDate } from '@/shared/lib/helpers/formatDate';
 import cls from './GlobalDefectSearch.module.scss';
@@ -28,7 +28,7 @@ export const SheetDefectRows = memo((props: SheetDefectRowsProps) => {
     return defects
       .filter((d: DefectRecord) => {
         const dt = defectTypes.find((t: DefectType) => t.id === d.defectId);
-        const el = elements.find((e: Element) => e.id === dt?.element_id);
+        const el = elements.find((e: Element) => e.id === dt?.elementId);
         return (
           dt?.name.toLowerCase().includes(q) ||
           el?.name.toLowerCase().includes(q) ||
@@ -46,7 +46,7 @@ export const SheetDefectRows = memo((props: SheetDefectRowsProps) => {
     <>
       {matches.map((d: DefectRecord) => {
         const dt = defectTypes.find((t: DefectType) => t.id === d.defectId);
-        const el = elements.find((e: Element) => e.id === dt?.element_id);
+        const el = elements.find((e: Element) => e.id === dt?.elementId);
         const sev = (dt?.severity ?? 'low') as Severity;
         return (
           <tr key={d.id} className={cls.row} onClick={() => navigate(getRouteSheetDetail(String(sheetId)))}>
@@ -57,7 +57,7 @@ export const SheetDefectRows = memo((props: SheetDefectRowsProps) => {
             <td className={cls.cell}>{el?.name ?? '—'}</td>
             <td className={cls.cell}>{dt?.name ?? '—'}</td>
             <td className={cls.cell}>
-              <span className={cls.badge} style={{ background: SEVERITY_COLORS[sev] }}>
+              <span className={cls.badge} data-severity={sev}>
                 {SEVERITY_LABELS[sev]}
               </span>
             </td>

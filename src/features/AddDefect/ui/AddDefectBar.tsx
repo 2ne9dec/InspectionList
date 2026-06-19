@@ -93,7 +93,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
     [defectTypes, selectedDefectId],
   );
   const selectedElement = useMemo(
-    () => elements.find((e) => selectedDefect && e.id === selectedDefect.element_id),
+    () => elements.find((e) => selectedDefect && e.id === selectedDefect.elementId),
     [elements, selectedDefect],
   );
 
@@ -133,7 +133,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
   );
 
   const handlePickDefect = useCallback(
-    (defect: DefectType) => selectDefect({ defectId: defect.id, elementId: defect.element_id }),
+    (defect: DefectType) => selectDefect({ defectId: defect.id, elementId: defect.elementId }),
     [selectDefect],
   );
 

@@ -1,15 +1,38 @@
-// ============================================================================
-// Color tokens — статические (не зависят от темы) цвета статусов.
-//
-// Статусы ДЕФЕКТОВ (severity):
-//   → используйте алиасы из _severity.scss (они дублируют эти значения)
-// ============================================================================
+/* ============================================================================
+   Color tokens — статические цвета статусов (не зависят от темы).
+   ============================================================================ */
 
 :root {
-  // ── Статусы дефектов (таблица, badge) ──────────────────────────────────
-  // Синхронизированы с _severity.scss — не дублируйте вручную.
+  /* Статусы опор (карта) */
+  --color-pole-ok:      #22c55e;
+  --color-pole-defect:  #ef4444;
+  --color-pole-fixed:   #f59e0b;
+  --color-pole-no-data: #94a3b8;
+
+  /* Статусы дефектов (таблица, badge) */
   --color-defect-critical: #e03131;
   --color-defect-medium:   #e67700;
   --color-defect-low:      #2f9e44;
   --color-defect-ok:       #22c55e;
+
+  /* AI-аннотатор (BBox canvas) */
+  --color-ai:          #a855f7;   /* фиолетовый — AI-класс, AI-чипы, AI-аннотации */
+  --color-ai-muted:    rgb(168 85 247 / 15%);
+  --color-ai-bbox:     rgba(251, 191, 36, 0.85);
+  --color-ai-selected: rgba(59, 130, 246, 0.95);
+
+  /* Маркер редактирования на карте */
+  --color-map-drag-border: #f97316;
+
+  /* Статусы задач (InspectionTask) */
+  --color-task-assigned:    #3b82f6;
+  --color-task-in-progress: #f59e0b;
+  --color-task-done:        #22c55e;
+
+  /* Оценка риска опоры (Risk Score) */
+  --color-pole-risk-ok:       #22c55e;
+  --color-pole-risk-low:      #84cc16;
+  --color-pole-risk-medium:   #f59e0b;
+  --color-pole-risk-high:     #ef4444;
+  --color-pole-risk-critical: #7c3aed;
 }

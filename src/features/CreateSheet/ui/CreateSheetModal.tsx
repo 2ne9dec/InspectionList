@@ -54,11 +54,11 @@ export const CreateSheetModal = memo(() => {
   const filteredVoltages = useMemo(() => {
     if (!effectiveFilialId) return [];
     const allowed = voltageFilter[String(effectiveFilialId)];
-    return voltages.filter((v) => v.filial_id === effectiveFilialId && (!allowed || allowed.includes(v.id)));
+    return voltages.filter((v) => v.filialId === effectiveFilialId && (!allowed || allowed.includes(v.id)));
   }, [voltages, effectiveFilialId, voltageFilter]);
 
   const filteredLines = useMemo(
-    () => (voltageId ? lines.filter((l) => l.voltage_id === voltageId) : []),
+    () => (voltageId ? lines.filter((l) => l.voltageId === voltageId) : []),
     [lines, voltageId],
   );
 
@@ -160,7 +160,7 @@ export const CreateSheetModal = memo(() => {
 
         {selectedLine && (
           <div className={cls.info}>
-            Опоры: <strong>{selectedLine.pole_range}</strong> ({selectedLine.pole_count} шт.)
+            Опоры: <strong>{selectedLine.poleRange}</strong> ({selectedLine.poleCount} шт.)
           </div>
         )}
 

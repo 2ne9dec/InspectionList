@@ -1,7 +1,6 @@
 import { memo, useCallback, useMemo } from 'react';
 import { Button, HStack, SearchInput, Tabs } from '@/shared/ui';
 import type { TabItem } from '@/shared/ui';
-import { SEVERITY_COLORS } from '@/shared/const/severity';
 import type { Severity } from '@/shared/const/severity';
 import type { DefectTab } from '../model/useDefectTable';
 import cls from './DefectTableToolbar.module.scss';
@@ -76,7 +75,7 @@ export const DefectTableToolbar = memo((props: DefectTableToolbarProps) => {
         <div className={cls.stats}>
           {severityOrder.map((sev) =>
             severityStats[sev] > 0 ? (
-              <span key={sev} className={cls.stat} style={{ color: SEVERITY_COLORS[sev] }}>
+              <span key={sev} className={cls.stat} data-severity={sev}>
                 * {severityStats[sev]} {SEV_LABEL_SHORT[sev]}
               </span>
             ) : null,

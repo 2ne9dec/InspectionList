@@ -1,84 +1,137 @@
 // ============================================================================
 // Light theme — семантические переменные.
 // Применяется через body[data-theme='light'].
+//
+// Палитра: zinc scale + blue-600 accent (shadcn/ui / Radix).
+// Чистые белые поверхности, zinc-100 фон страницы, насыщенный синий акцент.
+// Та же цветовая семья, что и в тёмной теме — визуальная согласованность.
 // ============================================================================
 
 body[data-theme='light'] {
-  // ── Фоны ────────────────────────────────────────────────────────────────
-  --color-bg-page:       #f1f5f9;
-  --color-bg-surface:    #fff;
-  --color-bg-surface-2:  #f8fafc;
-  --color-bg-base:       #f1f5f9;
-  --color-bg-hover:      rgb(0 0 0 / 5%);
-  --color-bg-inverse:    #1a202c;
+  // ── Фоны (slate scale — чуть голубоватый нейтральный, стандарт shadcn/Vercel/Linear) ──
+  --color-bg-page:       #f8fafc;   // slate-50  — страница чуть холоднее карточек
+  --color-bg-surface:    #fff;   // чистый белый — карточки ярко выделяются на фоне
+  --color-bg-surface-2:  #f1f5f9;   // slate-100 — вложенные поверхности
+  --color-bg-base:       #e2e8f0;   // slate-200 — самый глубокий фон (border-area)
+  --color-bg-hover:      rgb(15 23 42 / 5%);   // slate-900 @ 5%
+  --color-bg-inverse:    #0f172a;   // slate-900
 
-  // ── Текст ───────────────────────────────────────────────────────────────
-  --color-text-primary:   #1a202c;
-  --color-text-secondary: #64748b;
-  --color-text-muted:     #94a3b8;
-  --color-text-inverse:   #fff;
+  // ── Текст (slate — глубокий, не «чернильный», профессиональный) ─────────
+  --color-text-primary:   #0f172a;  // slate-900 — максимальный контраст
+  --color-text-secondary: #475569;  // slate-600 — WCAG AA на белом
+  --color-text-muted:     #94a3b8;  // slate-400 — подсказки, метки
+  --color-text-inverse:   #f8fafc;
   --color-text-on-accent: #fff;
 
-  // ── Акцент ──────────────────────────────────────────────────────────────
-  --color-accent:        #2563eb;
-  --color-accent-hover:  #1d4ed8;
+  // ── Акцент (blue-600 — насыщенный, контрастный на белом) ────────────────
+  --color-accent:        #2563eb;   // blue-600 — стандарт shadcn/ui
+  --color-accent-hover:  #1d4ed8;   // blue-700
   --color-accent-muted:  rgb(37 99 235 / 10%);
   --color-accent-soft:   rgb(37 99 235 / 4%);
 
   // ── Границы ─────────────────────────────────────────────────────────────
-  --color-border:        rgb(0 0 0 / 9%);
-  --color-border-strong: rgb(0 0 0 / 14%);
-  --color-border-subtle: rgb(0 0 0 / 5%);
+  --color-border:           rgb(15 23 42 / 10%);  // slate-900 @ 10%
+  --color-border-strong:    rgb(15 23 42 / 18%);  // slate-900 @ 18%
+  --color-border-subtle:    rgb(15 23 42 / 4%);   // slate-900 @ 4%
 
   // ── Поверхности ─────────────────────────────────────────────────────────
-  --color-surface-navbar:  #fff;
-  --color-surface-card:    #fff;
-  --color-surface-modal:   #fff;
-  --color-surface-overlay: rgb(0 0 0 / 45%);
+  --color-surface-navbar:   #fff;  // белый navbar — контраст с slate-50 страницей
+  --color-surface-card:     #fff;
+  --color-surface-modal:    #fff;
+  --color-surface-overlay:  rgb(0 0 0 / 45%);
 
   // ── Строки таблицы ──────────────────────────────────────────────────────
-  --color-row-alt:   rgb(0 0 0 / 1.8%);
-  --color-row-selected: rgb(37 99 235 / 8%);
-  --color-row-hover: rgb(37 99 235 / 6%);
+  --color-row-alt:      rgb(15 23 42 / 3%);    // slate-900 @ 3%
+  --color-row-hover:    rgb(37 99 235 / 7%);
+  --color-row-selected: rgb(37 99 235 / 12%);
 
   // ── Состояния ───────────────────────────────────────────────────────────
-  --color-error:         #e03131;
-  --color-error-muted:   rgb(224 49 49 / 10%);
-  --color-success:       #2f9e44;
-  --color-success-muted: rgb(47 158 68 / 10%);
-  --color-warning:       #e67700;
-  --color-warning-muted: rgb(230 119 0 / 12%);
-  --color-danger:        #e03131;
-  --color-danger-muted:  rgb(224 49 49 / 10%);
+  --color-error:          #dc2626;  // red-600
+  --color-error-muted:    rgb(220 38 38 / 9%);
+  --color-success:        #16a34a;  // green-600
+  --color-success-muted:  rgb(22 163 74 / 9%);
+  --color-warning:        #d97706;  // amber-600
+  --color-warning-muted:  rgb(217 119 6 / 10%);
+  --color-danger:         #dc2626;
+  --color-danger-muted:   rgb(220 38 38 / 9%);
 
   // ── Статусы листков осмотра ─────────────────────────────────────────────
-  --color-status-draft:    #64748b;
-  --color-status-active:   #6d28d9;
-  --color-status-archived: #b45309;
+  --color-status-draft:   #71717a;  // zinc-500
+  --color-status-active:  #4f46e5;  // indigo-600 — гармонирует с blue акцентом
+  --color-status-review:  #d97706;  // amber-600
+  --color-status-done:    #16a34a;  // green-600
+
+  // ── Карта / FAB-кнопки ──────────────────────────────────────────────────
+  --map-fab-bg:           var(--color-bg-surface);
+  --map-fab-bg-hover:     var(--color-bg-surface-2);
+  --map-fab-border:       var(--color-border);
+  --map-fab-border-hover: var(--color-border-strong);
+  --map-fab-text:         var(--color-text-primary);
+  --map-tile-url:         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+  // ── «Кинозал» PhotoGallery lightbox (намеренно всегда тёмный) ──────────
+  --color-cinema-bg:         #09090b;
+  --color-cinema-bg-deep:    #030304;
+  --color-cinema-text:       #fafafa;
+  --color-cinema-text-muted: #71717a;
+  --color-cinema-accent:     #3b82f6;
 
   // ── Скроллбар ───────────────────────────────────────────────────────────
-  --color-scrollbar-track:       #f1f5f9;
-  --color-scrollbar-thumb:       #cbd5e1;
-  --color-scrollbar-thumb-hover: #94a3b8;
+  --color-scrollbar-track:       #f1f5f9;  // slate-100
+  --color-scrollbar-thumb:       #cbd5e1;  // slate-300
+  --color-scrollbar-thumb-hover: #94a3b8;  // slate-400
 
   // ── Тени ────────────────────────────────────────────────────────────────
-  --shadow-xs: 0 1px 2px rgb(0 0 0 / 5%);
-  --shadow-s:  0 2px 4px rgb(0 0 0 / 8%);
-  --shadow-m:  0 4px 12px rgb(0 0 0 / 10%);
-  --shadow-l:  0 8px 24px rgb(0 0 0 / 12%);
-  --shadow-xl: 0 16px 40px rgb(0 0 0 / 18%);
+  --shadow-xs: 0 1px 2px  rgb(15 23 42 / 6%);
+  --shadow-s:  0 2px 6px  rgb(15 23 42 / 8%), 0 1px 2px rgb(15 23 42 / 4%);
+  --shadow-m:  0 4px 16px rgb(15 23 42 / 10%), 0 2px 4px rgb(15 23 42 / 5%);
+  --shadow-l:  0 8px 28px rgb(15 23 42 / 12%), 0 4px 8px rgb(15 23 42 / 6%);
+  --shadow-xl: 0 16px 48px rgb(15 23 42 / 16%), 0 8px 16px rgb(15 23 42 / 8%);
 
-  // ── Алиасы (используются в существующих SCSS-модулях) ───────────────────
-  --color-bg:           var(--color-bg-page);
-  --color-bg-secondary: var(--color-bg-surface-2);
-  --border:             var(--color-border);
-  --text-primary:       var(--color-text-primary);
-  --text-secondary:     var(--color-text-secondary);
+  // ── Canvas annotation colors ────────────────────────────────────────────
+  // Canvas API не умеет читать var(--…), поэтому эти переменные резолвятся
+  // через getCanvasTheme() из shared/lib/canvasTheme.ts один раз за кадр.
+  --canvas-label-bg:       #18181b;               // тёмный — контраст на любом фото
+  --canvas-label-text:     #fafafa;               // белый текст
+  --canvas-handle-fill:    #fff;                  // белые ручки resize
+  --canvas-handle-stroke:  var(--color-accent);   // акцентная обводка ручек
+  --canvas-drawing-stroke: rgba(9,9,11,.85);      // тёмный пунктир на светлых фото
+  --canvas-polygon-line:   #7c3aed;               // violet-700 — видно на светлом
+  --canvas-polygon-fill:   rgba(124,58,237,.12);  // полупрозрачная заливка полигона
+  --canvas-dot-rim:        rgba(255,255,255,.85); // ободок центральной точки
 
-  // Используются в GlobalDefectSearch, PoleGroupRow, DefectRow, LoginPage, ThemeSwitcher
-  --colors-bg:    var(--color-bg-page);
-  --bg-primary:   var(--color-bg-surface);
-  --bg-secondary: var(--color-bg-surface-2);
-  --bg-row-alt:   var(--color-row-alt);
-  --bg-row-hover: var(--color-row-hover);
+  // ── Legacy aliases (обратная совместимость) ─────────────────────────────
+  --colors-bg:                var(--color-bg-page);
+  --colors-bg-inverted:       var(--color-bg-inverse);
+  --colors-primary:           var(--color-text-primary);
+  --colors-primary-inverted:  var(--color-text-inverse);
+  --colors-secondary:         var(--color-text-secondary);
+  --colors-error-light:       var(--color-error);
+  --colors-error-dark:        #b91c1c;
+  --bg-primary:               var(--color-bg-surface);
+  --bg-secondary:             var(--color-bg-surface-2);
+  --bg-row-alt:               var(--color-row-alt);
+  --bg-row-hover:             var(--color-row-hover);
+  --color-border-tertiary:    var(--color-border-subtle);
+  --navbar-bg:                var(--color-surface-navbar);
+  --navbar-border:            var(--color-border);
+  --scrollbar-track:          var(--color-scrollbar-track);
+  --scrollbar-thumb:          var(--color-scrollbar-thumb);
+  --card-bg:                  var(--color-surface-card);
+  --colors-overlay:           var(--color-surface-overlay);
+  --btn-bg:                   var(--color-accent);
+  --btn-bg-hover:             var(--color-accent-hover);
+  --btn-color:                var(--color-text-on-accent);
+  --btn-border:               rgb(15 23 42 / 14%);
+
+  // ── Короткие алиасы ─────────────────────────────────────────────────────
+  --color-bg:            var(--color-bg-page);
+  --color-bg-secondary:  var(--color-bg-surface-2);
+  --border:              var(--color-border);
+  --text-primary:        var(--color-text-primary);
+  --text-secondary:      var(--color-text-secondary);
+
+  // ── Выделение текста ────────────────────────────────────────────────────
+  --color-selection-bg:   rgb(37 99 235 / 20%);
+  --color-selection-text: inherit;
 }

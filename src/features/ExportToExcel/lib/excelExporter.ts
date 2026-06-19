@@ -139,7 +139,7 @@ export async function exportToExcel(params: ExportParams): Promise<void> {
   // ── Данные ───────────────────────────────────────────────────────────────────
   sorted.forEach((d, i) => {
     const dt    = defectTypes.find((t) => t.id === d.defectId);
-    const el    = elements.find((e) => e.id === dt?.element_id);
+    const el    = elements.find((e) => e.id === dt?.elementId);
     const phase = phases.find((p) => p.id === d.phaseId);
 
     const rowNum = i + 5;
@@ -206,8 +206,8 @@ export async function exportToExcel(params: ExportParams): Promise<void> {
   const statMap = new Map<string, { elem: string; defect: string; active: number; fixed: number }>();
   for (const d of defects) {
     const dt  = defectTypes.find((t) => t.id === d.defectId);
-    const el  = elements.find((e) => dt && e.id === dt.element_id);
-    const key = `${dt?.element_id ?? 0}_${d.defectId}`;
+    const el  = elements.find((e) => dt && e.id === dt.elementId);
+    const key = `${dt?.elementId ?? 0}_${d.defectId}`;
     if (!statMap.has(key)) statMap.set(key, { elem: el?.name ?? '—', defect: dt?.name ?? '—', active: 0, fixed: 0 });
     const row = statMap.get(key)!;
     if (!d.isFixed) row.active++; else row.fixed++;

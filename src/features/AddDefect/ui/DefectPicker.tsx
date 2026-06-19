@@ -1,6 +1,6 @@
 import { memo, useCallback, useImperativeHandle, useRef, useState, forwardRef } from 'react';
 import type { DefectType, Element } from '@/entities/InspectionLine';
-import { SEVERITY_COLORS, SEVERITY_LABELS } from '@/entities/InspectionLine';
+import { SEVERITY_LABELS } from '@/entities/InspectionLine';
 import { DefectTreePopup } from './DefectTreePopup';
 import cls from './DefectPicker.module.scss';
 
@@ -52,7 +52,7 @@ export const DefectPicker = memo(forwardRef<DefectPickerHandle, DefectPickerProp
           <>
             <span
               className={cls.dot}
-              style={{ background: SEVERITY_COLORS[selectedDefect.severity] }}
+              data-severity={selectedDefect.severity}
             />
             <span className={cls.text}>
               {selectedElement?.name === selectedDefect.name
@@ -61,7 +61,7 @@ export const DefectPicker = memo(forwardRef<DefectPickerHandle, DefectPickerProp
             </span>
             <span
               className={cls.sev}
-              style={{ color: SEVERITY_COLORS[selectedDefect.severity] }}
+              data-severity={selectedDefect.severity}
             >
               {SEVERITY_LABELS[selectedDefect.severity]}
             </span>

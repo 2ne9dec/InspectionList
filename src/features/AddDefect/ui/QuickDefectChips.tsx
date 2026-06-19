@@ -21,7 +21,7 @@ export const QuickDefectChips = memo(({
     <div className={cls.quickChips}>
       <span className={cls.quickLabel}>Быстро:</span>
       {topDefects.map((dt) => {
-        const el = elements.find((e) => e.id === dt.element_id);
+        const el = elements.find((e) => e.id === dt.elementId);
         const active = selectedDefectId === dt.id;
         return (
           <button

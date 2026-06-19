@@ -12,4 +12,6 @@ export const base = (size: number): SVGProps<SVGSVGElement> => ({
   strokeWidth: 1.6,
   strokeLinecap: 'round' as const,
   strokeLinejoin: 'round' as const,
+  'aria-hidden': true,
+  focusable: false,
 });

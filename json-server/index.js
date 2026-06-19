@@ -17,15 +17,56 @@ const { tenancyMiddleware } = require('./lib/tenancy');
 
 const server = jsonServer.create();
 
+// ── CORS ───────────────────────────────────────────────────────────────────────
+// В production задайте ALLOWED_ORIGINS=https://app.example.com (через запятую).
+// В dev значение по умолчанию — http://localhost:5173.
+const IS_PROD = process.env.NODE_ENV === 'production';
+
+const rawOrigins = process.env.ALLOWED_ORIGINS || (IS_PROD ? '' : 'http://localhost:5173');
+const ALLOWED_ORIGINS = new Set(
+  rawOrigins.split(',').map((s) => s.trim()).filter(Boolean)
+);
+
+if (IS_PROD && ALLOWED_ORIGINS.size === 0) {
+  console.error(
+    '[FATAL] ALLOWED_ORIGINS не задан. ' +
+    'Установите переменную окружения: ALLOWED_ORIGINS=https://your-domain.com'
+  );
+  process.exit(1);
+}
+
 // ── Middleware ─────────────────────────────────────────────────────────────────
 server.use(jsonServer.defaults({}));
 server.use(jsonServer.bodyParser);
 
 server.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin',  '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, X-User-Id, X-Filial-Id, X-Is-Admin');
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  const origin = req.headers.origin || '';
+
+  // Устанавливаем security-заголовки на все ответы
+  res.setHeader('X-Content-Type-Options',  'nosniff');
+  res.setHeader('X-Frame-Options',         'DENY');
+  res.setHeader('Referrer-Policy',         'strict-origin-when-cross-origin');
+
+  if (IS_PROD) {
+    // В production — строгий whitelist
+    if (ALLOWED_ORIGINS.has(origin)) {
+      res.setHeader('Access-Control-Allow-Origin',       origin);
+      res.setHeader('Vary',                              'Origin');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+    // Если origin не в whitelist — CORS-заголовок не выставляем → браузер заблокирует preflight
+  } else {
+    // В dev — разрешаем только явно заданные origins (localhost:5173 по умолчанию)
+    if (!origin || ALLOWED_ORIGINS.has(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin || '*');
+      if (origin) res.setHeader('Vary', 'Origin');
+    }
+  }
+
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-User-Id, X-Filial-Id, X-Is-Admin');
+
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
 

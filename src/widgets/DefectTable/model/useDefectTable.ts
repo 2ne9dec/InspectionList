@@ -49,7 +49,7 @@ export function useDefectTable(sheetId: number) {
 
   // H-1: предвычисляем Map один раз, чтобы filter был O(n) вместо O(n²)
   const defectElementMap = useMemo(
-    () => new Map(defectTypes.map((t) => [t.id, String(t.element_id)])),
+    () => new Map(defectTypes.map((t) => [t.id, String(t.elementId)])),
     [defectTypes],
   );
 
@@ -87,7 +87,7 @@ export function useDefectTable(sheetId: number) {
   const elementOptions = useMemo(() => elements.map((e) => ({ id: e.id, name: e.name })), [elements]);
 
   const defectTypeOptions = useMemo(() => {
-    const source = filterElementId ? defectTypes.filter((t) => String(t.element_id) === filterElementId) : defectTypes;
+    const source = filterElementId ? defectTypes.filter((t) => String(t.elementId) === filterElementId) : defectTypes;
     return source.map((t) => ({ id: t.id, name: t.name }));
   }, [defectTypes, filterElementId]);
 

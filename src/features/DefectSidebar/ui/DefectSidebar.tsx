@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef } from 'react';
 import { formatDate } from '@/shared/lib/helpers/formatDate';
 import type { DefectRecordFull } from '@/entities/DefectRecord';
-import { SEVERITY_LABELS, SEVERITY_COLORS } from '@/shared/const/severity';
+import { SEVERITY_LABELS } from '@/shared/const/severity';
 import { Button } from '@/shared/ui';
 import { IconClose, IconTasks, IconCheck, IconTrash } from '@/shared/ui/Icons';
 import cls from './DefectSidebar.module.scss';
@@ -67,7 +67,7 @@ export const DefectSidebar = memo(({ defect, onClose, onFix, onDelete }: DefectS
           </div>
 
           <div className={cls.body}>
-            <span className={cls.severityBadge} style={{ background: SEVERITY_COLORS[defect.severity] }}>
+            <span className={cls.severityBadge} data-severity={defect.severity}>
               {SEVERITY_LABELS[defect.severity]}
             </span>
 

@@ -48,7 +48,7 @@ export const CopyDefectModal = memo((props: CopyDefectModalProps) => {
     () =>
       sourceDefects.map((d) => {
         const dt = defectTypes.find((t) => t.id === d.defectId);
-        const el = elements.find((e) => e.id === dt?.element_id);
+        const el = elements.find((e) => e.id === dt?.elementId);
         const ph = d.phaseId != null ? phases.find((p) => p.id === d.phaseId) : undefined;
         return {
           ...d,

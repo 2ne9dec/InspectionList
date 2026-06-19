@@ -7,27 +7,27 @@ export interface Filial {
 export interface Voltage {
   id: number;
   name: string;
-  filial_id: number;
+  filialId: number;
 }
 
 export interface Line {
   id: number;
   name: string;
-  voltage_id: number;
-  pole_range: string;
-  pole_start: number;
-  pole_end: number;
-  pole_count: number;
+  voltageId: number;
+  poleRange: string;
+  poleStart: number;
+  poleEnd: number;
+  poleCount: number;
   /** Год ввода в эксплуатацию */
-  year_built?: number | null;
+  yearBuilt?: number | null;
   /** Год последнего капитального ремонта */
-  year_last_overhaul?: number | null;
+  yearLastOverhaul?: number | null;
   /** Протяжённость линии, км (опционально, вручную) */
-  length_km?: number | null;
+  lengthKm?: number | null;
   /** Тип опор: деревянные, железобетонные, металлические */
-  pole_type?: string | null;
+  poleType?: string | null;
   /** Марка провода */
-  wire_type?: string | null;
+  wireType?: string | null;
   /** Дополнительные примечания */
   notes?: string | null;
 }
@@ -40,7 +40,7 @@ export interface Element {
 export interface DefectType {
   id: number;
   name: string;
-  element_id: number;
+  elementId: number;
   severity: Severity;
 }
 

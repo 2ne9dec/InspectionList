@@ -25,9 +25,9 @@ export function useSheetDetail(sheetId: number) {
       filialName:  filial?.name  ?? '—',
       voltageName: voltage?.name ?? '—',
       lineName:    line?.name    ?? '—',
-      poleStart:   line?.pole_start ?? 1,
-      poleEnd:     line?.pole_end   ?? 1,
-      poleCount:   line?.pole_count ?? 0,
+      poleStart:   line?.poleStart ?? 1,
+      poleEnd:     line?.poleEnd   ?? 1,
+      poleCount:   line?.poleCount ?? 0,
       activeCount: 0,
       fixedCount:  0,
     };
@@ -36,7 +36,7 @@ export function useSheetDetail(sheetId: number) {
   const defectsFull = useMemo<DefectRecordFull[]>(
     () => allDefects.map((d) => {
       const dt = defectTypes.find((t) => t.id === d.defectId);
-      const el = elements.find((e) => dt && e.id === dt.element_id);
+      const el = elements.find((e) => dt && e.id === dt.elementId);
       const ph = phases.find((p) => p.id === d.phaseId);
       return {
         ...d,

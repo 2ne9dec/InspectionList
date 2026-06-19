@@ -6,6 +6,19 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const isDev = mode !== 'production';
 
+  // В production VITE_API_URL желателен — без него __API__ будет localhost:8443.
+  // В CI (process.env.CI=true) — жёсткая ошибка, локально — только предупреждение.
+  if (!isDev && !env.VITE_API_URL) {
+    const msg =
+      '[vite] VITE_API_URL не задан — сборка будет использовать http://localhost:8443.\n' +
+      'Для продакшна задайте: VITE_API_URL=https://api.your-domain.com yarn build';
+    if (process.env.CI) {
+      throw new Error(msg);
+    } else {
+      console.warn('\x1b[33m⚠\x1b[0m  ' + msg);
+    }
+  }
+
   return {
     server: {
       open: true,

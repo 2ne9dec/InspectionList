@@ -67,7 +67,7 @@ export function useJournalFilters() {
 
   // ── Напряжения и линии текущего филиала ──────────────────────────────────
   // filialVoltageFilter: { "2": [1, 2, 4], ... } — маппинг filialId → voltageId[]
-  // voltages.json.filial_id не несёт смысловой нагрузки — используем только фильтр
+  // voltages.json.filialId не несёт смысловой нагрузки — используем только фильтр
   const filialVoltageIds = useMemo(() => {
     if (isAdmin || userFilialId === null) return null; // null = нет ограничений
     const ids = filialVoltageMap[String(userFilialId)];
@@ -84,7 +84,7 @@ export function useJournalFilters() {
   const filialLines = useMemo(
     () => filialVoltageIds === null
       ? lines
-      : lines.filter((l) => filialVoltageIds.has(l.voltage_id)),
+      : lines.filter((l) => filialVoltageIds.has(l.voltageId)),
     [lines, filialVoltageIds],
   );
 
@@ -98,7 +98,7 @@ export function useJournalFilters() {
 
   const filteredLines = useMemo(() => {
     if (!voltageFilter) return filialLines;
-    return filialLines.filter((l) => String(l.voltage_id) === voltageFilter);
+    return filialLines.filter((l) => String(l.voltageId) === voltageFilter);
   }, [filialLines, voltageFilter]);
 
   // ── Вычисление строк ───────────────────────────────────────────────────────
@@ -116,7 +116,7 @@ export function useJournalFilters() {
         if (lineFilter    && String(sheet.lineId)    !== lineFilter)    return false;
         if (defectFilter) {
           const dt = defectTypeMap.get(d.defectId);
-          const el = dt ? elementMap.get(dt.element_id) : undefined;
+          const el = dt ? elementMap.get(dt.elementId) : undefined;
           const haystack = [el?.name, dt?.name].filter(Boolean).join(' ').toLowerCase();
           if (!haystack.includes(defectFilter.toLowerCase())) return false;
         }
@@ -128,7 +128,7 @@ export function useJournalFilters() {
       .map((d) => {
         const sheet      = sheetMap.get(d.sheetId)!;
         const defectType = defectTypeMap.get(d.defectId);
-        const element    = defectType ? elementMap.get(defectType.element_id) : undefined;
+        const element    = defectType ? elementMap.get(defectType.elementId) : undefined;
         const phase      = d.phaseId  ? phaseMap.get(d.phaseId)              : undefined;
         const line       = lineMap.get(sheet.lineId);
         const voltage    = voltageMap.get(sheet.voltageId);

@@ -3,7 +3,7 @@ import { formatDate } from '@/shared/lib/helpers/formatDate';
 import type { DefectRecordFull } from '../model/types';
 import { usePatchDefectNotesMutation } from '../api/defectsApi';
 import { isOverdue, daysSince } from '@/shared/lib/helpers/isOverdue';
-import { SEVERITY_LABELS, SEVERITY_COLORS } from '@/shared/const/severity';
+import { SEVERITY_LABELS } from '@/shared/const/severity';
 import { IconWarning, IconClose, IconSave } from '@/shared/ui/Icons';
 import cls from './DefectRow.module.scss';
 
@@ -26,7 +26,6 @@ export const DefectRow = memo((props: DefectRowProps) => {
 
   const overdue       = !record.isFixed && isOverdue(record.dateFound);
   const days          = overdue ? daysSince(record.dateFound) : 0;
-  const severityColor = SEVERITY_COLORS[record.severity];
   const severityLabel = SEVERITY_LABELS[record.severity];
 
   const handleNoteClick = useCallback(() => {
@@ -58,7 +57,7 @@ export const DefectRow = memo((props: DefectRowProps) => {
         <td className={cls.cell}>{record.elementName}</td>
         <td className={cls.cell}>{record.defectName}</td>
         <td className={cls.cell}>
-          <span className={cls.severityBadge} style={{ background: severityColor }}>
+          <span className={cls.severityBadge} data-severity={record.severity}>
             {severityLabel}
           </span>
         </td>

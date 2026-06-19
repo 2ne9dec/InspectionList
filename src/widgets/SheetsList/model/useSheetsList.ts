@@ -73,9 +73,9 @@ export function useSheetsList({ dateFrom, dateTo, statusFilter }: UseSheetsListO
           filialName:  filial?.name  ?? '—',
           voltageName: voltage?.name ?? '—',
           lineName:    line?.name    ?? '—',
-          poleStart:   line?.pole_start ?? 1,
-          poleEnd:     line?.pole_end   ?? 1,
-          poleCount:   line?.pole_count ?? 0,
+          poleStart:   line?.poleStart ?? 1,
+          poleEnd:     line?.poleEnd   ?? 1,
+          poleCount:   line?.poleCount ?? 0,
           activeCount: counts.active,
           fixedCount:  counts.fixed,
         };

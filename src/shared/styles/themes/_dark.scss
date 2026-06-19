@@ -1,6 +1,10 @@
 // ============================================================================
 // Dark theme — семантические переменные.
 // Применяется через body[data-theme='dark'].
+//
+// Палитра: zinc scale + blue-500 accent (shadcn/ui / Radix / Linear).
+// Нейтральные тёмно-серые фоны + чёткий синий акцент — индустриальный
+// стиль для технических приложений мониторинга инфраструктуры.
 // ============================================================================
 
 body[data-theme='dark'] {
@@ -8,81 +12,130 @@ body[data-theme='dark'] {
   // scrollbar, select) автоматически переключатся в тёмный вид.
   color-scheme: dark;
 
-  // ── Фоны ────────────────────────────────────────────────────────────────
-  --color-bg-page:       #1a1a2e;
-  --color-bg-surface:    #16213e;
-  --color-bg-surface-2:  #1c2a4a;
-  --color-bg-base:       #0f172a;
-  --color-bg-hover:      #334155;
-  --color-bg-inverse:    #e2e8f0;
+  // ── Фоны (zinc scale — нейтральные, не «коричневатые») ──────────────────
+  --color-bg-page:       #18181b;   // zinc-900
+  --color-bg-surface:    #27272a;   // zinc-800
+  --color-bg-surface-2:  #3f3f46;   // zinc-700
+  --color-bg-base:       #09090b;   // zinc-950
+  --color-bg-hover:      rgb(255 255 255 / 6%);
+  --color-bg-inverse:    #fafafa;   // zinc-50
 
-  // ── Текст ───────────────────────────────────────────────────────────────
-  --color-text-primary:   #e2e8f0;
-  --color-text-secondary: #8892a4;
-  --color-text-muted:     #5b6478;
-  --color-text-inverse:   #1a1a2e;
+  // ── Текст (чистый, не кремовый) ─────────────────────────────────────────
+  --color-text-primary:   #fafafa;  // zinc-50
+  --color-text-secondary: #a1a1aa;  // zinc-400
+  --color-text-muted:     #71717a;  // zinc-500
+  --color-text-inverse:   #09090b;
   --color-text-on-accent: #fff;
 
-  // ── Акцент ──────────────────────────────────────────────────────────────
-  --color-accent:        #4f8ef7;
-  --color-accent-hover:  #3d7ef0;
-  --color-accent-muted:  rgb(79 142 247 / 15%);
-  --color-accent-soft:   rgb(79 142 247 / 6%);
+  // ── Акцент (blue-500 — промышленный стандарт для tech-UI) ───────────────
+  --color-accent:        #3b82f6;   // blue-500
+  --color-accent-hover:  #2563eb;   // blue-600
+  --color-accent-muted:  rgb(59 130 246 / 15%);
+  --color-accent-soft:   rgb(59 130 246 / 7%);
 
   // ── Границы ─────────────────────────────────────────────────────────────
-  --color-border:        rgb(255 255 255 / 8%);
-  --color-border-strong: rgb(255 255 255 / 14%);
-  --color-border-subtle: rgb(255 255 255 / 5%);
+  --color-border:           rgb(255 255 255 / 9%);
+  --color-border-strong:    rgb(255 255 255 / 15%);
+  --color-border-subtle:    rgb(255 255 255 / 4%);
 
   // ── Поверхности ─────────────────────────────────────────────────────────
-  --color-surface-navbar:  #0f0f23;
-  --color-surface-card:    #16213e;
-  --color-surface-modal:   #1c2a4a;
-  --color-surface-overlay: rgb(0 0 0 / 65%);
+  --color-surface-navbar:   #141417;  // чуть темнее страницы — визуальное разделение
+  --color-surface-card:     #27272a;
+  --color-surface-modal:    #2d2d31;
+  --color-surface-overlay:  rgb(0 0 0 / 70%);
 
   // ── Строки таблицы ──────────────────────────────────────────────────────
-  --color-row-alt:   rgb(255 255 255 / 2.5%);
-  --color-row-selected: rgb(255 255 255 / 8%);
-  --color-row-hover: rgb(255 255 255 / 6%);
+  --color-row-alt:      rgb(255 255 255 / 2%);
+  --color-row-hover:    rgb(59 130 246 / 8%);
+  --color-row-selected: rgb(59 130 246 / 18%);
 
   // ── Состояния ───────────────────────────────────────────────────────────
-  --color-error:         #ff6b6b;
-  --color-error-muted:   rgb(255 107 107 / 14%);
-  --color-success:       #51cf66;
-  --color-success-muted: rgb(81 207 102 / 12%);
-  --color-warning:       #ffa94d;
-  --color-warning-muted: rgb(255 169 77 / 14%);
-  --color-danger:        #ff6b6b;
-  --color-danger-muted:  rgb(255 107 107 / 14%);
+  --color-error:          #f87171;  // red-400
+  --color-error-muted:    rgb(248 113 113 / 14%);
+  --color-success:        #4ade80;  // green-400
+  --color-success-muted:  rgb(74 222 128 / 12%);
+  --color-warning:        #fbbf24;  // amber-400 (не оранжевый — лучше читается)
+  --color-warning-muted:  rgb(251 191 36 / 14%);
+  --color-danger:         #f87171;
+  --color-danger-muted:   rgb(248 113 113 / 14%);
 
   // ── Статусы листков осмотра ─────────────────────────────────────────────
-  --color-status-draft:    #64748b;
-  --color-status-active:   #7c3aed;
-  --color-status-archived: #d97706;
+  --color-status-draft:   #71717a;   // zinc-500
+  --color-status-active:  #818cf8;   // indigo-400 — гармонирует с blue акцентом
+  --color-status-review:  #fbbf24;   // amber-400
+  --color-status-done:    #4ade80;   // green-400
+
+  // ── Карта / FAB-кнопки ──────────────────────────────────────────────────
+  --map-fab-bg:           rgb(24 24 27 / 92%);   // zinc-900 с прозрачностью
+  --map-fab-bg-hover:     rgb(39 39 42 / 98%);   // zinc-800
+  --map-fab-border:       rgb(255 255 255 / 12%);
+  --map-fab-border-hover: rgb(255 255 255 / 20%);
+  --map-fab-text:         #fafafa;
+  --map-tile-url:         'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+
+  // ── «Кинозал» PhotoGallery lightbox (намеренно всегда тёмный) ──────────
+  --color-cinema-bg:         #09090b;
+  --color-cinema-bg-deep:    #030304;
+  --color-cinema-text:       #fafafa;
+  --color-cinema-text-muted: #71717a;
+  --color-cinema-accent:     #3b82f6;
 
   // ── Скроллбар ───────────────────────────────────────────────────────────
-  --color-scrollbar-track:       #1a1a2e;
-  --color-scrollbar-thumb:       #2d3561;
-  --color-scrollbar-thumb-hover: #3d4670;
+  --color-scrollbar-track:       #27272a;  // zinc-800
+  --color-scrollbar-thumb:       #52525b;  // zinc-600
+  --color-scrollbar-thumb-hover: #71717a;  // zinc-500
 
   // ── Тени (глубже для тёмной темы) ───────────────────────────────────────
-  --shadow-xs: 0 1px 2px rgb(0 0 0 / 20%);
-  --shadow-s:  0 2px 6px rgb(0 0 0 / 25%);
-  --shadow-m:  0 6px 16px rgb(0 0 0 / 30%);
-  --shadow-l:  0 10px 30px rgb(0 0 0 / 38%);
-  --shadow-xl: 0 20px 50px rgb(0 0 0 / 45%);
+  --shadow-xs: 0 1px 2px  rgb(0 0 0 / 30%);
+  --shadow-s:  0 2px 6px  rgb(0 0 0 / 36%);
+  --shadow-m:  0 6px 16px rgb(0 0 0 / 42%);
+  --shadow-l:  0 12px 32px rgb(0 0 0 / 52%);
+  --shadow-xl: 0 20px 50px rgb(0 0 0 / 62%);
 
-  // ── Алиасы (используются в существующих SCSS-модулях) ───────────────────
-  --color-bg:           var(--color-bg-page);
-  --color-bg-secondary: var(--color-bg-surface-2);
-  --border:             var(--color-border);
-  --text-primary:       var(--color-text-primary);
-  --text-secondary:     var(--color-text-secondary);
+  // ── Canvas annotation colors ────────────────────────────────────────────
+  // Canvas API не умеет читать var(--…), поэтому эти переменные резолвятся
+  // через getCanvasTheme() из shared/lib/canvasTheme.ts один раз за кадр.
+  --canvas-label-bg:       #27272a;              // zinc-800 — контраст на любом фото
+  --canvas-label-text:     #fafafa;              // чистый белый текст
+  --canvas-handle-fill:    #fafafa;              // белые ручки resize
+  --canvas-handle-stroke:  var(--color-accent);  // акцентная обводка ручек
+  --canvas-drawing-stroke: rgba(255,255,255,.9); // пунктир нового bbox
+  --canvas-polygon-line:   #f59e0b;              // amber — виден на любом фото
+  --canvas-polygon-fill:   rgba(245,158,11,.12); // полупрозрачная заливка полигона
+  --canvas-dot-rim:        rgba(255,255,255,.8); // ободок центральной точки
 
-  // Используются в GlobalDefectSearch, PoleGroupRow, DefectRow, LoginPage, ThemeSwitcher
-  --colors-bg:    var(--color-bg-page);
-  --bg-primary:   var(--color-bg-surface);
-  --bg-secondary: var(--color-bg-surface-2);
-  --bg-row-alt:   var(--color-row-alt);
-  --bg-row-hover: var(--color-row-hover);
+  // ── Legacy aliases (обратная совместимость) ─────────────────────────────
+  --colors-bg:                var(--color-bg-page);
+  --colors-bg-inverted:       var(--color-bg-inverse);
+  --colors-primary:           var(--color-text-primary);
+  --colors-primary-inverted:  var(--color-text-inverse);
+  --colors-secondary:         var(--color-text-secondary);
+  --colors-error-light:       var(--color-error);
+  --colors-error-dark:        #ef4444;
+  --bg-primary:               var(--color-bg-surface);
+  --bg-secondary:             var(--color-bg-surface-2);
+  --bg-row-alt:               var(--color-row-alt);
+  --bg-row-hover:             var(--color-row-hover);
+  --color-border-tertiary:    var(--color-border-subtle);
+  --navbar-bg:                var(--color-surface-navbar);
+  --navbar-border:            var(--color-border);
+  --scrollbar-track:          var(--color-scrollbar-track);
+  --scrollbar-thumb:          var(--color-scrollbar-thumb);
+  --card-bg:                  var(--color-surface-card);
+  --colors-overlay:           var(--color-surface-overlay);
+  --btn-bg:                   var(--color-accent);
+  --btn-bg-hover:             var(--color-accent-hover);
+  --btn-color:                var(--color-text-on-accent);
+  --btn-border:               rgb(255 255 255 / 18%);
+
+  // ── Короткие алиасы ─────────────────────────────────────────────────────
+  --color-bg:            var(--color-bg-page);
+  --color-bg-secondary:  var(--color-bg-surface-2);
+  --border:              var(--color-border);
+  --text-primary:        var(--color-text-primary);
+  --text-secondary:      var(--color-text-secondary);
+
+  // ── Выделение текста ────────────────────────────────────────────────────
+  --color-selection-bg:   rgb(59 130 246 / 35%);
+  --color-selection-text: #fff;
 }

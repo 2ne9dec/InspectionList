@@ -111,7 +111,11 @@ const sheetsApi = rtkApi.injectEndpoints({
         const merged = await localDb.sheets.get(newId as number);
         return { data: merged! };
       },
-      invalidatesTags: [{ type: 'Sheet', id: 'LIST' }, { type: 'Defect', id: 'LIST' }],
+      invalidatesTags: [
+        { type: 'Sheet', id: 'LIST' },
+        { type: 'Defect', id: 'LIST' },
+        { type: 'DefectCount', id: 'LIST' },
+      ],
     }),
 
     deleteSheet: build.mutation<void, number>({
@@ -124,6 +128,7 @@ const sheetsApi = rtkApi.injectEndpoints({
         { type: 'Sheet', id },
         { type: 'Sheet', id: 'LIST' },
         { type: 'Defect', id: 'LIST' },
+        { type: 'DefectCount', id: 'LIST' },
       ],
     }),
   }),

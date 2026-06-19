@@ -95,6 +95,7 @@
   width: 3px;
   align-self: stretch;
   border-radius: 2px;
+  background: var(--sev);  // data-severity на элементе
   flex-shrink: 0;
   min-height: 20px;
 }
@@ -102,6 +103,7 @@
 .sev {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
+  color: var(--sev);  // data-severity на элементе
   white-space: nowrap;
   flex-shrink: 0;
 }

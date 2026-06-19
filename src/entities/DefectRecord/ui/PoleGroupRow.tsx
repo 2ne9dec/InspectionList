@@ -1,7 +1,7 @@
 import { memo, useMemo } from 'react';
 import { formatDate } from '@/shared/lib/helpers/formatDate';
 import { KebabMenu } from '@/shared/ui/KebabMenu';
-import { SEVERITY_COLORS, SEVERITY_LABELS } from '@/shared/const/severity';
+import { SEVERITY_LABELS } from '@/shared/const/severity';
 import { formatLocationLabel, locationKeyType } from '../lib/locationKey';
 import type { DefectRecordFull } from '../model/types';
 import cls from './PoleGroupRow.module.scss';
@@ -161,9 +161,9 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
                   <span
                     key={elName}
                     className={cls.chip}
-                    style={{ borderColor: isNoDefect ? SEVERITY_COLORS['low'] : SEVERITY_COLORS[sev] }}
+                    data-severity={isNoDefect ? 'low' : sev}
                   >
-                    {!isNoDefect && <span className={cls.chipDot} style={{ background: SEVERITY_COLORS[sev] }} />}
+                    {!isNoDefect && <span className={cls.chipDot} data-severity={sev} />}
                     {elName}
                   </span>
                 );
@@ -181,7 +181,7 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
         <td className={cls.cell}>
           <span
             className={cls.badge}
-            style={{ background: isNoDefectPole ? SEVERITY_COLORS['low'] : SEVERITY_COLORS[maxSeverity] }}
+            data-severity={isNoDefectPole ? 'low' : maxSeverity}
           >
             {isNoDefectPole ? '0' : records.length} деф.
           </span>
@@ -231,7 +231,7 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
               </td>
               <td className={cls.subCell}>
                 {!isNoDefectRecord && (
-                  <span className={cls.badge} style={{ background: SEVERITY_COLORS[first.severity] }}>
+                  <span className={cls.badge} data-severity={first.severity}>
                     {SEVERITY_LABELS[first.severity]}
                   </span>
                 )}

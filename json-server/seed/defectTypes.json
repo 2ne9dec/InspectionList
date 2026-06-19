@@ -2,700 +2,775 @@
   {
     "id": 1,
     "name": "Грозотрос-Разрегулировка стрелы провеса",
-    "element_id": 1,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 1
   },
   {
     "id": 2,
     "name": "Провод-Разрегулировка стрелы провеса",
-    "element_id": 1,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 1
   },
   {
     "id": 3,
     "name": "Расстояние до крайнего провода меньше 4-6 м",
-    "element_id": 2,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 2
   },
   {
     "id": 4,
     "name": "Угрожающее (наклонённое)",
-    "element_id": 2,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 2
   },
   {
     "id": 5,
     "name": "Угрожающее (сухостойное)",
-    "element_id": 2,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 2
   },
   {
     "id": 6,
     "name": "Высотой более 4 м",
-    "element_id": 3,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 3
   },
   {
     "id": 7,
     "name": "Неправильно установлен",
-    "element_id": 4,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 4
   },
   {
     "id": 8,
     "name": "Отсутствует",
-    "element_id": 4,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 4
   },
   {
     "id": 9,
     "name": "Отсутствует Груз(ы)",
-    "element_id": 4,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 4
   },
   {
     "id": 10,
     "name": "Провисание Груза(ов)",
-    "element_id": 4,
-    "severity": "low"
+    "severity": "low",
+    "elementId": 4
   },
   {
     "id": 11,
     "name": "Смещён с места установки",
-    "element_id": 4,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 4
   },
   {
     "id": 12,
     "name": "Обрыв",
-    "element_id": 5,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 5
   },
   {
     "id": 13,
     "name": "Обрыв проволок верхнего повива (расплетение)",
-    "element_id": 5,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 5
   },
   {
     "id": 14,
     "name": "Оплавление",
-    "element_id": 5,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 5
   },
   {
     "id": 15,
     "name": "Повреждение соединительного зажима",
-    "element_id": 5,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 5
   },
   {
     "id": 16,
     "name": "Разрегулировка искрового промежутка",
-    "element_id": 5,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 5
   },
   {
     "id": 17,
     "name": "Отсутствует",
-    "element_id": 6,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 6
   },
   {
     "id": 18,
     "name": "Раскрутился зажим",
-    "element_id": 6,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 6
   },
   {
     "id": 19,
     "name": "Сломана",
-    "element_id": 6,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 6
   },
   {
     "id": 20,
     "name": "Смещена",
-    "element_id": 6,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 6
   },
   {
     "id": 21,
     "name": "Выпахан (на поверхности земли)",
-    "element_id": 7,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 7
   },
   {
     "id": 22,
     "name": "Отсутствие выпуска контура заземления (место присоединения заземляющего спуска не доступно для осмотра)",
-    "element_id": 7,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 7
   },
   {
     "id": 23,
     "name": "Обрыв заземляющего спуска на опоре",
-    "element_id": 7,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 7
   },
   {
     "id": 24,
     "name": "Загрязнение птичьим пометом",
-    "element_id": 8,
-    "severity": "low"
+    "severity": "low",
+    "elementId": 8
   },
   {
     "id": 25,
     "name": "Разрушен",
-    "element_id": 8,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 8
   },
   {
     "id": 26,
     "name": "Отсутствие замка",
-    "element_id": 8,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 8
   },
   {
     "id": 27,
     "name": "Следы перекрытия",
-    "element_id": 8,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 8
   },
   {
     "id": 28,
     "name": "Загрязнение от выбросов промышленными предприятиями",
-    "element_id": 8,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 8
   },
   {
     "id": 29,
     "name": "Загрязнение птичьим пометом",
-    "element_id": 9,
-    "severity": "low"
+    "severity": "low",
+    "elementId": 9
   },
   {
     "id": 30,
     "name": "Отсутствие замка",
-    "element_id": 9,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 9
   },
   {
     "id": 31,
     "name": "Разрушен изолятор",
-    "element_id": 9,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 9
   },
   {
     "id": 32,
     "name": "Следы перекрытия",
-    "element_id": 9,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 9
   },
   {
     "id": 33,
     "name": "Загрязнение птичьим пометом",
-    "element_id": 10,
-    "severity": "low"
+    "severity": "low",
+    "elementId": 10
   },
   {
     "id": 34,
     "name": "Отсутствие замка",
-    "element_id": 10,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 10
   },
   {
     "id": 35,
     "name": "Разрушен изолятор",
-    "element_id": 10,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 10
   },
   {
     "id": 36,
     "name": "Следы перекрытия",
-    "element_id": 10,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 10
   },
   {
     "id": 37,
     "name": "Загрязнение птичьим пометом",
-    "element_id": 11,
-    "severity": "low"
+    "severity": "low",
+    "elementId": 11
   },
   {
     "id": 38,
     "name": "Отсутствие замка",
-    "element_id": 11,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 11
   },
   {
     "id": 39,
     "name": "Разрушен изолятор",
-    "element_id": 11,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 11
   },
   {
     "id": 40,
     "name": "Следы перекрытия",
-    "element_id": 11,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 11
   },
   {
     "id": 45,
     "name": "Отклонение от вертикального положения",
-    "element_id": 11,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 11
   },
   {
     "id": 46,
     "name": "Загрязнение птичьим пометом",
-    "element_id": 13,
-    "severity": "low"
+    "severity": "low",
+    "elementId": 13
   },
   {
     "id": 47,
     "name": "Следы перекрытия",
-    "element_id": 13,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 13
   },
   {
     "id": 48,
     "name": "Разрушен изолятор",
-    "element_id": 13,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 13
   },
   {
     "id": 49,
     "name": "Механическое повреждение - Трещины",
-    "element_id": 13,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 13
   },
   {
     "id": 50,
     "name": "Загрязнение птичьим пометом",
-    "element_id": 14,
-    "severity": "low"
+    "severity": "low",
+    "elementId": 14
   },
   {
     "id": 51,
     "name": "Следы перекрытия",
-    "element_id": 14,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 14
   },
   {
     "id": 52,
     "name": "Информация не обновлена (невозможно прочесть)",
-    "element_id": 15,
-    "severity": "low"
+    "severity": "low",
+    "elementId": 15
   },
   {
     "id": 53,
     "name": "Отсутствует нумерации",
-    "element_id": 15,
-    "severity": "low"
+    "severity": "low",
+    "elementId": 15
   },
   {
     "id": 54,
     "name": "Отсутствует предупреждающий плакат",
-    "element_id": 15,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 15
   },
   {
     "id": 55,
     "name": "Отсутствует расцветка фаз",
-    "element_id": 15,
-    "severity": "low"
+    "severity": "low",
+    "elementId": 15
   },
   {
     "id": 56,
     "name": "Отсутствует Знак Ловить рыбу опасно для жизни",
-    "element_id": 15,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 15
   },
   {
     "id": 57,
     "name": "Отсутствует наименование ВЛ",
-    "element_id": 15,
-    "severity": "low"
+    "severity": "low",
+    "elementId": 15
   },
   {
     "id": 58,
     "name": "Коррозия металла – поверхностная",
-    "element_id": 16,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 16
   },
   {
     "id": 59,
     "name": "Коррозия металла – сквозная",
-    "element_id": 16,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 16
   },
   {
     "id": 60,
     "name": "Опора железобетонная - выкрашивание бетона, скол, раковина",
-    "element_id": 16,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 16
   },
   {
     "id": 61,
     "name": "Опора железобетонная - оголение и коррозия арматуры каркаса",
-    "element_id": 16,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 16
   },
   {
     "id": 62,
     "name": "Опора железобетонная - сквозная выбоина (дыра в опоре)",
-    "element_id": 16,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 16
   },
   {
     "id": 63,
     "name": "Опора железобетонная – трещина",
-    "element_id": 16,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 16
   },
   {
     "id": 64,
     "name": "Опора железобетонная – изгиб стойки",
-    "element_id": 16,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 16
   },
   {
     "id": 65,
     "name": "Опора металлическая - отсутствие деталей элементов",
-    "element_id": 16,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 16
   },
   {
     "id": 66,
     "name": "Ослабление болтовых соединений",
-    "element_id": 16,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 16
   },
   {
     "id": 67,
     "name": "Отклонение по вертикали (вдоль и поперек ВЛ)",
-    "element_id": 16,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 16
   },
   {
     "id": 68,
     "name": "Смещение перпендикулярно оси (опора установлена не по оси ВЛ)",
-    "element_id": 16,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 16
   },
   {
     "id": 69,
     "name": "Коррозия",
-    "element_id": 17,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 17
   },
   {
     "id": 70,
     "name": "Ослабление",
-    "element_id": 17,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 17
   },
   {
     "id": 71,
     "name": "Отсутствие контргайки на U-образном болте",
-    "element_id": 17,
-    "severity": "low"
+    "severity": "low",
+    "elementId": 17
   },
   {
     "id": 72,
     "name": "Отсутствие смазки",
-    "element_id": 17,
-    "severity": "low"
+    "severity": "low",
+    "elementId": 17
   },
   {
     "id": 73,
     "name": "Отсутствие хомутов (бандажей)",
-    "element_id": 17,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 17
   },
   {
     "id": 74,
     "name": "Отсутствие шплинтов в клиньях тросовых оттяжек",
-    "element_id": 17,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 17
   },
   {
     "id": 75,
     "name": "Повреждение",
-    "element_id": 17,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 17
   },
   {
     "id": 76,
     "name": "Повреждение U-образных болтов",
-    "element_id": 17,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 17
   },
   {
     "id": 77,
     "name": "Расплетение повива тросовой оттяжки",
-    "element_id": 17,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 17
   },
   {
     "id": 78,
     "name": "Обрыв проволок тросовой оттяжки",
-    "element_id": 17,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 17
   },
   {
     "id": 79,
     "name": "Гнездо в теле металлической опоры",
-    "element_id": 18,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 18
   },
   {
     "id": 80,
     "name": "Гнездо на оголовнике железобетонной опоры",
-    "element_id": 18,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 18
   },
   {
     "id": 81,
     "name": "Гнездо на траверсе",
-    "element_id": 18,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 18
   },
   {
     "id": 82,
     "name": "Гнездо на тросостойке",
-    "element_id": 18,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 18
   },
   {
     "id": 83,
     "name": "Наброс ветки",
-    "element_id": 18,
-    "severity": "low"
+    "severity": "low",
+    "elementId": 18
   },
   {
     "id": 84,
     "name": "Наброс другое",
-    "element_id": 18,
-    "severity": "low"
+    "severity": "low",
+    "elementId": 18
   },
   {
     "id": 85,
     "name": "Наброс проволоки на траверсу с шунтированием изоляторов",
-    "element_id": 18,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 18
   },
   {
     "id": 86,
     "name": "Падение дерева без обрыва провода",
-    "element_id": 18,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 18
   },
   {
     "id": 87,
     "name": "Падение дерева с обрывом провода",
-    "element_id": 18,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 18
   },
   {
     "id": 88,
     "name": "Вспучивание верхнего повива",
-    "element_id": 19,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 19
   },
   {
     "id": 89,
     "name": "Обрыв проволок верхнего повива (расплетение)",
-    "element_id": 19,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 19
   },
   {
     "id": 90,
     "name": "Оплавление",
-    "element_id": 19,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 19
   },
   {
     "id": 91,
     "name": "Повреждение соединительного зажима",
-    "element_id": 19,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 19
   },
   {
     "id": 92,
     "name": "Обрыв",
-    "element_id": 19,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 19
   },
   {
     "id": 95,
     "name": "Деформация",
-    "element_id": 20,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 20
   },
   {
     "id": 96,
     "name": "Деформация оттяжки траверсы",
-    "element_id": 20,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 20
   },
   {
     "id": 97,
     "name": "Неправильная установка элементов для крепления КГП (скопление воды)",
-    "element_id": 20,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 20
   },
   {
     "id": 98,
     "name": "Обрыв тяга траверсы",
-    "element_id": 20,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 20
   },
   {
     "id": 99,
     "name": "Разворот траверс железобетонной опоры относительно оси ВЛ",
-    "element_id": 20,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 20
   },
   {
     "id": 100,
     "name": "Отсутствует (100%)",
-    "element_id": 21,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 21
   },
   {
     "id": 101,
     "name": "Повреждено",
-    "element_id": 21,
-    "severity": "low"
+    "severity": "low",
+    "elementId": 21
   },
   {
     "id": 102,
     "name": "Механическое повреждение",
-    "element_id": 22,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 22
   },
   {
     "id": 103,
     "name": "Подмывание грунта",
-    "element_id": 22,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 22
   },
   {
     "id": 104,
     "name": "Оголён (не засыпан грунтом)",
-    "element_id": 22,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 22
   },
   {
     "id": 105,
     "name": "Разрушен (трещины, сколы)",
-    "element_id": 22,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 22
   },
   {
     "id": 106,
     "name": "Вспучивание верхнего повива",
-    "element_id": 23,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 23
   },
   {
     "id": 107,
     "name": "Обрыв",
-    "element_id": 23,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 23
   },
   {
     "id": 108,
     "name": "Обрыв проволок верхнего повива (расплетение)",
-    "element_id": 23,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 23
   },
   {
     "id": 109,
     "name": "Раковины сварного соединения",
-    "element_id": 23,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 23
   },
   {
     "id": 110,
     "name": "Оборван",
-    "element_id": 24,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 24
   },
   {
     "id": 111,
     "name": "Отсоединен, не закреплён",
-    "element_id": 24,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 24
   },
   {
     "id": 112,
     "name": "Отсутствует",
-    "element_id": 24,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 24
   },
   {
     "id": 113,
     "name": "Перегорел",
-    "element_id": 24,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 24
   },
   {
     "id": 114,
     "name": "Разрегулирован роговой разрядник",
-    "element_id": 25,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 25
   },
   {
     "id": 115,
     "name": "Поврежден роговой разрядник (отсутствует 1 рог)",
-    "element_id": 25,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 25
   },
   {
     "id": 116,
     "name": "Разрушен стеклянный индикатор срабатывания мультикамерного разрядника (РМК-35)",
-    "element_id": 25,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 25
   },
   {
     "id": 117,
     "name": "Дефекты отсутствуют",
-    "element_id": 26,
-    "severity": "low"
+    "severity": "low",
+    "elementId": 26
   },
   {
     "id": 118,
     "name": "Посторонние предметы под опорой",
-    "element_id": 18,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 18
   },
   {
     "id": 119,
     "name": "Нарушение охранной зоны",
-    "element_id": 27,
-    "severity": "critical"
+    "severity": "critical",
+    "elementId": 27
   },
   {
     "id": 120,
     "name": "Провис",
-    "element_id": 19,
-    "severity": "medium"
+    "severity": "medium",
+    "elementId": 19
   },
-  { "id": 121, "name": "Загрязнение птичьим пометом",                       "element_id": 28, "severity": "low"      },
-  { "id": 122, "name": "Разрушен",                                           "element_id": 28, "severity": "critical" },
-  { "id": 123, "name": "Отсутствие замка",                                   "element_id": 28, "severity": "medium"   },
-  { "id": 124, "name": "Следы перекрытия",                                   "element_id": 28, "severity": "critical" },
-  { "id": 125, "name": "Загрязнение от выбросов промышленными предприятиями","element_id": 28, "severity": "medium"   },
-  { "id": 126, "name": "Загрязнение птичьим пометом",                       "element_id": 29, "severity": "low"      },
-  { "id": 127, "name": "Разрушен",                                           "element_id": 29, "severity": "critical" },
-  { "id": 128, "name": "Отсутствие замка",                                   "element_id": 29, "severity": "medium"   },
-  { "id": 129, "name": "Следы перекрытия",                                   "element_id": 29, "severity": "critical" },
-  { "id": 130, "name": "Загрязнение от выбросов промышленными предприятиями","element_id": 29, "severity": "medium"   },
-  { "id": 131, "name": "Загрязнение птичьим пометом",                       "element_id": 30, "severity": "low"      },
-  { "id": 132, "name": "Разрушен",                                           "element_id": 30, "severity": "critical" },
-  { "id": 133, "name": "Отсутствие замка",                                   "element_id": 30, "severity": "medium"   },
-  { "id": 134, "name": "Следы перекрытия",                                   "element_id": 30, "severity": "critical" },
-  { "id": 135, "name": "Загрязнение от выбросов промышленными предприятиями","element_id": 30, "severity": "medium"   }
+  {
+    "id": 121,
+    "name": "Загрязнение птичьим пометом",
+    "severity": "low",
+    "elementId": 28
+  },
+  {
+    "id": 122,
+    "name": "Разрушен",
+    "severity": "critical",
+    "elementId": 28
+  },
+  {
+    "id": 123,
+    "name": "Отсутствие замка",
+    "severity": "medium",
+    "elementId": 28
+  },
+  {
+    "id": 124,
+    "name": "Следы перекрытия",
+    "severity": "critical",
+    "elementId": 28
+  },
+  {
+    "id": 125,
+    "name": "Загрязнение от выбросов промышленными предприятиями",
+    "severity": "medium",
+    "elementId": 28
+  },
+  {
+    "id": 126,
+    "name": "Загрязнение птичьим пометом",
+    "severity": "low",
+    "elementId": 29
+  },
+  {
+    "id": 127,
+    "name": "Разрушен",
+    "severity": "critical",
+    "elementId": 29
+  },
+  {
+    "id": 128,
+    "name": "Отсутствие замка",
+    "severity": "medium",
+    "elementId": 29
+  },
+  {
+    "id": 129,
+    "name": "Следы перекрытия",
+    "severity": "critical",
+    "elementId": 29
+  },
+  {
+    "id": 130,
+    "name": "Загрязнение от выбросов промышленными предприятиями",
+    "severity": "medium",
+    "elementId": 29
+  },
+  {
+    "id": 131,
+    "name": "Загрязнение птичьим пометом",
+    "severity": "low",
+    "elementId": 30
+  },
+  {
+    "id": 132,
+    "name": "Разрушен",
+    "severity": "critical",
+    "elementId": 30
+  },
+  {
+    "id": 133,
+    "name": "Отсутствие замка",
+    "severity": "medium",
+    "elementId": 30
+  },
+  {
+    "id": 134,
+    "name": "Следы перекрытия",
+    "severity": "critical",
+    "elementId": 30
+  },
+  {
+    "id": 135,
+    "name": "Загрязнение от выбросов промышленными предприятиями",
+    "severity": "medium",
+    "elementId": 30
+  }
 ]

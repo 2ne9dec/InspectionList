@@ -18,44 +18,55 @@ const referenceApi = rtkApi.injectEndpoints({
     getFilials: build.query<Filial[], void>({
       queryFn: () => ({ data: filialsData as Filial[] }),
       providesTags: ['References'],
+      // Данные статические (из JSON-бандла) — кешировать бессрочно
+      keepUnusedDataFor: Infinity,
     }),
     getVoltages: build.query<Voltage[], void>({
       queryFn: () => ({ data: voltagesData as Voltage[] }),
       providesTags: ['References'],
+      keepUnusedDataFor: Infinity,
     }),
     getLines: build.query<Line[], void>({
       queryFn: () => ({ data: linesData as Line[] }),
       providesTags: ['References'],
+      keepUnusedDataFor: Infinity,
     }),
     getElements: build.query<Element[], void>({
       queryFn: () => ({ data: elementsData as Element[] }),
       providesTags: ['References'],
+      keepUnusedDataFor: Infinity,
     }),
     getDefectTypes: build.query<DefectType[], void>({
       queryFn: () => ({ data: defectTypesData as DefectType[] }),
       providesTags: ['References'],
+      keepUnusedDataFor: Infinity,
     }),
     getFilialVoltageFilter: build.query<Record<string, number[]>, void>({
       queryFn: () => ({ data: filialVoltageFilterData as Record<string, number[]> }),
       providesTags: ['References'],
+      keepUnusedDataFor: Infinity,
     }),
     getPhases: build.query<Phase[], void>({
       queryFn: () => ({ data: phasesData as Phase[] }),
       providesTags: ['References'],
+      keepUnusedDataFor: Infinity,
     }),
     getPhaseElementIds: build.query<number[], void>({
       queryFn: () => ({ data: phaseElementIdsData as number[] }),
       providesTags: ['References'],
+      keepUnusedDataFor: Infinity,
     }),
     getGarlandElementIds: build.query<number[], void>({
       queryFn: () => ({ data: garlandElementIdsData as number[] }),
       providesTags: ['References'],
+      keepUnusedDataFor: Infinity,
     }),
     getVoltageGarlandCount: build.query<Record<string, number>, void>({
       queryFn: () => ({ data: voltageGarlandCountData as Record<string, number> }),
       providesTags: ['References'],
+      keepUnusedDataFor: Infinity,
     }),
-    updateLine: build.mutation<Line, { id: number; year_built?: number | null; year_last_overhaul?: number | null; pole_type?: string | null; wire_type?: string | null; notes?: string | null }>({
+    updateLine: build.mutation<Line, { id: number; yearBuilt?: number | null; yearLastOverhaul?: number | null; poleType?: string | null; wireType?: string | null; notes?: string | null }>({
       // В офлайн-режиме обновление линий не поддерживается
       queryFn: () => ({ error: { status: 'CUSTOM_ERROR', error: 'Offline mode: line editing not supported' } }),
       invalidatesTags: ['References'],

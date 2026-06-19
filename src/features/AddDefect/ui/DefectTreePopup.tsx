@@ -1,6 +1,6 @@
 import { memo, useMemo, useRef, useState } from 'react';
 import type { DefectType, Element } from '@/entities/InspectionLine';
-import { SEVERITY_COLORS, SEVERITY_LABELS } from '@/entities/InspectionLine';
+import { SEVERITY_LABELS } from '@/entities/InspectionLine';
 import { Portal } from '@/shared/ui';
 import { useEscape, useOutsideClick } from '@/shared/lib/hooks';
 import cls from './DefectTreePopup.module.scss';
@@ -43,13 +43,13 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
   useEscape(onClose);
 
   const filteredDefects = useMemo(
-    () => (activeId !== null ? defectTypes.filter((d) => d.element_id === activeId) : []),
+    () => (activeId !== null ? defectTypes.filter((d) => d.elementId === activeId) : []),
     [defectTypes, activeId],
   );
 
   const countByElement = useMemo(() => {
     const map: Record<number, number> = {};
-    for (const d of defectTypes) map[d.element_id] = (map[d.element_id] ?? 0) + 1;
+    for (const d of defectTypes) map[d.elementId] = (map[d.elementId] ?? 0) + 1;
     return map;
   }, [defectTypes]);
 
@@ -114,12 +114,12 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
                 >
                   <span
                     className={cls.bar}
-                    style={{ background: SEVERITY_COLORS[defect.severity] }}
+                    data-severity={defect.severity}
                   />
                   <span className={cls.defectName}>{defect.name}</span>
                   <span
                     className={cls.sev}
-                    style={{ color: SEVERITY_COLORS[defect.severity] }}
+                    data-severity={defect.severity}
                   >
                     {SEVERITY_LABELS[defect.severity]}
                   </span>

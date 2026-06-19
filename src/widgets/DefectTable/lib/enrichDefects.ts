@@ -14,7 +14,7 @@ export function enrichDefects(
 
   return records.map((d) => {
     const dt = dtById.get(d.defectId);
-    const el = dt ? elById.get(dt.element_id) : undefined;
+    const el = dt ? elById.get(dt.elementId) : undefined;
     const phase = d.phaseId !== null ? phById.get(d.phaseId) : undefined;
     return {
       ...d,

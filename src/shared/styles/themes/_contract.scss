@@ -12,11 +12,16 @@
 //   --color-row-*              — состояния строк таблицы
 //   --color-scrollbar-*        — скроллбар
 //   --shadow-*                 — тени (в тёмной — глубже)
-//   --color-success / -muted   — успех
-//   --color-error / -muted     — ошибка
-//   --color-warning / -muted   — предупреждение
-//   --color-danger / -muted    — опасность
+//   --color-success-muted      — фон для success-состояний (бейджи, уведомления)
+//   --color-error-muted        — фон для error-состояний
+//   --color-warning-muted      — фон для warning-состояний
 //   --color-status-draft       — статус листка: черновик
 //   --color-status-active      — статус листка: в работе
-//   --color-status-archived    — статус листка: архивирован
+//   --color-status-review      — статус листка: на проверке
+//   --color-status-done        — статус листка: завершён
+//   --color-cinema-bg          — фон «кинозала» (PhotoGallery lightbox, всегда тёмный)
+//   --color-cinema-bg-deep     — более глубокий фон кинозала
+//   --color-cinema-text        — текст поверх кинозала
+//   --color-cinema-text-muted  — приглушённый текст кинозала
+//   --color-cinema-accent      — акцент поверх кинозала (всегда голубой)
 // ============================================================================

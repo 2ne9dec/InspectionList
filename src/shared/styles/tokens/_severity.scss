@@ -44,3 +44,18 @@
   --color-severity-low:       var(--severity-low);
   --color-severity-ok:        var(--severity-ok);
 }
+
+// ── data-severity → --sev ─────────────────────────────────────────────────────
+// Компоненты используют data-severity="critical|high|medium|low|ok".
+// CSS автоматически выбирает нужный цвет через var(--sev).
+// SCSS-модуль компонента добавляет только свойство (background / color / border-color),
+// не зная конкретного значения цвета.
+//
+// Пример:
+//   TSX:  <span data-severity={severity} className={cls.badge}>
+//   SCSS: .badge { background: var(--sev); }
+[data-severity='critical'] { --sev: var(--severity-critical); }
+[data-severity='high']     { --sev: var(--severity-high);     }
+[data-severity='medium']   { --sev: var(--severity-medium);   }
+[data-severity='low']      { --sev: var(--severity-low);      }
+[data-severity='ok']       { --sev: var(--severity-ok);       }
