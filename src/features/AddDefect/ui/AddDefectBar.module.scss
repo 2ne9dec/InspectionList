@@ -25,7 +25,6 @@
   width: calc(9ch + 1.2rem);
   min-width: 0;
   text-align: center;
-  /* hide native number spinners */
   &::-webkit-outer-spin-button,
   &::-webkit-inner-spin-button { appearance: none; margin: 0; }
   appearance: textfield;
@@ -50,7 +49,6 @@
   &:disabled { opacity: 0.35; cursor: default; }
 }
 
-/* QuickDefectChips */
 .quickChips {
   display: flex;
   flex-wrap: wrap;
@@ -58,13 +56,11 @@
   align-items: center;
   flex-basis: 100%;
 }
-
 .quickLabel {
   font-size: 11px;
   color: var(--color-text-secondary);
   white-space: nowrap;
 }
-
 .chip {
   padding: 3px 8px;
   border: 1px solid var(--color-border, #334155);
@@ -75,10 +71,8 @@
   color: var(--color-text-primary);
   white-space: nowrap;
   transition: all .12s;
-
   &:hover { border-color: var(--color-accent); }
 }
-
 .chipActive {
   background: var(--color-accent, #3b82f6);
   color: var(--color-text-on-accent);
@@ -93,43 +87,55 @@
   .smallField     { width: 90px; }
 }
 
-/* Phone (< 480px) - Samsung S24 CSS viewport = 360px */
+/* Phone (< 480px) — 6-column CSS Grid, obhodit HStack */
 @include m.down(phone) {
   .bar {
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--space-2);
     padding: var(--space-2) var(--space-3);
-    gap: 8px;
+    align-items: end;
   }
 
-  .dateField {
-    flex: 0 0 calc(50% - 4px);
-    width: calc(50% - 4px);
-  }
-  .locationField {
-    flex: 0 0 calc(50% - 4px);
-    width: calc(50% - 4px);
-  }
+  /* Row 2: data (3 kol) + opor (3 kol) */
+  .dateField     { grid-column: span 3; order: 1; width: 100%; }
+  .locationField { grid-column: span 3; order: 2; width: 100%; }
 
+  /* Row 3: inspektor polnaya shirina */
   .inspectorField {
-    flex: 0 0 100%;
+    grid-column: span 6;
+    order: 3;
     width: 100%;
+    flex-basis: auto;
   }
 
+  /* Row 4: malen'kie polya po 2 iz 6 (= 1/3 shiriny kazhdoe) */
   .smallField {
-    flex: 1 1 calc(33% - 6px);
-    min-width: 80px;
-    width: auto;
+    grid-column: span 2;
+    width: 100%;
+    min-width: 0;
   }
 
+  /* Knopka Dobavit' — polnaya shirina */
   .submitWrap {
-    flex: 0 0 100%;
+    grid-column: span 6;
+    order: 10;
     > button { width: 100% !important; }
+  }
+
+  /* Quick-chips — polnaya shirina */
+  .quickChips {
+    grid-column: span 6;
+    order: 11;
   }
 
   .stepBtn {
     width: 36px;
     height: var(--control-height-m);
   }
-
+  .stepInput {
+    width: calc(7ch + 1rem);
+  }
   .chip {
     padding: 5px 10px;
     font-size: 12px;

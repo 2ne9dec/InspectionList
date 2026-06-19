@@ -65,10 +65,16 @@ export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy }: DefectT
     });
   }, []);
 
-  // ── Infinite scroll ──────────────────────────────────────────────────────
+  // ── Infinite scroll ──────────────────────────────────────────────────────────────────────────
   const [displayCount, setDisplayCount] = useState(INITIAL_POLES);
   const tableWrapperRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // На телефоне (< 480px) страница скроллит нативно — root должен быть null (viewport)
+  const isMobilePhone = useMemo(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 479px)').matches,
+    [],
+  );
 
   const filtersKey = [tab, search, filterElementId, filterDefectTypeId, filterSeverity, sortDir].join('|');
   useEffect(() => {
@@ -83,15 +89,16 @@ export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy }: DefectT
   useEffect(() => {
     const sentinel = sentinelRef.current;
     const wrapper = tableWrapperRef.current;
-    if (!sentinel || !wrapper || !hasMore) return;
+    if (!sentinel || !hasMore) return;
+    if (!isMobilePhone && !wrapper) return;
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) setDisplayCount((prev) => prev + LOAD_MORE_POLES); },
-      { root: wrapper, threshold: 0 },
+      { root: isMobilePhone ? null : wrapper, threshold: 0 },
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasMore]);
-  // ────────────────────────────────────────────────────────────────────────
+  }, [hasMore, isMobilePhone]);
+  // ────────────────────────────────────────────────────────────────────────────
 
   const isFixedTab = tab === 'fixed';
   const anyExpanded = expandedPoles.size > 0;

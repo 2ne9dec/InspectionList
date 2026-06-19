@@ -7,7 +7,6 @@
   overflow: hidden;
 }
 
-/* Информационная шапка */
 .infoBar {
   display: flex;
   align-items: center;
@@ -54,7 +53,6 @@
   flex-shrink: 0;
 }
 
-/* Кнопки action-bar в шапке */
 .actionBtnWrap {
   position: relative;
   display: inline-flex;
@@ -77,7 +75,6 @@
   cursor: pointer;
   transition: var(--transition-bg);
   flex-shrink: 0;
-
   &:hover:not(:disabled) { background: var(--color-priority-hover); }
 }
 
@@ -95,7 +92,6 @@
   cursor: pointer;
   flex-shrink: 0;
   transition: var(--transition-bg), var(--transition-border), var(--transition-color);
-
   &:hover:not(:disabled) {
     background: var(--color-accent-muted);
     border-color: var(--color-accent);
@@ -140,52 +136,32 @@
   color: var(--color-text-secondary);
 }
 
-/* Адаптивная верстка */
+/* Tablet (< 768px) */
 @include m.down(tablet) {
-  .infoBar {
-    padding: var(--space-1) var(--space-2);
-    gap: var(--space-1);
-  }
-
-  .lineName {
-    font-size: var(--font-size-s);
-  }
-
-  .metaItem {
-    font-size: var(--font-size-xs);
-  }
+  .infoBar { padding: var(--space-1) var(--space-2); gap: var(--space-1); }
+  .lineName { font-size: var(--font-size-s); }
+  .metaItem { font-size: var(--font-size-xs); }
 }
 
+/* Phone (< 480px) — stran. skrollit nativno, tableWrapper ne nuzhno skrollit' sam */
 @include m.down(phone) {
-  .infoBar {
-    padding: var(--space-1) var(--space-2);
-    gap: 6px;
+  .page {
+    height: auto;
+    min-height: calc(100dvh - var(--navbar-height));
+    overflow: visible;
   }
 
-  .lineName {
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-bold);
+  .body {
+    overflow: visible;
+    flex: none;
+    min-height: 0;
   }
 
-  .metaItem,
-  .metaSep {
-    font-size: 10px;
-  }
-
-  .btnIcon {
-    width: 44px;
-    height: 44px;
-  }
-
-  .btnPriorities {
-    height: 36px;
-    padding: 0 var(--space-2);
-    font-size: 11px;
-  }
+  .infoBar { padding: var(--space-1) var(--space-2); gap: 6px; }
+  .lineName { font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); }
+  .metaItem, .metaSep { font-size: 10px; }
+  .btnIcon { width: 44px; height: 44px; }
+  .btnPriorities { height: 36px; padding: 0 var(--space-2); font-size: 11px; }
 }
 
-/* Толкает кнопку Excel к правому краю */
-.spacer {
-  flex: 1;
-  min-width: var(--space-2);
-}
+.spacer { flex: 1; min-width: var(--space-2); }

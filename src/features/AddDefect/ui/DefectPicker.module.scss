@@ -85,10 +85,10 @@
   flex-shrink: 0;
   opacity: 0.85;
   transition: var(--transition-opacity);
-
   &:hover { opacity: 1; }
 }
 
+/* Tablet */
 @include m.down(tablet) {
   .wrap {
     flex: 1 1 100%;
@@ -97,9 +97,15 @@
   }
 }
 
+/* Phone — v grid-konteyner: zanimaem vse 6 kolonok, stoit pervym */
 @include m.down(phone) {
+  .wrap {
+    grid-column: span 6;
+    width: 100%;
+    max-width: 100%;
+    order: -1;
+  }
   .btn {
     height: var(--control-height-m);
-    padding: 0 var(--space-3);
   }
 }

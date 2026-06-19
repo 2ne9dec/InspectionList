@@ -35,11 +35,9 @@
   opacity: 0.5;
 }
 
-/* Адаптивная верстка */
+/* Tablet/mobile - gorizontalny skroll */
 @media (max-width: 720px) {
-  .table {
-    min-width: 600px;
-  }
+  .table { min-width: 600px; }
   .tableWrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -47,8 +45,16 @@
   }
 }
 
+/* Phone - stranica skrollit nativno, tableWrapper ne ogranchivayem vysotu */
 @media (max-width: 479px) {
-  .table {
-    min-width: 520px;
+  .wrapper {
+    height: auto;
+    min-height: 0;
   }
+  .tableWrapper {
+    overflow-y: visible;
+    height: auto;
+    flex: none;
+  }
+  .table { min-width: 520px; }
 }
