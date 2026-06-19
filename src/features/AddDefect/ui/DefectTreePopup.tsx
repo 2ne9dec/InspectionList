@@ -16,10 +16,18 @@ interface DefectTreePopupProps {
 
 /**
  * Двухпанельный попап «Элемент → Дефект».
- * Использует общие хуки useOutsideClick + useEscape.
+ * На десктопе: две колонки side-by-side с hover-навигацией.
+ * На телефоне (< 480px CSS): bottom sheet с пошаговой навигацией (tap).
  */
 export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
   const { elements, defectTypes, anchor, onSelect, onClose } = props;
+
+  // Определяем телефонный viewport один раз при монтировании.
+  // При изменении ориентации попап закроется сам — повторный открой пересчитает.
+  const isMobile = useMemo(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 479px)').matches,
+    [],
+  );
 
   // Спец-маркер «без дефектов» — всегда наверху списка.
   const sortedElements = useMemo(() => {
@@ -33,13 +41,18 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
   const [activeId, setActiveId] = useState<number | null>(sortedElements[0]?.id ?? null);
   const [rightPos, setRightPos] = useState<{ top: number; left: number } | null>(null);
 
+  // Мобильный: шаг навигации ('elem' → список элементов, 'defect' → список дефектов)
+  const [mobileStep, setMobileStep] = useState<'elem' | 'defect'>('elem');
+
   const leftRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
-  // useMemo — чтобы массив refs не создавался заново каждый рендер
-  // (useOutsideClick имеет refs в deps, нестабильный массив → лишние add/remove)
-  const outerRefs = useMemo(() => [leftRef, rightRef], []);
+  const mobileRef = useRef<HTMLDivElement>(null);
 
-  useOutsideClick(outerRefs, onClose, { enabled: true });
+  // useMemo — чтобы массив refs не создавался заново каждый рендер
+  const desktopRefs = useMemo(() => [leftRef, rightRef], []);
+  const mobileRefs  = useMemo(() => [mobileRef], []);
+
+  useOutsideClick(isMobile ? mobileRefs : desktopRefs, onClose, { enabled: true });
   useEscape(onClose);
 
   const filteredDefects = useMemo(
@@ -53,11 +66,7 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
     return map;
   }, [defectTypes]);
 
-  // При наведении на элемент — правую панель сдвигаем вверх на высоту одной
-  // строки, чтобы:
-  //   • заголовок «ДЕФЕКТ» оказался ровно на одну позицию выше элемента,
-  //   • первый дефект встал на одну линию с подсвеченным элементом.
-  // Высоту берём из btnRect — она совпадает с высотой шапки + padding'a.
+  // Десктоп: при наведении на элемент — правую панель сдвигаем вверх на высоту одной строки
   const handleElemHover = (el: Element, e: React.MouseEvent<HTMLButtonElement>) => {
     setActiveId(el.id);
     const btnRect = e.currentTarget.getBoundingClientRect();
@@ -70,6 +79,91 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
     }
   };
 
+  // Мобильный: тап на элемент — переход к дефектам
+  const handleElemTap = (el: Element) => {
+    setActiveId(el.id);
+    setMobileStep('defect');
+  };
+
+  const activeElemName = useMemo(
+    () => sortedElements.find((e) => e.id === activeId)?.name ?? '',
+    [sortedElements, activeId],
+  );
+
+  /* ── Mobile bottom sheet ─────────────────────────────────────────── */
+  if (isMobile) {
+    return (
+      <Portal>
+        <div className={cls.backdrop} onClick={onClose} />
+        <div ref={mobileRef} className={cls.mobileSheet}>
+          {mobileStep === 'elem' ? (
+            <>
+              <div className={cls.sheetHeader}>
+                {/* пустой спейсер слева для выравнивания заголовка по центру */}
+                <span style={{ minWidth: 64 }} />
+                <span className={cls.sheetTitle}>Выберите элемент</span>
+                <button type="button" className={cls.closeBtn} onClick={onClose} aria-label="Закрыть">
+                  ✕
+                </button>
+              </div>
+              <div className={cls.colList}>
+                {sortedElements.map((el) => (
+                  <button
+                    key={el.id}
+                    type="button"
+                    className={`${cls.elemItem} ${activeId === el.id ? cls.active : ''}`}
+                    onClick={() => handleElemTap(el)}
+                  >
+                    <span className={cls.elemName}>{el.name}</span>
+                    <span className={cls.elemCount}>{countByElement[el.id] ?? 0}</span>
+                    <span className={cls.arrow} aria-hidden>›</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className={cls.sheetHeader}>
+                <button
+                  type="button"
+                  className={cls.backBtn}
+                  onClick={() => setMobileStep('elem')}
+                >
+                  ‹ Назад
+                </button>
+                <span className={cls.sheetTitle}>{activeElemName}</span>
+                <button type="button" className={cls.closeBtn} onClick={onClose} aria-label="Закрыть">
+                  ✕
+                </button>
+              </div>
+              <div className={cls.colList}>
+                {filteredDefects.length === 0 ? (
+                  <div className={cls.hint}>Нет дефектов</div>
+                ) : (
+                  filteredDefects.map((defect) => (
+                    <button
+                      key={defect.id}
+                      type="button"
+                      className={cls.defectItem}
+                      onClick={() => { onSelect(defect); onClose(); }}
+                    >
+                      <span className={cls.bar} data-severity={defect.severity} />
+                      <span className={cls.defectName}>{defect.name}</span>
+                      <span className={cls.sev} data-severity={defect.severity}>
+                        {SEVERITY_LABELS[defect.severity]}
+                      </span>
+                    </button>
+                  ))
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </Portal>
+    );
+  }
+
+  /* ── Desktop two-panel popup ─────────────────────────────────────── */
   return (
     <Portal>
       <div

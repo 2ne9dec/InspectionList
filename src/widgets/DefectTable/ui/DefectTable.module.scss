@@ -14,8 +14,6 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  // Фиксированный layout — ширины колонок задаются только заголовком и не «прыгают»
-  // при разворачивании группы (когда меняется набор cell'ов внутри строк).
   table-layout: fixed;
 }
 
@@ -27,8 +25,6 @@
 }
 
 .sentinel {
-  // Строка-сентинель для IntersectionObserver.
-  // Не должна влиять на layout таблицы.
   pointer-events: none;
 }
 
@@ -39,14 +35,20 @@
   opacity: 0.5;
 }
 
-/* ── Адаптивная вёрстка ──────────────────────────────────────────────────── */
+/* Адаптивная верстка */
 @media (max-width: 720px) {
   .table {
-    // На мобильных — горизонтальный скролл, колонки не сжимаются
     min-width: 600px;
   }
   .tableWrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+}
+
+@media (max-width: 479px) {
+  .table {
+    min-width: 520px;
   }
 }

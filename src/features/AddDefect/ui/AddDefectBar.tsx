@@ -294,16 +294,17 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
         </FormField>
       </div>
 
-      <Button
-        variant='primary'
-        size='m'
-        onClick={handleSubmit}
-        disabled={!isValid}
-        loading={isLoading}
-        style={{ flexShrink: 0 }}
-      >
-        + Добавить
-      </Button>
+      <div className={cls.submitWrap}>
+        <Button
+          variant='primary'
+          size='m'
+          onClick={handleSubmit}
+          disabled={!isValid}
+          loading={isLoading}
+        >
+          + Добавить
+        </Button>
+      </div>
 
       <QuickDefectChips
         topDefects={topDefects}

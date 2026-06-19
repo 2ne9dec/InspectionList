@@ -34,7 +34,7 @@
 .stat {
   font-size: var(--font-size-s);
   font-weight: var(--font-weight-semibold);
-  color: var(--sev);  // data-severity на элементе
+  color: var(--sev);
 }
 
 .filterGroup {
@@ -51,4 +51,13 @@
 @include m.down(tablet) {
   .search { width: 100%; margin-left: 0; }
   .toolbar { gap: var(--space-2); }
+}
+
+@include m.down(phone) {
+  .toolbar {
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-2);
+  }
+  .stats { gap: var(--space-2); }
+  .stat  { font-size: var(--font-size-xs); }
 }

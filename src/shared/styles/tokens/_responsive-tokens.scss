@@ -1,14 +1,31 @@
-// ============================================================================
-// Адаптивная подмена токенов по брейкпоинтам.
-// Только то, что реально зависит от размера экрана:
-//   font-sizes, navbar-height, page-padding.
-// Цвета/радиусы/шадоу остаются неизменными.
-// ============================================================================
+/* ============================================================================
+ * Адаптивная подмена токенов по брейкпоинтам.
+ * Только то, что реально зависит от размера экрана:
+ *   font-sizes, navbar-height, page-padding.
+ * Цвета/радиусы/шадоу остаются неизменными.
+ * ============================================================================ */
 
 @use 'breakpoints' as bp;
 
-// Mobile (< 768px)
-@media (max-width: 767px) {
+/* Phone (< 480px) - Samsung S24 CSS viewport = 360px
+   Идёт первым — будет переопределён более широкими правилами ниже если нужно. */
+@media (max-width: 479px) {
+  :root {
+    --font-size-xs:  11px;
+    --font-size-s:   12px;
+    --font-size-m:   13px;
+    --font-size-l:   15px;
+    --font-size-xl:  18px;
+    --navbar-height: 52px;
+    --page-padding:  10px;
+    --content-max-width: 100%;
+    --control-height-m: 44px;
+    --control-height-s: 36px;
+  }
+}
+
+/* Mobile (480-767px) */
+@media (min-width: 480px) and (max-width: 767px) {
   :root {
     --font-size-xs:  11px;
     --font-size-s:   12px;
@@ -21,9 +38,7 @@
   }
 }
 
-
-
-// Tablet (768–1023)
+/* Tablet (768-1023) */
 @media (min-width: 768px) and (max-width: 1023px) {
   :root {
     --font-size-xs:  12px;
@@ -36,8 +51,7 @@
   }
 }
 
-// Desktop (1024–1919) — базовые значения уже выставлены в _typography/_sizes,
-// здесь лишь уточняем (на случай если desktop ≠ tablet).
+/* Desktop (1024-1919) */
 @media (min-width: 1024px) and (max-width: 1919px) {
   :root {
     --font-size-xs:  12px;
@@ -50,7 +64,7 @@
   }
 }
 
-// Wide (1920+) — увеличиваем для 4K
+/* Wide (1920+) */
 @media (min-width: 1920px) {
   :root {
     --font-size-xs:  13px;

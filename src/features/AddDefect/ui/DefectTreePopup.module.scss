@@ -1,3 +1,4 @@
+
 .elemPanel {
   position: fixed;
   z-index: var(--z-popover);
@@ -95,7 +96,7 @@
   width: 3px;
   align-self: stretch;
   border-radius: 2px;
-  background: var(--sev);  // data-severity на элементе
+  background: var(--sev);
   flex-shrink: 0;
   min-height: 20px;
 }
@@ -103,7 +104,7 @@
 .sev {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
-  color: var(--sev);  // data-severity на элементе
+  color: var(--sev);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -113,4 +114,107 @@
   text-align: center;
   font-size: var(--font-size-s);
   color: var(--color-text-secondary);
+}
+
+/* ── Mobile bottom sheet (< 480px) ─────────────────────────────────────── */
+.backdrop {
+  display: none;
+}
+
+.mobileSheet {
+  display: none;
+}
+
+.sheetHeader {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  min-height: 48px;
+  flex-shrink: 0;
+  gap: var(--space-1);
+}
+
+.sheetTitle {
+  flex: 1;
+  text-align: center;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  font-size: var(--font-size-m);
+  cursor: pointer;
+  padding: var(--space-2) var(--space-3);
+  min-width: 64px;
+  text-align: left;
+  flex-shrink: 0;
+  min-height: 44px;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 20px;
+  cursor: pointer;
+  padding: var(--space-2) var(--space-3);
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: var(--radii);
+  transition: var(--transition-bg);
+
+  &:hover { background: var(--color-row-hover); }
+}
+
+@media (max-width: 479px) {
+  // Скрываем десктопные панели
+  .elemPanel,
+  .defectPanel {
+    display: none !important;
+  }
+
+  // Показываем bottom sheet
+  .backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: calc(var(--z-popover) - 1);
+  }
+
+  .mobileSheet {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-popover);
+    background: var(--color-surface-card);
+    border-radius: var(--radii-l) var(--radii-l) 0 0;
+    border: 1px solid var(--color-border);
+    border-bottom: none;
+    box-shadow: var(--shadow-l);
+    max-height: 72vh;
+    overflow: hidden;
+  }
+
+  // Большие touch-target'ы для списочных кнопок в шите
+  .elemItem,
+  .defectItem {
+    min-height: 48px;
+    padding: var(--space-3) var(--space-4);
+  }
 }

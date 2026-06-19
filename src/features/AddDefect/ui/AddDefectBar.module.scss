@@ -50,7 +50,7 @@
   &:disabled { opacity: 0.35; cursor: default; }
 }
 
-/* ── QuickDefectChips ───────────────────────────────────────────────── */
+/* QuickDefectChips */
 .quickChips {
   display: flex;
   flex-wrap: wrap;
@@ -85,9 +85,53 @@
   border-color: var(--color-accent, #3b82f6);
 }
 
+/* Tablet (< 768px) */
 @include m.down(tablet) {
   .dateField      { width: 130px; }
   .inspectorField { width: 100%; flex-basis: 100%; }
   .phaseField     { width: 90px; }
   .smallField     { width: 90px; }
+}
+
+/* Phone (< 480px) - Samsung S24 CSS viewport = 360px */
+@include m.down(phone) {
+  .bar {
+    padding: var(--space-2) var(--space-3);
+    gap: 8px;
+  }
+
+  .dateField {
+    flex: 0 0 calc(50% - 4px);
+    width: calc(50% - 4px);
+  }
+  .locationField {
+    flex: 0 0 calc(50% - 4px);
+    width: calc(50% - 4px);
+  }
+
+  .inspectorField {
+    flex: 0 0 100%;
+    width: 100%;
+  }
+
+  .smallField {
+    flex: 1 1 calc(33% - 6px);
+    min-width: 80px;
+    width: auto;
+  }
+
+  .submitWrap {
+    flex: 0 0 100%;
+    > button { width: 100% !important; }
+  }
+
+  .stepBtn {
+    width: 36px;
+    height: var(--control-height-m);
+  }
+
+  .chip {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
 }

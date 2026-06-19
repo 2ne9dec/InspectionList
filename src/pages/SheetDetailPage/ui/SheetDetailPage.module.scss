@@ -7,7 +7,7 @@
   overflow: hidden;
 }
 
-/* ── Информационная шапка ──────────────────────────────────────────────────── */
+/* Информационная шапка */
 .infoBar {
   display: flex;
   align-items: center;
@@ -54,14 +54,13 @@
   flex-shrink: 0;
 }
 
-/* ── Кнопки action-bar в шапке ─────────────────────────────────────────────── */
+/* Кнопки action-bar в шапке */
 .actionBtnWrap {
   position: relative;
   display: inline-flex;
   flex-shrink: 0;
 }
 
-/* Кнопка «Приоритеты» — фиолетовый акцент через CSS-переменные */
 .btnPriorities {
   display: inline-flex;
   align-items: center;
@@ -82,7 +81,6 @@
   &:hover:not(:disabled) { background: var(--color-priority-hover); }
 }
 
-/* Иконочные кнопки (Принт, Клон, Таймлайн) */
 .btnIcon {
   display: inline-flex;
   align-items: center;
@@ -105,7 +103,6 @@
   }
 }
 
-/* Бейдж критических дефектов */
 .criticalBadge {
   position: absolute;
   top: -7px;
@@ -126,7 +123,6 @@
   z-index: 1;
 }
 
-/* ── Основная область ──────────────────────────────────────────────────────── */
 .body {
   flex: 1;
   min-height: 0;
@@ -144,8 +140,7 @@
   color: var(--color-text-secondary);
 }
 
-
-/* ── Адаптивная вёрстка ────────────────────────────────────────────────────── */
+/* Адаптивная верстка */
 @include m.down(tablet) {
   .infoBar {
     padding: var(--space-1) var(--space-2);
@@ -158,6 +153,34 @@
 
   .metaItem {
     font-size: var(--font-size-xs);
+  }
+}
+
+@include m.down(phone) {
+  .infoBar {
+    padding: var(--space-1) var(--space-2);
+    gap: 6px;
+  }
+
+  .lineName {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+  }
+
+  .metaItem,
+  .metaSep {
+    font-size: 10px;
+  }
+
+  .btnIcon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .btnPriorities {
+    height: 36px;
+    padding: 0 var(--space-2);
+    font-size: 11px;
   }
 }
 
