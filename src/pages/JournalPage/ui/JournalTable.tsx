@@ -57,19 +57,23 @@ const Row = memo(({
         className={`${cls.tdDate} ${cls.editable}`}
         onClick={() => onEdit(d.id)}
       >
-        {formatDate(d.resolutionDeadline)}
-        {d.masterName
-          ? <div className={cls.signed}>✍ {d.masterName}</div>
-          : <span className={cls.editHint}>—</span>}
+        {(d.resolutionDeadline || d.masterName) ? (
+          <>
+            {formatDate(d.resolutionDeadline)}
+            {d.masterName && <div className={cls.signed}>✍ {d.masterName}</div>}
+          </>
+        ) : <span className={cls.editHint}>—</span>}
       </td>
       <td
         className={`${cls.tdDate} ${cls.editable}`}
         onClick={() => onEdit(d.id)}
       >
-        {formatDate(d.dateFixed)}
-        {d.fixWorkVolume
-          ? <div className={cls.clamp} title={d.fixWorkVolume}>{d.fixWorkVolume}</div>
-          : (!d.dateFixed && <span className={cls.editHint}>—</span>)}
+        {(d.dateFixed || d.fixWorkVolume) ? (
+          <>
+            {formatDate(d.dateFixed)}
+            {d.fixWorkVolume && <div className={cls.clamp} title={d.fixWorkVolume}>{d.fixWorkVolume}</div>}
+          </>
+        ) : <span className={cls.editHint}>—</span>}
       </td>
       <td className={cls.editable} onClick={() => onEdit(d.id)}>
         {d.inspectorFix

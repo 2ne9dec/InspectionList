@@ -157,14 +157,27 @@
 /* ── Таблица ────────────────────────────────────────────────────────── */
 .table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;  /* collapse + sticky = артефакты бордеров */
+  border-spacing: 0;
   font-size: 13px;
 
   th, td {
     padding: 7px 10px;
     text-align: left;
-    border: 1px solid var(--color-border);
+    /* Чтобы не дублировать бордеры при separate: рисуем только right + bottom */
+    border-right:  1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
     vertical-align: middle;
+  }
+
+  /* Левый бордер только у первых ячеек каждой строки */
+  th:first-child, td:first-child {
+    border-left: 1px solid var(--color-border);
+  }
+
+  /* Верхний бордер только у первой строки thead */
+  thead tr:first-child th {
+    border-top: 1px solid var(--color-border);
   }
 
   thead tr:first-child th {
@@ -179,9 +192,14 @@
     line-height: 1.35;
     vertical-align: middle;
     text-align: center;
+    height: 56px;  /* фиксируем высоту → top второй строки надёжен */
+    box-sizing: border-box;
   }
 
   thead tr:nth-child(2) th {
+    position: sticky;
+    top: 56px;  /* = высота первой строки шапки */
+    z-index: 2;
     background: var(--color-bg-surface-2);
     font-size: 13px;
     font-weight: 600;
@@ -201,14 +219,9 @@
     background: var(--color-row-hover) !important;
   }
 
-  /* DOM-виртуализация без react-virtual:
-     браузер пропускает рендер строк вне вьюпорта.
-     contain-intrinsic-size задаёт примерную высоту строки (37px)
-     чтобы скроллбар не прыгал при прокрутке. */
-  tbody tr {
-    content-visibility: auto;
-    contain-intrinsic-size: 0 37px;
-  }
+  /* content-visibility: auto вызывало артефакты рендеринга
+     (содержимое строк "просвечивало" сквозь sticky-шапку).
+     При 17 записях виртуализация не нужна. */
 }
 
 /* ── Заголовки групп ─────────────────────────────────────────────────── */
