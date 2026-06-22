@@ -14,10 +14,12 @@ interface SelectMenuProps {
   placeholder?: string;
   panelWidth?: number | string;
   className?:  string;
+  /** id для кнопки-триггера — нужен для связки с <label htmlFor>. */
+  id?: string;
 }
 
 export const SelectMenu = memo(({
-  options, value, onChange, placeholder = '—', panelWidth, className,
+  options, value, onChange, placeholder = '—', panelWidth, className, id,
 }: SelectMenuProps) => {
   const selected = useMemo(
     () => options.find((o) => o.value === value),
@@ -30,6 +32,7 @@ export const SelectMenu = memo(({
       wrapperClassName={className}
       trigger={({ open, toggle }) => (
         <button
+          id={id}
           type='button'
           className={`${cls.trigger}${open ? ` ${cls.open}` : ''}`}
           onClick={toggle}

@@ -1,8 +1,7 @@
-import { memo, useRef, useState, useCallback } from 'react';
+import { memo, useRef, useState, useCallback, useEffect, useLayoutEffect } from 'react';
 import type { ReactNode } from 'react';
 import { classNames } from '@/shared/lib/classNames/classNames';
-import { useEscape, useFloatingPosition, useOutsideClick } from '@/shared/lib/hooks';
-import type { FloatingPosition } from '@/shared/lib/hooks';
+import { useEscape, useOutsideClick } from '@/shared/lib/hooks';
 import { Portal } from '../Portal';
 import cls from './Dropdown.module.scss';
 
@@ -37,11 +36,45 @@ export const Dropdown = memo((props: DropdownProps) => {
   useOutsideClick([triggerRef, panelRef], close, { enabled: open });
   useEscape(close, { enabled: open });
 
-  const pos: FloatingPosition = useFloatingPosition(triggerRef, { isOpen: open, placement });
+  const applyPosition = useCallback(() => {
+    if (!panelRef.current || !triggerRef.current) return;
+    const panel = panelRef.current;
+    const tr = triggerRef.current.getBoundingClientRect();
+    const width = panelWidth
+      ? (typeof panelWidth === 'number' ? `${panelWidth}px` : panelWidth)
+      : undefined;
+    if (width) panel.style.width = width;
 
-  const panelStyle: React.CSSProperties = { top: pos.top, width: panelWidth };
-  if (pos.right !== undefined) panelStyle.right = pos.right;
-  if (pos.left !== undefined) panelStyle.left = pos.left;
+    if (placement === 'bottom-end') {
+      panel.style.right = `${window.innerWidth - tr.right}px`;
+      panel.style.left  = 'auto';
+    } else {
+      panel.style.left  = `${tr.left}px`;
+      panel.style.right = 'auto';
+    }
+    panel.style.top = `${tr.bottom + 4}px`;
+
+    const pr = panel.getBoundingClientRect();
+    if (pr.bottom > window.innerHeight) {
+      panel.style.top = `${Math.max(tr.top - pr.height - 4, 4)}px`;
+    }
+    panel.style.visibility = 'visible';
+  }, [placement, panelWidth]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    applyPosition();
+  }, [open, applyPosition]);
+
+  useEffect(() => {
+    if (!open) return;
+    window.addEventListener('resize', applyPosition);
+    window.addEventListener('scroll', applyPosition, true);
+    return () => {
+      window.removeEventListener('resize', applyPosition);
+      window.removeEventListener('scroll', applyPosition, true);
+    };
+  }, [open, applyPosition]);
 
   return (
     <>
@@ -53,7 +86,7 @@ export const Dropdown = memo((props: DropdownProps) => {
           <div
             ref={panelRef}
             className={classNames(cls.panel, {}, [panelClassName])}
-            style={panelStyle}
+            style={{ visibility: 'hidden' }}
             role="menu"
           >
             {children({ close })}

@@ -2,17 +2,14 @@ import {
   memo,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
 import { classNames } from '@/shared/lib/classNames/classNames';
-import {
-  useEscape,
-  useFloatingPosition,
-  useOutsideClick,
-} from '@/shared/lib/hooks';
+import { useEscape, useOutsideClick } from '@/shared/lib/hooks';
 import { Portal } from '../Portal';
 import cls from './Combobox.module.scss';
 
@@ -78,7 +75,19 @@ function ComboboxInner<V extends string | number = string | number>(
   useOutsideClick([wrapRef, panelRef], close, { enabled: open });
   useEscape(close, { enabled: open });
 
-  const pos = useFloatingPosition(wrapRef, { isOpen: open });
+  useLayoutEffect(() => {
+    if (!open || !panelRef.current || !wrapRef.current) return;
+    const panel = panelRef.current;
+    const wr = wrapRef.current.getBoundingClientRect();
+    panel.style.left  = `${wr.left}px`;
+    panel.style.width = `${wr.width}px`;
+    panel.style.top   = `${wr.bottom + 4}px`;
+    const pr = panel.getBoundingClientRect();
+    if (pr.bottom > window.innerHeight) {
+      panel.style.top = `${Math.max(wr.top - pr.height - 4, 4)}px`;
+    }
+    panel.style.visibility = 'visible';
+  }, [open]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -159,7 +168,7 @@ function ComboboxInner<V extends string | number = string | number>(
           <div
             ref={panelRef}
             className={cls.panel}
-            style={{ top: pos.top, left: pos.left, width: wrapRef.current?.offsetWidth }}
+            style={{ visibility: 'hidden' }}
             role="listbox"
           >
             {filtered.length === 0 ? (

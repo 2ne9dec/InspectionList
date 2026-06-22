@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import type { RefObject } from 'react';
 
 export interface FloatingPosition {
@@ -43,9 +43,16 @@ export function useFloatingPosition<T extends HTMLElement>(
     }
   }, [triggerRef, placement, offset]);
 
-  useEffect(() => {
+  // useLayoutEffect (не useEffect) — позиция считается синхронно до первого paint,
+  // иначе flip-логика в компонентах не успевает сработать при первом открытии.
+  useLayoutEffect(() => {
     if (!isOpen) return;
     update();
+  }, [isOpen, update]);
+
+  // Scroll/resize слушаются через обычный useEffect — они не влияют на первый рендер.
+  useEffect(() => {
+    if (!isOpen) return;
     window.addEventListener('resize', update);
     window.addEventListener('scroll', update, true);
     return () => {

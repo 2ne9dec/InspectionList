@@ -275,6 +275,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
       <div className={cls.smallField}>
         <FormField label='Гирлянда' htmlFor='add-garland'>
           <SelectMenu
+            id='add-garland'
             options={GARLAND_OPTIONS}
             value={garlandNumber}
             onChange={setGarlandNumber}
@@ -286,6 +287,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
       <div className={cls.smallField}>
         <FormField label='Изол.' htmlFor='add-insulator-count'>
           <SelectMenu
+            id='add-insulator-count'
             options={INSULATOR_OPTIONS}
             value={insulatorCount}
             onChange={setInsulatorCount}

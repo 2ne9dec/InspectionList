@@ -1,6 +1,6 @@
-import { memo, useMemo, useRef, useState } from 'react';
+import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { useEscape, useFloatingPosition, useOutsideClick } from '@/shared/lib/hooks';
+import { useEscape, useOutsideClick } from '@/shared/lib/hooks';
 import { classNames } from '@/shared/lib/classNames/classNames';
 import { Portal } from '../Portal';
 import { IconClose } from '../Icons';
@@ -38,7 +38,18 @@ export const ThFilter = memo((props: ThFilterProps) => {
   useOutsideClick([wrapRef, panelRef], () => { setOpen(false); setQuery(''); }, { enabled: open });
   useEscape(() => setOpen(false), { enabled: open });
 
-  const pos = useFloatingPosition(btnRef, { isOpen: open });
+  useLayoutEffect(() => {
+    if (!open || !panelRef.current || !btnRef.current) return;
+    const panel = panelRef.current;
+    const btn = btnRef.current.getBoundingClientRect();
+    panel.style.left = `${btn.left}px`;
+    panel.style.top  = `${btn.bottom + 4}px`;
+    const pr = panel.getBoundingClientRect();
+    if (pr.bottom > window.innerHeight) {
+      panel.style.top = `${Math.max(btn.top - pr.height - 4, 4)}px`;
+    }
+    panel.style.visibility = 'visible';
+  }, [open]);
 
   const filtered = useMemo(
     () => options.filter((o) => o.name.toLowerCase().includes(query.toLowerCase())),
@@ -84,7 +95,7 @@ export const ThFilter = memo((props: ThFilterProps) => {
             <div
               ref={panelRef}
               className={cls.dropdown}
-              style={{ top: pos.top, left: pos.left }}
+              style={{ visibility: 'hidden' }}
             >
               <input
                 autoFocus

@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useOutsideClick } from '@/shared/lib/hooks/useOutsideClick';
 import type { RefObject } from 'react';
@@ -13,43 +13,47 @@ export interface MultiSelectProps<V extends number | string = number> {
   id?: string;
 }
 
-interface DropdownPos { top: number; left: number; width: number; }
-
 function MultiSelectInner<V extends number | string = number>(props: MultiSelectProps<V>) {
   const { options, values, onChange, placeholder = '—', id } = props;
 
   const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState<DropdownPos>({ top: 0, left: 0, width: 0 });
   const triggerRef  = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // useOutsideClick ожидает однородный массив — приводим к HTMLElement
   const outerRefs = useMemo<RefObject<HTMLElement>[]>(
     () => [triggerRef as RefObject<HTMLElement>, dropdownRef as RefObject<HTMLElement>],
     [],
   );
   useOutsideClick(outerRefs, useCallback(() => setOpen(false), []), { enabled: open });
 
-  const calcPos = useCallback(() => {
-    if (!triggerRef.current) return;
-    const r = triggerRef.current.getBoundingClientRect();
-    setPos({ top: r.bottom + 4, left: r.left, width: r.width });
+  const applyPosition = useCallback(() => {
+    if (!dropdownRef.current || !triggerRef.current) return;
+    const panel = dropdownRef.current;
+    const tr = triggerRef.current.getBoundingClientRect();
+    panel.style.left  = `${tr.left}px`;
+    panel.style.width = `${tr.width}px`;
+    panel.style.top   = `${tr.bottom + 4}px`;
+    const pr = panel.getBoundingClientRect();
+    if (pr.bottom > window.innerHeight) {
+      panel.style.top = `${Math.max(tr.top - pr.height - 4, 4)}px`;
+    }
+    panel.style.visibility = 'visible';
   }, []);
 
-  const handleOpen = useCallback(() => {
-    calcPos();
-    setOpen((v) => !v);
-  }, [calcPos]);
+  useLayoutEffect(() => {
+    if (!open) return;
+    applyPosition();
+  }, [open, applyPosition]);
 
   useEffect(() => {
     if (!open) return;
-    window.addEventListener('scroll', calcPos, true);
-    window.addEventListener('resize', calcPos);
+    window.addEventListener('scroll', applyPosition, true);
+    window.addEventListener('resize', applyPosition);
     return () => {
-      window.removeEventListener('scroll', calcPos, true);
-      window.removeEventListener('resize', calcPos);
+      window.removeEventListener('scroll', applyPosition, true);
+      window.removeEventListener('resize', applyPosition);
     };
-  }, [open, calcPos]);
+  }, [open, applyPosition]);
 
   const toggle = useCallback((v: V) => {
     const next = values.includes(v) ? values.filter((x) => x !== v) : [...values, v];

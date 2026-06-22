@@ -1,7 +1,7 @@
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode, RefObject } from 'react';
 import { classNames } from '@/shared/lib/classNames/classNames';
-import { useEscape, useFloatingPosition, useOutsideClick } from '@/shared/lib/hooks';
+import { useEscape, useOutsideClick } from '@/shared/lib/hooks';
 import { Portal } from '../Portal';
 import cls from './KebabMenu.module.scss';
 
@@ -53,7 +53,58 @@ export const KebabMenu = memo((props: KebabMenuProps) => {
   useOutsideClick(outsideRefs, close, { enabled: open });
   useEscape(close, { enabled: open });
 
-  const pos = useFloatingPosition(btnRef, { isOpen: open, placement: 'bottom-end' });
+  /**
+   * Позиционирование + flip — всё в одном useLayoutEffect, без state.
+   *
+   * Проблема state-based подхода: setPos() внутри useLayoutEffect ставит обновление
+   * в очередь и обрабатывает его ПОСЛЕ всех текущих эффектов. Поэтому к моменту
+   * flip-проверки панель всё ещё на top:0 — flip не срабатывает.
+   *
+   * Решение: рендерим панель с visibility:hidden, применяем реальную позицию и flip
+   * напрямую через DOM в одном эффекте, затем делаем visible. Браузер рисует сразу
+   * в правильном месте — без промежуточных состояний.
+   */
+  useLayoutEffect(() => {
+    if (!open || !panelRef.current || !btnRef.current) return;
+    const panel = panelRef.current;
+    const btn   = btnRef.current.getBoundingClientRect();
+
+    // Начальная позиция: правый край панели = правый край кнопки, ниже кнопки.
+    panel.style.top   = `${btn.bottom + 4}px`;
+    panel.style.right = `${window.innerWidth - btn.right}px`;
+    panel.style.left  = 'auto';
+
+    // Flip: не помещается снизу — открываем выше.
+    const pr = panel.getBoundingClientRect();
+    if (pr.bottom > window.innerHeight) {
+      panel.style.top = `${Math.max(btn.top - pr.height - 4, 4)}px`;
+    }
+
+    panel.style.visibility = 'visible';
+  }, [open]);
+
+  // Обновляем позицию при скролле/ресайзе пока меню открыто.
+  useEffect(() => {
+    if (!open) return;
+    const update = () => {
+      if (!panelRef.current || !btnRef.current) return;
+      const panel = panelRef.current;
+      const btn   = btnRef.current.getBoundingClientRect();
+      panel.style.top   = `${btn.bottom + 4}px`;
+      panel.style.right = `${window.innerWidth - btn.right}px`;
+      panel.style.left  = 'auto';
+      const pr = panel.getBoundingClientRect();
+      if (pr.bottom > window.innerHeight) {
+        panel.style.top = `${Math.max(btn.top - pr.height - 4, 4)}px`;
+      }
+    };
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, true);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
+    };
+  }, [open]);
 
   const handleItem = (item: KebabMenuItem) => {
     if (item.disabled) return;
@@ -83,7 +134,7 @@ export const KebabMenu = memo((props: KebabMenuProps) => {
             ref={panelRef}
             className={cls.panel}
             role="menu"
-            style={{ top: pos.top, right: pos.right, left: pos.left }}
+            style={{ visibility: 'hidden' }}
           >
             {items.map((it) => (
               <button
