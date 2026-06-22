@@ -72,7 +72,7 @@ function MultiSelectInner<V extends number | string = number>(props: MultiSelect
     <div
       ref={dropdownRef}
       className={cls.dropdown}
-      style={{ top: pos.top, left: pos.left, width: pos.width }}
+      style={{ visibility: 'hidden' }}
     >
       {options.map((opt) => {
         const checked = values.includes(opt.value);
@@ -99,7 +99,7 @@ function MultiSelectInner<V extends number | string = number>(props: MultiSelect
         type="button"
         id={id}
         className={`${cls.trigger} ${open ? cls.triggerOpen : ''}`}
-        onClick={handleOpen}
+        onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
       >
