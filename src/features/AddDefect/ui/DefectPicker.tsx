@@ -17,10 +17,6 @@ export interface DefectPickerHandle {
   focus: () => void;
 }
 
-/**
- * Поле выбора «Элемент → Дефект».
- * Управляет состоянием open + позиционированием попапа.
- */
 export const DefectPicker = memo(forwardRef<DefectPickerHandle, DefectPickerProps>((props, ref) => {
   const { elements, defectTypes, selectedDefect, selectedElement, onSelect, onClear } = props;
 
@@ -36,38 +32,37 @@ export const DefectPicker = memo(forwardRef<DefectPickerHandle, DefectPickerProp
     setOpen((p) => !p);
   }, []);
 
-  const handleClose = useCallback(() => setOpen(false), []);
+  const handleClose = useCallback(() => {
+    setOpen(false);
+    // После закрытия ESC/outside-click браузер теряет фокус.
+    // Возвращаем фокус на кнопку, чтобы следующий клик сразу срабатывал.
+    requestAnimationFrame(() => btnRef.current?.focus());
+  }, []);
 
   return (
     <div className={cls.wrap}>
       <button
         ref={btnRef}
         type="button"
-        className={`${cls.btn} ${selectedDefect ? cls.btnSelected : ''}`}
+        className={cls.btn + (selectedDefect ? ' ' + cls.btnSelected : '')}
         onClick={handleToggle}
         aria-haspopup="dialog"
         aria-expanded={open}
       >
         {selectedDefect ? (
           <>
-            <span
-              className={cls.dot}
-              data-severity={selectedDefect.severity}
-            />
+            <span className={cls.dot} data-severity={selectedDefect.severity} />
             <span className={cls.text}>
               {selectedElement?.name === selectedDefect.name
                 ? selectedDefect.name
-                : `${selectedElement?.name ?? ''} → ${selectedDefect.name}`}
+                : (selectedElement?.name ?? '') + ' → ' + selectedDefect.name}
             </span>
-            <span
-              className={cls.sev}
-              data-severity={selectedDefect.severity}
-            >
+            <span className={cls.sev} data-severity={selectedDefect.severity}>
               {SEVERITY_LABELS[selectedDefect.severity]}
             </span>
           </>
         ) : (
-          <span className={cls.placeholder}>Элемент / Дефект…</span>
+          <span className={cls.placeholder}>Элемент / Дефект...</span>
         )}
         <span className={cls.arrow} aria-hidden>{open ? '▲' : '▼'}</span>
       </button>

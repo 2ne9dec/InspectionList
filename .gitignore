@@ -10,6 +10,9 @@
 /ios
 capacitor.config.ts.bak
 
+# PocketBase data (Docker volume — не коммитим БД)
+/pocketbase/pb_data
+
 # Env
 .env.local
 .env.production.local

@@ -23,6 +23,47 @@ yarn start          # фронтенд :3000 + json-server :8443 одновре�
 
 ---
 
+## Синхронизация (PocketBase + Docker)
+
+Приложение работает **офлайн-first**: данные хранятся локально в IndexedDB (Dexie) и синхронизируются с PocketBase при наличии сети.
+
+### Запуск сервера
+
+```bash
+docker compose up -d
+```
+
+PocketBase доступен на `http://localhost:8090`, админ-панель — `http://localhost:8090/_/`.
+
+### Первый запуск
+
+1. Открыть `http://localhost:8090/_/` → создать суперпользователя
+2. Импортировать схему: **Collections → Import** → выбрать `pocketbase/pb_schema.json`
+3. Для обеих коллекций (`sheets`, `defect_records`): ⚙ → API Rules → очистить все правила → Save
+
+### Настройка IP на планшете
+
+Узнать IP ноутбука: `ipconfig` → IPv4-адрес Wi-Fi адаптера.
+
+В приложении на планшете нажать **⚙** рядом с кнопкой «Синхронизировать» → ввести `http://192.168.X.X:8090` → Сохранить. Пересборка APK не нужна.
+
+### Схема синхронизации
+
+- **Изменение на устройстве** → пуш в PocketBase через 2 сек (debounce)
+- **Real-time SSE** → при изменении на сервере все устройства получают пул мгновенно
+- **Fallback** — опрос каждые 30 сек если SSE недоступен
+- **Офлайн** — изменения пишутся в локальную очередь (syncQueue), отправляются при восстановлении сети
+- **Удаление** синхронизируется в обе стороны
+
+### Переменные окружения (`.env.production.local`)
+
+| Переменная     | Описание                          | Пример                        |
+|----------------|-----------------------------------|-------------------------------|
+| `VITE_PB_URL`  | URL PocketBase (для APK-сборки)   | `http://192.168.1.50:8090`    |
+| `VITE_API_URL` | URL json-server (авторизация)     | `http://192.168.1.50:8443`    |
+
+---
+
 ## Страницы
 
 | Маршрут      | Страница                                                  |
@@ -37,16 +78,17 @@ yarn start          # фронтенд :3000 + json-server :8443 одновре�
 
 ## Стек
 
-| Категория  | Технологии                                          |
-|------------|-----------------------------------------------------|
-| Фронтенд   | React 18, TypeScript strict, Vite 4                 |
-| Мобильный  | Capacitor 8 (Android)                               |
-| Стейт      | Redux Toolkit, RTK Query                            |
-| Локальная БД | Dexie 4 (IndexedDB, офлайн-режим)                 |
-| Стили      | SCSS Modules, CSS-переменные, тёмная/светлая тема   |
-| Экспорт    | ExcelJS, docx, JSZip                                |
-| Сервер     | Node.js + Express (json-server-like)                |
-| Качество   | ESLint (TS + React), TypeScript strict              |
+| Категория      | Технологии                                          |
+|----------------|-----------------------------------------------------|
+| Фронтенд       | React 18, TypeScript strict, Vite 4                 |
+| Мобильный      | Capacitor 8 (Android)                               |
+| Стейт          | Redux Toolkit, RTK Query                            |
+| Локальная БД   | Dexie 4 (IndexedDB, офлайн-режим)                   |
+| Синхронизация  | PocketBase 0.39 (Docker), SDK v0.27                 |
+| Стили          | SCSS Modules, CSS-переменные, тёмная/светлая тема   |
+| Экспорт        | ExcelJS, docx, JSZip                                |
+| Сервер (auth)  | Node.js + Express (json-server)                     |
+| Качество       | ESLint (TS + React), TypeScript strict              |
 
 ---
 
@@ -58,8 +100,7 @@ src/
 ├── pages/      # LoginPage, SheetsListPage, SheetDetailPage, JournalPage, NotFoundPage
 ├── widgets/    # Navbar, GlobalDefectSearch, SheetsList, DefectTable
 ├── features/   # AddDefect, DefectSidebar, DefectTimeline, CreateSheet
-│               # ExportToExcel, ExportToWord, ThemeSwitcher
-│               # MasterConclusion (в составе JournalPage)
+│               # ExportToExcel, ExportToWord, ThemeSwitcher, SyncToServer
 ├── entities/   # InspectionSheet, DefectRecord, InspectionLine, User
 └── shared/     # ui-kit, хуки, lib, api, стили, константы
 ```
@@ -85,11 +126,12 @@ src/
 
 ### Хранение данных
 
-Приложение работает **офлайн-first**: данные хранятся в IndexedDB (Dexie).  
-Синхронизация с сервером — по кнопке «Синхронизировать» в навбаре.
-
-- `shared/lib/db/localDb.ts` — схема Dexie (`sheets`, `defectRecords`)
-- `entities/*/api/` — RTK Query эндпоинты поверх `baseQuery`, работающего через localDb
+```
+shared/lib/db/localDb.ts       — схема Dexie (sheets, defectRecords, syncQueue, referenceCache)
+shared/lib/sync/syncService.ts — push/pull логика, очередь мутаций
+shared/lib/sync/useSyncService.ts — хук: SSE подписки, интервал, online-событие
+shared/lib/pocketbase/pbClient.ts — клиент PocketBase, runtime смена URL
+```
 
 ---
 
@@ -97,43 +139,7 @@ src/
 
 - При входе без фильтров — показывается заглушка с общим счётчиком дефектов
 - Таблица открывается при выборе **линии** или вводе **элемента/дефекта** в поиск
-- Это исключает случайную загрузку тысяч записей без контекста
 - Поддерживается выбор нескольких строк → массовое заключение мастера
-
----
-
-## Сервер данных
-
-```
-json-server/
-├── index.js
-├── lib/
-│   ├── auth.js           # middleware X-User-Id / X-Filial-Id / X-Is-Admin
-│   ├── tenancy.js        # фильтрация по филиалу
-│   ├── globalStore.js    # users (глобальные коллекции)
-│   ├── lineStore.js      # inspectionSheets, defectRecords (per-line файлы)
-│   ├── pathResolver.js
-│   ├── helpers.js
-│   ├── idCounters.js
-│   └── migrations.js
-└── routes/
-    ├── reference.js      # /filials /voltages /lines /elements /defectTypes /phases
-    ├── auth.js           # POST /login, /users, /changePassword
-    ├── sheets.js         # /inspectionSheets + /clone
-    └── defects.js        # /defectRecords + /defectCounts
-```
-
-**Хранение данных на сервере:**
-- `seed/` — статические справочники (только чтение)
-- `store/data/<collection>/<voltage>/<line>_<lineId>.json` — динамика, атомарная запись
-
----
-
-## Переменные окружения
-
-| Переменная     | Описание        | По умолчанию            |
-|----------------|-----------------|-------------------------|
-| `VITE_API_URL` | URL json-server | `http://localhost:8443` |
 
 ---
 

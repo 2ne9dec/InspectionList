@@ -1,5 +1,6 @@
 import { rtkApi } from '@/shared/api/rtkApi';
-import { localDb } from '@/shared/lib/db/localDb';
+import { localDb, enqueueSyncTask } from '@/shared/lib/db/localDb';
+import { syncService } from '@/shared/lib/sync/syncService';
 import type { InspectionSheet } from '../model/types';
 
 export interface CreateSheetParams {
@@ -44,6 +45,8 @@ const sheetsApi = rtkApi.injectEndpoints({
             status:      'active',
           } as InspectionSheet);
           const created = await localDb.sheets.get(id as number);
+          await enqueueSyncTask('create', 'sheets', id as number);
+          syncService.scheduleSync();
           return { data: created! };
         } catch (e: any) {
           return { error: { status: 'CUSTOM_ERROR' as const, error: String(e?.message ?? e) } };
@@ -66,6 +69,8 @@ const sheetsApi = rtkApi.injectEndpoints({
           status:      'active',
         } as InspectionSheet);
         const cloned = await localDb.sheets.get(newId as number);
+        await enqueueSyncTask('create', 'sheets', newId as number);
+        syncService.scheduleSync();
         return { data: cloned! };
       },
       invalidatesTags: [{ type: 'Sheet', id: 'LIST' }],
@@ -75,6 +80,8 @@ const sheetsApi = rtkApi.injectEndpoints({
       queryFn: async (id) => {
         await localDb.sheets.update(id, { status: 'archived' });
         const updated = await localDb.sheets.get(id);
+        await enqueueSyncTask('update', 'sheets', id, updated?.serverId);
+        syncService.scheduleSync();
         return { data: updated! };
       },
       invalidatesTags: (_result, _err, id) => [
@@ -101,14 +108,21 @@ const sheetsApi = rtkApi.injectEndpoints({
         for (const id of ids) {
           const defects = await localDb.defectRecords.where('sheetId').equals(id).toArray();
           for (const d of defects) {
-            const { id: _did, ...dRest } = d;
-            await localDb.defectRecords.add({ ...dRest, sheetId: newId as number } as any);
+            const { id: _did, serverId: _sid, ...dRest } = d;
+            const newDefectId = await localDb.defectRecords.add({ ...dRest, sheetId: newId as number } as any);
+            await enqueueSyncTask('create', 'defect_records', newDefectId as number);
+            // Оригинальный дефект — ставим в очередь на удаление
+            await enqueueSyncTask('delete', 'defect_records', d.id, d.serverId);
           }
           // Удаляем исходный листок и его оригинальные дефекты
+          const origSheet = await localDb.sheets.get(id);
           await localDb.defectRecords.where('sheetId').equals(id).delete();
+          await enqueueSyncTask('delete', 'sheets', id, origSheet?.serverId);
           await localDb.sheets.delete(id);
         }
         const merged = await localDb.sheets.get(newId as number);
+        await enqueueSyncTask('create', 'sheets', newId as number);
+        syncService.scheduleSync();
         return { data: merged! };
       },
       invalidatesTags: [
@@ -120,8 +134,15 @@ const sheetsApi = rtkApi.injectEndpoints({
 
     deleteSheet: build.mutation<void, number>({
       queryFn: async (id) => {
+        const defects = await localDb.defectRecords.where('sheetId').equals(id).toArray();
+        for (const d of defects) {
+          await enqueueSyncTask('delete', 'defect_records', d.id, d.serverId);
+        }
         await localDb.defectRecords.where('sheetId').equals(id).delete();
+        const sheet = await localDb.sheets.get(id);
+        await enqueueSyncTask('delete', 'sheets', id, sheet?.serverId);
         await localDb.sheets.delete(id);
+        syncService.scheduleSync();
         return { data: undefined };
       },
       invalidatesTags: (_result, _err, id) => [

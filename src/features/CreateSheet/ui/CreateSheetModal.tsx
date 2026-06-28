@@ -11,7 +11,7 @@ import {
 } from '@/entities/InspectionLine';
 import { getUserAuthData, getUserFilialId, getUserIsAdmin } from '@/entities/User';
 import { getRouteSheetDetail } from '@/shared/const/router';
-import { Button, FormField, Input, Modal, SelectMenu } from '@/shared/ui';
+import { Button, Combobox, FormField, Input, Modal, SelectMenu } from '@/shared/ui';
 import { toast } from '@/shared/lib/toast';
 import { logger } from '@/shared/lib/logger';
 import { createSheetActions } from '../model/createSheetSlice';
@@ -81,10 +81,7 @@ export const CreateSheetModal = memo(() => {
     [filteredVoltages],
   );
   const lineOptions = useMemo(
-    () => [
-      { value: '', label: '— выберите линию —' },
-      ...filteredLines.map((l) => ({ value: String(l.id), label: l.name })),
-    ],
+    () => filteredLines.map((l) => ({ value: l.id, label: l.name })),
     [filteredLines],
   );
 
@@ -150,11 +147,13 @@ export const CreateSheetModal = memo(() => {
         </FormField>
 
         <FormField label='Линия' htmlFor='cs-line' required>
-          <SelectMenu
+          <Combobox
+            id='cs-line'
+            name='cs-line'
             options={lineOptions}
-            value={String(lineId ?? '')}
-            onChange={(v) => setLineId(v === '' ? 0 : Number(v))}
-            placeholder='— выберите линию —'
+            value={lineId ?? ''}
+            onChange={(v) => setLineId(v === '' ? 0 : (v as number))}
+            placeholder='Введите название линии…'
           />
         </FormField>
 

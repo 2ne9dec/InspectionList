@@ -36,7 +36,7 @@ export const ThFilter = memo((props: ThFilterProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
 
   useOutsideClick([wrapRef, panelRef], () => { setOpen(false); setQuery(''); }, { enabled: open });
-  useEscape(() => setOpen(false), { enabled: open });
+  useEscape(() => setOpen(false), { enabled: open, blurOnClose: true });
 
   useLayoutEffect(() => {
     if (!open || !panelRef.current || !btnRef.current) return;

@@ -8,6 +8,7 @@ import { getUserAuthData, getUserInited, userActions } from '@/entities/User';
 import { useAppDispatch, useTheme } from '@/shared/lib/hooks';
 import { classNames } from '@/shared/lib/classNames/classNames';
 import { Toaster } from '@/shared/ui/Toaster';
+import { useSyncService } from '@/shared/lib/sync/useSyncService';
 import { AppRouter } from './providers/router';
 
 const NavbarWithSlot = memo(() => {
@@ -27,6 +28,7 @@ const App = () => {
   const auth     = useSelector(getUserAuthData);
 
   useTheme();
+  useSyncService();
 
   useEffect(() => {
     dispatch(userActions.initAuthData());

@@ -6,6 +6,8 @@ import Dexie, { type Table } from 'dexie';
 export class LocalDatabase extends Dexie {
   sheets!: Table<any>;
   defectRecords!: Table<any>;
+  syncQueue!: Table<SyncTask>;
+  referenceCache!: Table<ReferenceCache>;
 
   constructor() {
     super('InspectionListDB');
@@ -32,6 +34,16 @@ export class LocalDatabase extends Dexie {
         }
       }),
     );
+
+    // v3 - добавляем serverId (индекс для поиска по PocketBase ID),
+    //       syncQueue (очередь офлайн-операций),
+    //       referenceCache (кеш справочников с сервера)
+    this.version(3).stores({
+      sheets:         '++id, filialId, voltageId, lineId, createdDate, status, serverId',
+      defectRecords:  '++id, sheetId, poleNumber, defectId, isFixed, dateFound, serverId',
+      syncQueue:      '++id, [collection+localId], action, createdAt',
+      referenceCache: 'key',
+    });
   }
 }
 
@@ -41,4 +53,65 @@ export const localDb = new LocalDatabase();
 export async function nextLocalId(table: Table<any>): Promise<number> {
   const last = await table.orderBy('id').last();
   return last ? (last.id as number) + 1 : 1;
+}
+
+// ─── Типы sync-очереди ───────────────────────────────────────────────────────
+
+export type SyncAction     = 'create' | 'update' | 'delete';
+export type SyncCollection = 'sheets' | 'defect_records';
+
+/**
+ * Задача в очереди синхронизации.
+ * action=create|update : берём актуальное состояние из Dexie по localId
+ * action=delete        : запись уже удалена из Dexie, используем serverId
+ */
+export interface SyncTask {
+  id?: number;
+  action: SyncAction;
+  collection: SyncCollection;
+  localId: number;
+  serverId?: string;   // PocketBase record ID
+  attempts: number;
+  createdAt: string;
+}
+
+// ─── Тип кеша справочников ───────────────────────────────────────────────────
+
+export interface ReferenceCache {
+  key: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: any[];
+  fetchedAt: string;
+}
+
+// ─── Хелпер добавления в очередь (с дедупликацией) ──────────────────────────
+
+/**
+ * Добавляет задачу в syncQueue.
+ * Для action=update: если уже есть pending create/update для той же записи —
+ * новую задачу не создаём (существующая заберёт свежее состояние из Dexie).
+ */
+export async function enqueueSyncTask(
+  action: SyncAction,
+  collection: SyncCollection,
+  localId: number,
+  serverId?: string,
+): Promise<void> {
+  if (action === 'update') {
+    const existing = await localDb.syncQueue
+      .where('[collection+localId]')
+      .equals([collection, localId])
+      .filter((t: SyncTask) => t.action === 'create' || t.action === 'update')
+      .first();
+    if (existing) return; // уже есть задача — не дублируем
+  }
+
+  await localDb.syncQueue.add({
+    action,
+    collection,
+    localId,
+    serverId,
+    attempts: 0,
+    createdAt: new Date().toISOString(),
+  });
 }

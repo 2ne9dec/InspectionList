@@ -51,7 +51,7 @@ export const KebabMenu = memo((props: KebabMenuProps) => {
     [],
   );
   useOutsideClick(outsideRefs, close, { enabled: open });
-  useEscape(close, { enabled: open });
+  useEscape(close, { enabled: open, blurOnClose: true });
 
   /**
    * Позиционирование + flip — всё в одном useLayoutEffect, без state.
