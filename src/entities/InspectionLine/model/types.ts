@@ -48,7 +48,7 @@ export interface DefectType {
 // для элементов из списка phaseElementIds
 export interface Phase {
   id: number;
-  name: string; // "Фаза A", "Фаза B", "Фаза C", "Грозотрос"
+  name: string; // "провод 1", "провод 2", "провод 3", "Грозотрос"
 }
 
 export interface DefectTreeNode {
