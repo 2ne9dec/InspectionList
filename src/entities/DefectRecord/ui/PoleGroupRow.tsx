@@ -223,9 +223,9 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
               <td className={cls.subCell}>{first.elementName}</td>
               <td className={cls.subCell}>
                 {first.defectName}
-                {grNum != null && <span className={cls.phaseTag}>гирл. {grNum}</span>}
+                {grNum != null && grNum > 0 && <span className={cls.phaseTag}>гирл. {grNum}</span>}
                 {phases && <span className={cls.phaseTag}>{phases}</span>}
-                {insulatorCount != null && <span className={cls.phaseTag}>{insulatorCount} шт.</span>}
+                {insulatorCount != null && insulatorCount > 0 && <span className={cls.phaseTag}>{insulatorCount} шт.</span>}
               </td>
               <td className={cls.subCell}>
                 {!isNoDefectRecord && (
