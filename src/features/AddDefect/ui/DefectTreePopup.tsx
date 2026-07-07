@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useMemo, useRef, useState } from 'react';
 import type { DefectType, Element } from '@/entities/InspectionLine';
 import { SEVERITY_LABELS } from '@/entities/InspectionLine';
 import { Portal } from '@/shared/ui';
@@ -12,10 +12,20 @@ interface DefectTreePopupProps {
   anchor: { top: number; left: number };
   onSelect: (defect: DefectType) => void;
   onClose: () => void;
+  /** Режим множественного выбора — попап не закрывается после клика */
+  multiSelect?: boolean;
+  /** Выбранные id (только для multiSelect) */
+  selectedIds?: ReadonlySet<number>;
+  /** Вызывается при изменении выборки (только для multiSelect) */
+  onSelectionChange?: (ids: Set<number>) => void;
 }
 
 export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
-  const { elements, defectTypes, anchor, onSelect, onClose } = props;
+  const {
+    elements, defectTypes, anchor,
+    onSelect, onClose,
+    multiSelect = false, selectedIds, onSelectionChange,
+  } = props;
 
   const isMobile = useMemo(
     () => typeof window !== 'undefined' && window.matchMedia('(max-width: 479px)').matches,
@@ -33,44 +43,20 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
   const [activeId, setActiveId] = useState<number | null>(sortedElements[0]?.id ?? null);
   const [rightPos, setRightPos] = useState<{ top: number; left: number } | null>(null);
   const [mobileStep, setMobileStep] = useState<'elem' | 'defect'>('elem');
-  const [elemQuery, setElemQuery] = useState('');
-  const [defectQuery, setDefectQuery] = useState('');
 
-  const leftRef         = useRef<HTMLDivElement>(null);
-  const rightRef        = useRef<HTMLDivElement>(null);
-  const mobileRef       = useRef<HTMLDivElement>(null);
-  const elemSearchRef   = useRef<HTMLInputElement>(null);
-  const defectSearchRef = useRef<HTMLInputElement>(null);
+  const leftRef   = useRef<HTMLDivElement>(null);
+  const rightRef  = useRef<HTMLDivElement>(null);
+  const mobileRef = useRef<HTMLDivElement>(null);
 
   const desktopRefs = useMemo(() => [leftRef, rightRef], []);
   const mobileRefs  = useMemo(() => [mobileRef], []);
 
   useOutsideClick(isMobile ? mobileRefs : desktopRefs, onClose, { enabled: true });
 
-  useEffect(() => {
-    if (!isMobile) setTimeout(() => elemSearchRef.current?.focus(), 50);
-  }, [isMobile]);
-
-  useEffect(() => {
-    if (isMobile && mobileStep === 'defect') setTimeout(() => defectSearchRef.current?.focus(), 50);
-  }, [isMobile, mobileStep]);
-
-  const displayedElements = useMemo(() => {
-    const q = elemQuery.trim().toLowerCase();
-    if (!q) return sortedElements;
-    return sortedElements.filter((e) => e.name.toLowerCase().includes(q));
-  }, [sortedElements, elemQuery]);
-
   const filteredDefects = useMemo(
     () => (activeId !== null ? defectTypes.filter((d) => d.elementId === activeId) : []),
     [defectTypes, activeId],
   );
-
-  const displayedDefects = useMemo(() => {
-    const q = defectQuery.trim().toLowerCase();
-    if (!q) return filteredDefects;
-    return filteredDefects.filter((d) => d.name.toLowerCase().includes(q));
-  }, [filteredDefects, defectQuery]);
 
   const countByElement = useMemo(() => {
     const map: Record<number, number> = {};
@@ -78,9 +64,25 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
     return map;
   }, [defectTypes]);
 
+  /** Переключить один дефект в множественном выборе */
+  const handleToggle = (defect: DefectType) => {
+    const next = new Set(selectedIds ?? []);
+    if (next.has(defect.id)) { next.delete(defect.id); } else { next.add(defect.id); }
+    onSelectionChange?.(next);
+  };
+
+  /** Клик по дефекту — единственный / множественный выбор */
+  const handleDefectClick = (defect: DefectType) => {
+    if (multiSelect) {
+      handleToggle(defect);
+    } else {
+      onSelect(defect);
+      onClose();
+    }
+  };
+
   const handleElemHover = (el: Element, e: React.MouseEvent<HTMLButtonElement>) => {
     setActiveId(el.id);
-    setDefectQuery('');
     const btnRect   = e.currentTarget.getBoundingClientRect();
     const panelRect = leftRef.current?.getBoundingClientRect();
     if (panelRect) {
@@ -90,7 +92,6 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
 
   const handleElemTap = (el: Element) => {
     setActiveId(el.id);
-    setDefectQuery('');
     setMobileStep('defect');
   };
 
@@ -111,20 +112,8 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
                 <span className={cls.sheetTitle}>Выберите элемент</span>
                 <button type="button" className={cls.closeBtn} onClick={onClose} aria-label="Закрыть">X</button>
               </div>
-              <div className={cls.searchRow}>
-                <input
-                  ref={elemSearchRef}
-                  className={cls.searchInput}
-                  type="text"
-                  placeholder="Поиск элемента..."
-                  value={elemQuery}
-                  onChange={(e) => setElemQuery(e.target.value)}
-                />
-              </div>
               <div className={cls.colList}>
-                {displayedElements.length === 0 ? (
-                  <div className={cls.hint}>Ничего не найдено</div>
-                ) : displayedElements.map((el) => (
+                {sortedElements.map((el) => (
                   <button
                     key={el.id}
                     type="button"
@@ -144,38 +133,29 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
                 <button
                   type="button"
                   className={cls.backBtn}
-                  onClick={() => { setMobileStep('elem'); setDefectQuery(''); }}
+                  onClick={() => setMobileStep('elem')}
                 >
                   &lsaquo; Назад
                 </button>
                 <span className={cls.sheetTitle}>{activeElemName}</span>
                 <button type="button" className={cls.closeBtn} onClick={onClose} aria-label="Закрыть">X</button>
               </div>
-              <div className={cls.searchRow}>
-                <input
-                  ref={defectSearchRef}
-                  className={cls.searchInput}
-                  type="text"
-                  placeholder="Поиск дефекта..."
-                  value={defectQuery}
-                  onChange={(e) => setDefectQuery(e.target.value)}
-                />
-              </div>
               <div className={cls.colList}>
-                {displayedDefects.length === 0 ? (
-                  <div className={cls.hint}>Ничего не найдено</div>
-                ) : displayedDefects.map((defect) => (
+                {filteredDefects.map((defect) => (
                   <button
                     key={defect.id}
                     type="button"
-                    className={cls.defectItem}
-                    onClick={() => { onSelect(defect); onClose(); }}
+                    className={`${cls.defectItem}${multiSelect && selectedIds?.has(defect.id) ? ' ' + cls.defectItemSelected : ''}`}
+                    onClick={() => handleDefectClick(defect)}
                   >
                     <span className={cls.bar} data-severity={defect.severity} />
                     <span className={cls.defectName}>{cap(defect.name)}</span>
                     <span className={cls.sev} data-severity={defect.severity}>
                       {SEVERITY_LABELS[defect.severity]}
                     </span>
+                    {multiSelect && (
+                      <span className={`${cls.check}${selectedIds?.has(defect.id) ? ' ' + cls.checkActive : ''}`} aria-hidden>✓</span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -194,20 +174,8 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
         style={{ top: anchor.top, left: anchor.left }}
       >
         <div className={cls.colHeader}>Элемент</div>
-        <div className={cls.searchRow}>
-          <input
-            ref={elemSearchRef}
-            className={cls.searchInput}
-            type="text"
-            placeholder="Поиск..."
-            value={elemQuery}
-            onChange={(e) => setElemQuery(e.target.value)}
-          />
-        </div>
         <div className={cls.colList}>
-          {displayedElements.length === 0 ? (
-            <div className={cls.hint}>Ничего не найдено</div>
-          ) : displayedElements.map((el) => (
+          {sortedElements.map((el) => (
             <button
               key={el.id}
               type="button"
@@ -229,31 +197,22 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
           style={{ top: rightPos.top, left: rightPos.left }}
         >
           <div className={cls.colHeader}>Дефект</div>
-          <div className={cls.searchRow}>
-            <input
-              ref={defectSearchRef}
-              className={cls.searchInput}
-              type="text"
-              placeholder="Поиск..."
-              value={defectQuery}
-              onChange={(e) => setDefectQuery(e.target.value)}
-            />
-          </div>
           <div className={cls.colList}>
-            {displayedDefects.length === 0 ? (
-              <div className={cls.hint}>Ничего не найдено</div>
-            ) : displayedDefects.map((defect) => (
+            {filteredDefects.map((defect) => (
               <button
                 key={defect.id}
                 type="button"
-                className={cls.defectItem}
-                onClick={() => { onSelect(defect); onClose(); }}
+                className={`${cls.defectItem}${multiSelect && selectedIds?.has(defect.id) ? ' ' + cls.defectItemSelected : ''}`}
+                onClick={() => handleDefectClick(defect)}
               >
                 <span className={cls.bar} data-severity={defect.severity} />
                 <span className={cls.defectName}>{cap(defect.name)}</span>
                 <span className={cls.sev} data-severity={defect.severity}>
                   {SEVERITY_LABELS[defect.severity]}
                 </span>
+                {multiSelect && (
+                  <span className={`${cls.check}${selectedIds?.has(defect.id) ? ' ' + cls.checkActive : ''}`} aria-hidden>✓</span>
+                )}
               </button>
             ))}
           </div>

@@ -208,6 +208,22 @@
   &:hover { background: var(--color-row-hover); }
 }
 
+.defectItemSelected {
+  background: var(--color-accent-muted);
+}
+
+.check {
+  flex-shrink: 0;
+  width: 16px;
+  font-size: 13px;
+  text-align: center;
+  color: transparent;
+}
+
+.checkActive {
+  color: var(--color-accent);
+}
+
 @media (max-width: 479px) {
   // Скрываем десктопные панели
   .elemPanel,

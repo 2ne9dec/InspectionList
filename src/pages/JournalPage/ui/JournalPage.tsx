@@ -30,10 +30,12 @@ export const JournalPage = memo(() => {
       <JournalFilters
         voltages={filters.voltages}
         filteredLines={filters.filteredLines}
+        elements={filters.elements}
+        defectTypes={filters.defectTypes}
         statusFilter={filters.statusFilter}
         voltageFilter={filters.voltageFilter}
         lineFilter={filters.lineFilter}
-        defectFilter={filters.defectFilter}
+        selectedDefectTypeIds={filters.selectedDefectTypeIds}
         inspectorFilter={filters.inspectorFilter}
         dateFrom={filters.dateFrom}
         dateTo={filters.dateTo}
@@ -41,7 +43,7 @@ export const JournalPage = memo(() => {
         setStatusFilter={filters.setStatusFilter}
         handleVoltageChange={filters.handleVoltageChange}
         setLineFilter={filters.setLineFilter}
-        setDefectFilter={filters.setDefectFilter}
+        setSelectedDefectTypeIds={filters.setSelectedDefectTypeIds}
         setInspectorFilter={filters.setInspectorFilter}
         setDateFrom={filters.setDateFrom}
         setDateTo={filters.setDateTo}
@@ -70,7 +72,7 @@ export const JournalPage = memo(() => {
       </div>
 
       {filters.isGated ? (
-<JournalEmptyState totalCount={filters.filialDefectCount} onShowAll={filters.handleShowAll} />
+        <JournalEmptyState totalCount={filters.filialDefectCount} onShowAll={filters.handleShowAll} />
       ) : (
         <JournalTable
           rows={filters.rows}

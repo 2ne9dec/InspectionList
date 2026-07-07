@@ -95,6 +95,47 @@
   &::placeholder { color: var(--color-text-secondary); }
 }
 
+.defectFilterBtn {
+  height: var(--control-height-m);
+  padding: 0 var(--space-2);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radii);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+  width: 160px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  &:hover { border-color: var(--color-accent); }
+}
+
+.defectFilterBtnActive {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent);
+}
+
+.defectFilterLabel {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.defectFilterClear {
+  flex-shrink: 0;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--color-text-secondary);
+  padding: 0 2px;
+  cursor: pointer;
+  &:hover { color: var(--color-error); }
+}
+
 .dateSep {
   color: var(--color-text-secondary);
   font-size: var(--font-size-s);
@@ -315,6 +356,7 @@
   .resetBtnHidden   { display: none; }
   .filterSelect     { width: 130px; }
   .textInput        { width: 110px; }
+  .defectFilterBtn  { width: 140px; }
   .dateInput        { width: 138px; }
 
   /* Таблица: более компактные отступы */

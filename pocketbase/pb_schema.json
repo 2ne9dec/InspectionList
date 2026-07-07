@@ -4,11 +4,11 @@
     "name": "sheets",
     "type": "base",
     "system": false,
-    "listRule": null,
-    "viewRule": null,
-    "createRule": null,
-    "updateRule": null,
-    "deleteRule": null,
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": "",
     "indexes": [],
     "fields": [
       {
@@ -53,11 +53,11 @@
     "name": "defect_records",
     "type": "base",
     "system": false,
-    "listRule": null,
-    "viewRule": null,
-    "createRule": null,
-    "updateRule": null,
-    "deleteRule": null,
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": "",
     "indexes": [],
     "fields": [
       {

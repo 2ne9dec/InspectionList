@@ -115,7 +115,9 @@ async function pbGetAll(collection: string): Promise<unknown[]> {
   // getFullList итерирует все страницы автоматически (SDK отправляет perPage=500
   // и делает столько запросов, сколько нужно). Сырой fetch без пагинации возвращал
   // только первые 30 записей — всё остальное считалось удалённым и стиралось локально.
-  return pb.collection(collection).getFullList({ sort: 'created' });
+  // PocketBase v0.39 compat: no sort, smaller batch, avoid skipTotal via getList
+  const page1 = await pb.collection(collection).getList(1, 2000, {});
+  return page1.items;
 }
 
 async function pull(): Promise<void> {
@@ -378,6 +380,7 @@ async function sync(): Promise<void> {
     await bootstrapQueue();
     await push();
     await pull();
+    await pullReferences();
     window.dispatchEvent(new Event('sync:complete'));
   } catch (err) {
     console.error('[sync] error:', err);
