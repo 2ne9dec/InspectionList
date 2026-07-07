@@ -1,0 +1,159 @@
+[
+  {
+    "id": "pbsheetsid00001",
+    "name": "sheets",
+    "type": "base",
+    "system": false,
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": "",
+    "indexes": [],
+    "fields": [
+      {
+        "system": false, "id": "sfldfilialid001", "name": "filial_id",
+        "type": "number", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "noDecimal": false
+      },
+      {
+        "system": false, "id": "sfldvoltgeid001", "name": "voltage_id",
+        "type": "number", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "noDecimal": false
+      },
+      {
+        "system": false, "id": "sfldlineid00001", "name": "line_id",
+        "type": "number", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "noDecimal": false
+      },
+      {
+        "system": false, "id": "sfldcreatddate1", "name": "created_date",
+        "type": "text", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "pattern": ""
+      },
+      {
+        "system": false, "id": "sfldcreatedby01", "name": "created_by",
+        "type": "text", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "pattern": ""
+      },
+      {
+        "system": false, "id": "sfldstatus00001", "name": "status",
+        "type": "text", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "pattern": ""
+      },
+      {
+        "system": false, "id": "sfldmrgdfrom001", "name": "merged_from_ids",
+        "type": "json", "required": false, "presentable": false, "hidden": false,
+        "maxSize": 0
+      }
+    ]
+  },
+  {
+    "id": "pbdefectid00001",
+    "name": "defect_records",
+    "type": "base",
+    "system": false,
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": "",
+    "indexes": [],
+    "fields": [
+      {
+        "system": false, "id": "dfldsheetid0001", "name": "sheet_id",
+        "type": "text", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "pattern": ""
+      },
+      {
+        "system": false, "id": "dfldpolenmbr001", "name": "pole_number",
+        "type": "number", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "noDecimal": false
+      },
+      {
+        "system": false, "id": "dflddefectid001", "name": "defect_id",
+        "type": "number", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "noDecimal": false
+      },
+      {
+        "system": false, "id": "dfldphaseid0001", "name": "phase_id",
+        "type": "number", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "noDecimal": false
+      },
+      {
+        "system": false, "id": "dflddatefound01", "name": "date_found",
+        "type": "text", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "pattern": ""
+      },
+      {
+        "system": false, "id": "dfldinspfind001", "name": "inspector_find",
+        "type": "text", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "pattern": ""
+      },
+      {
+        "system": false, "id": "dflddatefixed01", "name": "date_fixed",
+        "type": "text", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "pattern": ""
+      },
+      {
+        "system": false, "id": "dfldinspfix0001", "name": "inspector_fix",
+        "type": "text", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "pattern": ""
+      },
+      {
+        "system": false, "id": "dfldisfixed0001", "name": "is_fixed",
+        "type": "bool", "required": false, "presentable": false, "hidden": false
+      },
+      {
+        "system": false, "id": "dfldstatus00001", "name": "status",
+        "type": "text", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "pattern": ""
+      },
+      {
+        "system": false, "id": "dfldnotes000001", "name": "notes",
+        "type": "text", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "pattern": ""
+      },
+      {
+        "system": false, "id": "dfldinsucount01", "name": "insulator_count",
+        "type": "number", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "noDecimal": false
+      },
+      {
+        "system": false, "id": "dfldspanrange01", "name": "span_range",
+        "type": "text", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "pattern": ""
+      },
+      {
+        "system": false, "id": "dfldgarlandnr01", "name": "garland_number",
+        "type": "number", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "noDecimal": false
+      },
+      {
+        "system": false, "id": "dfldcreatdlocl1", "name": "created_at_local",
+        "type": "text", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "pattern": ""
+      },
+      {
+        "system": false, "id": "dfldmastercncl1", "name": "master_conclusion",
+        "type": "text", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "pattern": ""
+      },
+      {
+        "system": false, "id": "dfldrslvdline01", "name": "resolution_deadline",
+        "type": "text", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "pattern": ""
+      },
+      {
+        "system": false, "id": "dfldmasternm001", "name": "master_name",
+        "type": "text", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "pattern": ""
+      },
+      {
+        "system": false, "id": "dfldfixwrkvol01", "name": "fix_work_volume",
+        "type": "text", "required": false, "presentable": false, "hidden": false,
+        "min": null, "max": null, "pattern": ""
+      }
+    ]
+  }
+]

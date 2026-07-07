@@ -60,7 +60,7 @@ export const Modal = memo((props: ModalProps) => {
   });
 
   // Закрытие по Escape — централизованно через хук
-  useEscape(close, { enabled: isOpen && !disableEscapeClose });
+  useEscape(close, { enabled: isOpen && !disableEscapeClose, blurOnClose: true });
 
   // Блокируем скролл фона на время открытой модалки
   useEffect(() => {

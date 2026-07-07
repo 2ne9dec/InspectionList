@@ -26,9 +26,9 @@
 .mergedBadge {
   display: inline-block;
   margin-left: var(--space-2);
-  padding: 1px 6px;
-  border-radius: 10px;
-  font-size: 11px;
+  padding: 1px var(--space-2);
+  border-radius: var(--radii-full);
+  font-size: var(--font-size-xs);
   background: var(--color-accent-muted, rgba(99,102,241,.15));
   color: var(--color-accent, #6366f1);
   cursor: default;
@@ -52,7 +52,7 @@
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radii);
-  font-size: 20px;
+  font-size: var(--font-size-xl);
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: var(--transition-bg), var(--transition-border), var(--transition-color);
@@ -98,7 +98,7 @@
 .fixedCell {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .progressTrack {

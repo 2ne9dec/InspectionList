@@ -81,10 +81,7 @@ export const CreateSheetModal = memo(() => {
     [filteredVoltages],
   );
   const lineOptions = useMemo(
-    () => [
-      { value: '', label: '— выберите линию —' },
-      ...filteredLines.map((l) => ({ value: String(l.id), label: l.name })),
-    ],
+    () => filteredLines.map((l) => ({ value: String(l.id), label: l.name })),
     [filteredLines],
   );
 
@@ -151,6 +148,7 @@ export const CreateSheetModal = memo(() => {
 
         <FormField label='Линия' htmlFor='cs-line' required>
           <SelectMenu
+            id='cs-line'
             options={lineOptions}
             value={String(lineId ?? '')}
             onChange={(v) => setLineId(v === '' ? 0 : Number(v))}

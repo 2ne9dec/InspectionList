@@ -1,6 +1,8 @@
-import { memo, useMemo } from 'react';
-import type { Line, Voltage } from '@/entities/InspectionLine';
+import { memo, useMemo, useRef, useState } from 'react';
+import type { Line, Voltage, Element, DefectType } from '@/entities/InspectionLine';
 import { SelectMenu } from '@/shared/ui';
+import { DefectTreePopup } from '@/features/AddDefect';
+import { capitalizeFirst as cap } from '@/shared/lib/helpers';
 import type { StatusFilter } from '../model/useJournalFilters';
 import cls from './JournalPage.module.scss';
 
@@ -15,46 +17,39 @@ const STATUS_OPTIONS = [
 ];
 
 interface JournalFiltersProps {
-  voltages:     Voltage[];
+  voltages:      Voltage[];
   filteredLines: Line[];
+  elements:      ReadonlyArray<Element>;
+  defectTypes:   ReadonlyArray<DefectType>;
   statusFilter:    StatusFilter;
   voltageFilter:   string;
   lineFilter:      string;
-  defectFilter:    string;
+  selectedDefectTypeIds: ReadonlySet<number>;
   inspectorFilter: string;
   dateFrom:        string;
   dateTo:          string;
   hasFilters:      boolean;
-  setStatusFilter:    (v: StatusFilter) => void;
-  handleVoltageChange: (v: string) => void;
-  setLineFilter:      (v: string) => void;
-  setDefectFilter:    (v: string) => void;
-  setInspectorFilter: (v: string) => void;
-  setDateFrom:        (v: string) => void;
-  setDateTo:          (v: string) => void;
-  resetFilters:       () => void;
+  setStatusFilter:          (v: StatusFilter) => void;
+  handleVoltageChange:      (v: string) => void;
+  setLineFilter:            (v: string) => void;
+  setSelectedDefectTypeIds: (ids: Set<number>) => void;
+  setInspectorFilter:       (v: string) => void;
+  setDateFrom:              (v: string) => void;
+  setDateTo:                (v: string) => void;
+  resetFilters:             () => void;
 }
 
 export const JournalFilters = memo(({
-  voltages,
-  filteredLines,
-  statusFilter,
-  voltageFilter,
-  lineFilter,
-  defectFilter,
-  inspectorFilter,
-  dateFrom,
-  dateTo,
-  hasFilters,
-  setStatusFilter,
-  handleVoltageChange,
-  setLineFilter,
-  setDefectFilter,
-  setInspectorFilter,
-  setDateFrom,
-  setDateTo,
-  resetFilters,
+  voltages, filteredLines, elements, defectTypes,
+  statusFilter, voltageFilter, lineFilter, selectedDefectTypeIds,
+  inspectorFilter, dateFrom, dateTo, hasFilters,
+  setStatusFilter, handleVoltageChange, setLineFilter, setSelectedDefectTypeIds,
+  setInspectorFilter, setDateFrom, setDateTo, resetFilters,
 }: JournalFiltersProps) => {
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [anchor, setAnchor]       = useState({ top: 0, left: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+
   const voltageOptions = useMemo(() => [
     { value: '', label: 'Все напряжения' },
     ...voltages.map((v) => ({ value: String(v.id), label: v.name })),
@@ -64,6 +59,26 @@ export const JournalFilters = memo(({
     { value: '', label: 'Все линии' },
     ...filteredLines.map((l) => ({ value: String(l.id), label: l.name })),
   ], [filteredLines]);
+
+  // Подпись на кнопке
+  const buttonLabel = useMemo(() => {
+    const count = selectedDefectTypeIds.size;
+    if (count === 0) return 'Элемент / дефект…';
+    if (count === 1) {
+      const [id] = selectedDefectTypeIds;
+      const dt = defectTypes.find((d) => d.id === id);
+      if (!dt) return 'Элемент / дефект…';
+      const el = elements.find((e) => e.id === dt.elementId);
+      return el ? `${cap(el.name)}: ${cap(dt.name)}` : cap(dt.name);
+    }
+    return `Дефекты: ${count}`;
+  }, [selectedDefectTypeIds, defectTypes, elements]);
+
+  const handleOpenPopup = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setAnchor({ top: rect.bottom + 4, left: rect.left });
+    setPopupOpen(true);
+  };
 
   return (
     <div className={cls.filterBar}>
@@ -88,16 +103,35 @@ export const JournalFilters = memo(({
         className={cls.filterSelectLine}
       />
 
-      <input
-        id='journal-defect-filter'
-        name='journal-defect-filter'
-        className={cls.textInput}
-        type='text'
-        placeholder='Элемент / дефект…'
-        value={defectFilter}
-        onChange={(e) => setDefectFilter(e.target.value)}
-        autoComplete='off'
-      />
+      <button
+        ref={btnRef}
+        type="button"
+        className={`${cls.defectFilterBtn}${selectedDefectTypeIds.size > 0 ? ' ' + cls.defectFilterBtnActive : ''}`}
+        onClick={handleOpenPopup}
+      >
+        <span className={cls.defectFilterLabel}>{buttonLabel}</span>
+        {selectedDefectTypeIds.size > 0 && (
+          <span
+            className={cls.defectFilterClear}
+            role="button"
+            aria-label="Сбросить"
+            onClick={(e) => { e.stopPropagation(); setSelectedDefectTypeIds(new Set()); }}
+          >×</span>
+        )}
+      </button>
+
+      {popupOpen && (
+        <DefectTreePopup
+          elements={elements}
+          defectTypes={defectTypes}
+          anchor={anchor}
+          onSelect={() => {}}
+          onClose={() => setPopupOpen(false)}
+          multiSelect
+          selectedIds={selectedDefectTypeIds}
+          onSelectionChange={(ids) => setSelectedDefectTypeIds(new Set(ids))}
+        />
+      )}
 
       <input
         id='journal-inspector-filter'
@@ -135,7 +169,7 @@ export const JournalFilters = memo(({
       </div>
 
       <button
-        className={`${cls.resetBtn}${hasFilters ? '' : ` ${cls.resetBtnHidden}`}`}
+        className={`${cls.resetBtn}${hasFilters ? '' : ' ' + cls.resetBtnHidden}`}
         onClick={resetFilters}
       >
         Сбросить

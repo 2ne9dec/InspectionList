@@ -11,6 +11,7 @@ import { Button, FormField, HStack, Input, MultiSelect, SelectMenu } from '@/sha
 import type { SelectOption } from '@/shared/ui';
 import { toast } from '@/shared/lib/toast';
 import { logger } from '@/shared/lib/logger';
+import { capitalizeFirst } from '@/shared/lib/helpers';
 import { addDefectSlice } from '../model/addDefectSlice';
 import {
   selectAddDefectDate,
@@ -103,7 +104,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
   const isValid = !!selectedDefectId && hasLocation && inspector.trim().length > 0 && !!dateFound;
 
   const phaseOptions = useMemo<SelectOption<number>[]>(
-    () => phases.map((p) => ({ value: p.id, label: p.name })),
+    () => phases.map((p) => ({ value: p.id, label: capitalizeFirst(p.name) })),
     [phases],
   );
 

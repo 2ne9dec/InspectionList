@@ -1,96 +1,98 @@
 import { memo, useState, useCallback } from 'react';
-import { localDb } from '@/shared/lib/db/localDb';
-import { Button, Input, Modal } from '@/shared/ui';
+import { Button, Input, Modal, VStack, Text } from '@/shared/ui';
+import { syncService } from '@/shared/lib/sync/syncService';
+import { getPbServerUrl, setPbServerUrl } from '@/shared/lib/pocketbase/pbClient';
 import cls from './SyncButton.module.scss';
 
 type SyncStatus = 'idle' | 'loading' | 'success' | 'error';
 
 export const SyncButton = memo(() => {
-  const [isOpen,  setIsOpen]  = useState(false);
-  const [ip,      setIp]      = useState('');
-  const [status,  setStatus]  = useState<SyncStatus>('idle');
-  const [message, setMessage] = useState('');
+  const [status, setStatus] = useState<SyncStatus>('idle');
+  const [showSettings, setShowSettings] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
 
-  const handleOpen  = useCallback(() => { setIsOpen(true); setStatus('idle'); setMessage(''); }, []);
-  const handleClose = useCallback(() => setIsOpen(false), []);
+  // Инициализируем при открытии чтобы всегда показывать актуальный URL
+  const handleOpenSettings = useCallback(() => {
+    setUrlInput(getPbServerUrl());
+    setShowSettings(true);
+  }, []);
+
+  const handleCloseSettings = useCallback(() => setShowSettings(false), []);
 
   const handleSync = useCallback(async () => {
-    const baseUrl = `http://${ip.trim()}:8443`;
     setStatus('loading');
-    setMessage('');
-
     try {
-      const sheets  = await localDb.sheets.toArray();
-      const defects = await localDb.defectRecords.toArray();
-
-      const res = await fetch(`${baseUrl}/sync/batch`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sheets, defectRecords: defects }),
-      });
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      const data = await res.json() as {
-        ok: boolean;
-        sheetsUpserted: number;
-        defectsUpserted: number;
-        errors: { type: string; id: number; reason: string }[];
-      };
-
-      if (data.errors?.length) {
-        setStatus('error');
-        setMessage(`Частичная ошибка: ${data.errors.length} записей не синхронизировано`);
-      } else {
-        setStatus('success');
-        setMessage(`Отправлено: ${data.sheetsUpserted} листков, ${data.defectsUpserted} записей дефектов`);
-      }
+      await syncService.sync();
+      setStatus('success');
+      setTimeout(() => setStatus('idle'), 3000);
     } catch {
       setStatus('error');
-      setMessage('Не удалось подключиться к серверу. Проверьте IP и Wi-Fi.');
+      setTimeout(() => setStatus('idle'), 3000);
     }
-  }, [ip]);
+  }, []);
+
+  const handleSaveUrl = useCallback(() => {
+    if (urlInput.trim()) {
+      setPbServerUrl(urlInput.trim());
+    }
+  }, [urlInput]);
+
+  const label =
+    status === 'loading' ? 'Синхронизация...' :
+    status === 'success' ? 'Синхронизировано ✓' :
+    status === 'error'   ? 'Ошибка ✗' :
+    'Синхронизировать';
 
   return (
     <>
-      <Button variant='secondary' size='s' onClick={handleOpen}>
-        Синхронизировать
+      <Button
+        variant='secondary'
+        size='s'
+        onClick={handleSync}
+        disabled={status === 'loading'}
+      >
+        {label}
+      </Button>
+
+      <Button
+        variant='secondary'
+        size='s'
+        onClick={handleOpenSettings}
+        title='Настройки сервера'
+      >
+        ⚙
       </Button>
 
       <Modal
-        isOpen={isOpen}
-        onClose={handleClose}
+        isOpen={showSettings}
+        onClose={handleCloseSettings}
+        title='Настройки сервера'
         size='s'
-        title='Синхронизация с сервером'
         footer={
           <>
-            <Button variant='secondary' size='m' onClick={handleClose}>Отмена</Button>
-            <Button
-              variant='primary'
-              size='m'
-              onClick={handleSync}
-              disabled={!ip.trim() || status === 'loading'}
-              loading={status === 'loading'}
-            >
-              Отправить
+            <Button variant='secondary' size='s' onClick={handleCloseSettings}>
+              Отмена
+            </Button>
+            <Button variant='primary' size='s' onClick={handleSaveUrl}>
+              Сохранить и перезагрузить
             </Button>
           </>
         }
       >
-        <div className={cls.body}>
-          <p className={cls.hint}>
-            Введите IP-адрес компьютера с сервером (ПК должен быть в той же Wi-Fi сети)
-          </p>
+        <VStack gap='3'>
           <Input
-            placeholder='192.168.1.100'
-            value={ip}
-            onChange={setIp}
-            readonly={status === 'loading'}
+            name='pb-url'
+            value={urlInput}
+            onChange={setUrlInput}
+            placeholder='http://192.168.X.X:8090'
           />
-          {message && (
-            <p className={`${cls.message} ${cls[status]}`}>{message}</p>
-          )}
-        </div>
+          <Text
+            text={`Текущий: ${getPbServerUrl()}`}
+            variant='muted'
+            size='xs'
+            className={cls.hint}
+          />
+        </VStack>
       </Modal>
     </>
   );

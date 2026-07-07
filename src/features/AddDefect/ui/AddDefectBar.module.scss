@@ -57,26 +57,26 @@
   flex-basis: 100%;
 }
 .quickLabel {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   white-space: nowrap;
 }
 .chip {
-  padding: 3px 8px;
-  border: 1px solid var(--color-border, #334155);
-  border-radius: 12px;
-  font-size: 11px;
+  padding: 3px var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radii-full);
+  font-size: var(--font-size-xs);
   cursor: pointer;
-  background: var(--color-bg-secondary, #1e293b);
+  background: var(--color-bg-secondary);
   color: var(--color-text-primary);
   white-space: nowrap;
   transition: all .12s;
   &:hover { border-color: var(--color-accent); }
 }
 .chipActive {
-  background: var(--color-accent, #3b82f6);
+  background: var(--color-accent);
   color: var(--color-text-on-accent);
-  border-color: var(--color-accent, #3b82f6);
+  border-color: var(--color-accent);
 }
 
 /* Tablet (< 768px) */
@@ -137,7 +137,7 @@
     width: calc(7ch + 1rem);
   }
   .chip {
-    padding: 5px 10px;
-    font-size: 12px;
+    padding: 5px var(--space-3);
+    font-size: var(--font-size-xs);
   }
 }

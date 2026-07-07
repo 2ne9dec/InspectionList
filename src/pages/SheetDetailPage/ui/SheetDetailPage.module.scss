@@ -105,8 +105,8 @@
   right: -8px;
   background: var(--color-error);
   color: var(--color-text-on-accent);
-  border-radius: 50%;
-  font-size: 9px;
+  border-radius: var(--radii-full);
+  font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-bold);
   min-width: 16px;
   height: 16px;
@@ -159,9 +159,9 @@
 
   .infoBar { padding: var(--space-1) var(--space-2); gap: 6px; }
   .lineName { font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); }
-  .metaItem, .metaSep { font-size: 10px; }
-  .btnIcon { width: 44px; height: 44px; }
-  .btnPriorities { height: 36px; padding: 0 var(--space-2); font-size: 11px; }
+  .metaItem, .metaSep { font-size: var(--font-size-2xs); }
+  .btnIcon { width: var(--control-height-l); height: var(--control-height-l); }
+  .btnPriorities { height: 36px; padding: 0 var(--space-2); font-size: var(--font-size-xs); }
 }
 
 .spacer { flex: 1; min-width: var(--space-2); }

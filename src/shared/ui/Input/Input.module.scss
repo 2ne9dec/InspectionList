@@ -44,6 +44,15 @@
   &::placeholder {
     color: var(--color-text-secondary);
   }
+
+  // Убираем синий фон браузерного автофила
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px var(--color-bg-surface) inset; /* stylelint-disable-line property-no-vendor-prefix */
+    -webkit-text-fill-color: var(--color-text-primary);
+    transition: background-color 5000s ease-in-out 0s;
+  }
 }
 
 .leftIcon,

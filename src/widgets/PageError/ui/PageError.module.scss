@@ -4,21 +4,21 @@
   align-items: center;
   justify-content: center;
   height: 100vh;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .text {
-  font-size: 18px;
+  font-size: var(--font-size-l);
   color: var(--color-text-primary);
 }
 
 .btn {
-  padding: 10px 24px;
+  padding: 10px var(--space-6);
   background: var(--color-accent);
   color: var(--color-text-on-accent);
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: var(--radii);
+  font-size: var(--font-size-s);
   cursor: pointer;
 
   &:hover {

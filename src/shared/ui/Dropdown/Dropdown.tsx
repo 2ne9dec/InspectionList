@@ -52,12 +52,10 @@ export const Dropdown = memo((props: DropdownProps) => {
       panel.style.left  = `${tr.left}px`;
       panel.style.right = 'auto';
     }
+    // Всегда открываем вниз, ограничиваем доступным пространством
+    const spaceBelow = window.innerHeight - tr.bottom - 8;
     panel.style.top = `${tr.bottom + 4}px`;
-
-    const pr = panel.getBoundingClientRect();
-    if (pr.bottom > window.innerHeight) {
-      panel.style.top = `${Math.max(tr.top - pr.height - 4, 4)}px`;
-    }
+    panel.style.maxHeight = `${Math.min(spaceBelow, 360)}px`;
     panel.style.visibility = 'visible';
   }, [placement, panelWidth]);
 

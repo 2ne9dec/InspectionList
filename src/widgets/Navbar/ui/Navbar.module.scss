@@ -51,7 +51,7 @@
   background: var(--color-error);
   color: var(--color-text-on-accent);
   border-radius: var(--radii-full);
-  font-size: 9px;
+  font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-bold);
   min-width: 16px;
   height: 16px;
@@ -105,7 +105,7 @@
 }
 
 .searchKbd {
-  font-size: 0.65rem;
+  font-size: var(--font-size-2xs);
   opacity: 0.65;
   font-family: var(--font-family-mono);
 }
@@ -192,7 +192,7 @@
 }
 
 .mobileNavIcon {
-  font-size: 18px;
+  font-size: var(--font-size-l);
   width: 24px;
   text-align: center;
   flex-shrink: 0;

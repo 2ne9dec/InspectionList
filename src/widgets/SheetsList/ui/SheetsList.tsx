@@ -161,6 +161,7 @@ export const SheetsList = memo(() => {
     if (!ok) return;
     try {
       await deleteSheet(id).unwrap();
+      setSelectedIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
       toast.success('Листок осмотра удалён');
     } catch (e) {
       logger.error('Delete sheet failed', e);

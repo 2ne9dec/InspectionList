@@ -125,7 +125,7 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
     <>
       <tr className={`${cls.groupRow} ${isExpanded ? cls.open : ''}`} onClick={() => onToggle(locationKey)}>
         {/* Порядковый номер */}
-        <td className={cls.cell} style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)' }}>
+        <td className={`${cls.cell} ${cls.cellIndex}`}>
           {index}
         </td>
 
@@ -136,9 +136,7 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
           </span>
           <strong className={cls.poleNum}>
             {span && (
-              <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', marginRight: 4 }}>
-                пр.
-              </span>
+              <span className={cls.spanLabel}>пр.</span>
             )}
             {locationLabel}
           </strong>

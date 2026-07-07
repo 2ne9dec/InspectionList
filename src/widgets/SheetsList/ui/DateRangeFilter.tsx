@@ -19,11 +19,11 @@ export const DateRangeFilter = memo(({ dateFrom, dateTo, onChange }: DateRangeFi
   const ref = useRef<HTMLDivElement>(null);
 
   useOutsideClick(ref, () => setOpen(false), { enabled: open });
-  useEscape(() => setOpen(false), { enabled: open });
+  useEscape(() => setOpen(false), { enabled: open, blurOnClose: true });
 
   const hasFilter = !!(dateFrom || dateTo);
   const label = hasFilter
-    ? `${formatDate(dateFrom, '') || '…'} — ${formatDate(dateTo, '') || '…'}`
+    ? `${formatDate(dateFrom, '') || '...'} — ${formatDate(dateTo, '') || '...'}`
     : 'Фильтр по дате';
 
   return (

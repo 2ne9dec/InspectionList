@@ -9,10 +9,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   text-align: center;
 }
 
+// Крупный display-номер — специфичный для 404-страницы размер
 .code {
   font-size: 96px;
   font-weight: 900;
@@ -27,18 +28,18 @@
 }
 
 .subtitle {
-  font-size: 14px;
+  font-size: var(--font-size-s);
   color: var(--color-text-secondary);
 }
 
 .btn {
-  margin-top: 12px;
+  margin-top: var(--space-3);
   padding: 10px 28px;
   background: var(--color-accent);
   color: var(--color-text-on-accent);
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: var(--radii);
+  font-size: var(--font-size-s);
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.15s;

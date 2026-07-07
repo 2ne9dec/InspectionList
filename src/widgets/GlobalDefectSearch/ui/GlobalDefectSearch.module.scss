@@ -3,16 +3,16 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  margin: 16px;
+  margin: var(--space-4);
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--radii-l);
   overflow: hidden;
   background: var(--bg-secondary);
 }
 
 .title {
-  padding: 10px 16px;
-  font-size: 13px;
+  padding: 10px var(--space-4);
+  font-size: var(--font-size-s);
   color: var(--color-text-secondary);
   background: var(--bg-primary);
   border-bottom: 1px solid var(--color-border);
@@ -36,8 +36,8 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 8px 18px;
-  font-size: 12px;
+  padding: var(--space-2) 18px;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -51,18 +51,18 @@
   &:hover { color: var(--color-text-primary); }
 
   &--active {
-    color: var(--color-accent, #3b82f6);
-    border-bottom-color: var(--color-accent, #3b82f6);
+    color: var(--color-accent);
+    border-bottom-color: var(--color-accent);
     font-weight: 600;
   }
 }
 
 .tabCount {
-  margin-left: 4px;
-  font-size: 10px;
+  margin-left: var(--space-1);
+  font-size: var(--font-size-2xs);
   background: var(--color-border);
-  border-radius: 999px;
-  padding: 1px 6px;
+  border-radius: var(--radii-full);
+  padding: 1px var(--space-2);
   font-weight: 600;
 }
 
@@ -78,8 +78,8 @@
 }
 
 .th {
-  padding: 8px 10px;
-  font-size: 11px;
+  padding: var(--space-2) 10px;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.4px;
@@ -100,8 +100,8 @@
 }
 
 .cell {
-  padding: 8px 10px;
-  font-size: 12px;
+  padding: var(--space-2) 10px;
+  font-size: var(--font-size-xs);
   color: var(--color-text-primary);
   border-bottom: 1px solid var(--color-border);
   white-space: nowrap;
@@ -112,9 +112,9 @@
 
 .badge {
   display: inline-block;
-  padding: 1px 8px;
-  border-radius: 8px;
-  font-size: 11px;
+  padding: 1px var(--space-2);
+  border-radius: var(--radii-s);
+  font-size: var(--font-size-xs);
   font-weight: 700;
   background: var(--sev);  // data-severity на элементе
   color: var(--color-text-on-accent);
@@ -122,13 +122,13 @@
 
 .active {
   color: var(--severity-critical);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
 }
 
 .fixed {
   color: var(--severity-low);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
 }
 
@@ -137,19 +137,19 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 10px;
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 .photoCard {
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radii);
   overflow: hidden;
   cursor: pointer;
   transition: all 0.15s;
   background: var(--bg-primary);
 
   &:hover {
-    border-color: var(--color-accent, #3b82f6);
+    border-color: var(--color-accent);
     transform: translateY(-1px);
     box-shadow: var(--shadow-m);
   }
@@ -170,15 +170,15 @@
   align-items: center;
   justify-content: center;
   background: var(--bg-secondary);
-  font-size: 2rem;
+  font-size: var(--font-size-2xl);
 }
 
 .photoInfo {
-  padding: 6px 8px;
+  padding: var(--space-2);
 }
 
 .photoName {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--color-text-primary);
   white-space: nowrap;
@@ -187,7 +187,7 @@
 }
 
 .photoMeta {
-  font-size: 10px;
+  font-size: var(--font-size-2xs);
   color: var(--color-text-secondary);
   margin-top: 2px;
 }
@@ -195,8 +195,8 @@
 /* ── Аннотации-результаты ────────────────────────────── */
 .annCard {
   border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 8px 12px;
+  border-radius: var(--radii);
+  padding: var(--space-2) var(--space-3);
   cursor: pointer;
   transition: all 0.15s;
   background: var(--bg-primary);
@@ -205,15 +205,15 @@
   gap: 10px;
 
   &:hover {
-    border-color: var(--color-accent, #3b82f6);
-    background: var(--bg-row-hover, rgba(0,0,0,0.02));
+    border-color: var(--color-accent);
+    background: var(--bg-row-hover);
   }
 }
 
 .annList {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2);
   padding: 10px;
   overflow: auto;
   flex: 1;
@@ -223,7 +223,7 @@
   width: 48px;
   height: 36px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: var(--radii-xs);
   flex-shrink: 0;
   background: var(--color-border);
 }
@@ -231,12 +231,12 @@
 .annThumbPlaceholder {
   width: 48px;
   height: 36px;
-  border-radius: 4px;
+  border-radius: var(--radii-xs);
   background: var(--bg-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: var(--font-size-l);
   flex-shrink: 0;
 }
 
@@ -246,13 +246,13 @@
 }
 
 .annLabel {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
 .annMeta {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -261,9 +261,9 @@
 
 .annBadge {
   display: inline-block;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 10px;
+  padding: 1px var(--space-2);
+  border-radius: var(--radii-xs);
+  font-size: var(--font-size-2xs);
   font-weight: 600;
   flex-shrink: 0;
 
@@ -273,15 +273,15 @@
 }
 
 .empty {
-  padding: 2rem;
+  padding: var(--space-7);
   text-align: center;
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: var(--font-size-s);
 }
 
 .loading {
-  padding: 1.5rem;
+  padding: var(--space-6);
   text-align: center;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
