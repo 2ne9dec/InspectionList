@@ -25,6 +25,57 @@
 .search       { max-width: clamp(160px, 22vw, 300px); }
 .defectSearch { max-width: clamp(160px, 18vw, 260px); }
 
+/* Стиль кнопки фильтра дефектов — идентичен журналу (.defectFilterBtn в JournalPage.module.scss) */
+.defectFilterBtn {
+  width: 100%;
+  height: var(--control-height-s);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radii);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-s);
+  transition: border-color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-align: left;
+
+  &:hover { border-color: var(--color-accent); }
+}
+
+.defectFilterBtnActive {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent);
+}
+
+.defectFilterLabel {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.defectFilterChevron {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  line-height: 1;
+}
+
+.defectFilterClear {
+  flex-shrink: 0;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--color-text-secondary);
+  padding: 0 2px;
+  cursor: pointer;
+
+  &:hover { color: var(--color-error); }
+}
+
 @include m.down(tablet) {
   .title { display: none; }
   .defectSearch { display: none; }

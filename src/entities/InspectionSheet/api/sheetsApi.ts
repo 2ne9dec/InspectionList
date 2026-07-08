@@ -56,6 +56,20 @@ const sheetsApi = rtkApi.injectEndpoints({
     }),
 
     // Клонируем только метаданные листка — дефекты НЕ копируются
+    updateSheet: build.mutation<InspectionSheet, { id: number; createdDate?: string; createdBy?: string }>({
+      queryFn: async ({ id, ...patch }) => {
+        await localDb.sheets.update(id, patch);
+        const updated = await localDb.sheets.get(id);
+        await enqueueSyncTask('update', 'sheets', id, updated?.serverId);
+        syncService.scheduleSync();
+        return { data: updated! };
+      },
+      invalidatesTags: (_result, _err, { id }) => [
+        { type: 'Sheet' as const, id },
+        { type: 'Sheet' as const, id: 'LIST' },
+      ],
+    }),
+
     cloneSheet: build.mutation<InspectionSheet, { id: number; newDate: string; createdBy?: string }>({
       queryFn: async ({ id, newDate, createdBy }) => {
         const original = await localDb.sheets.get(id);
@@ -157,6 +171,7 @@ const sheetsApi = rtkApi.injectEndpoints({
 
 export const {
   useGetSheetsQuery,
+  useUpdateSheetMutation,
   useGetSheetByIdQuery,
   useCreateSheetMutation,
   useCloneSheetMutation,

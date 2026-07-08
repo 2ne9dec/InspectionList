@@ -4,6 +4,7 @@ import { SEVERITY_LABELS } from '@/entities/InspectionLine';
 import { Portal } from '@/shared/ui';
 import { useOutsideClick } from '@/shared/lib/hooks';
 import { capitalizeFirst as cap } from '@/shared/lib/helpers';
+import { useIsMobile } from '@/shared/lib/hooks';
 import cls from './DefectTreePopup.module.scss';
 
 interface DefectTreePopupProps {
@@ -27,10 +28,7 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
     multiSelect = false, selectedIds, onSelectionChange,
   } = props;
 
-  const isMobile = useMemo(
-    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 479px)').matches,
-    [],
-  );
+  const isMobile = useIsMobile();
 
   const sortedElements = useMemo(() => {
     return [...elements].sort((a, b) => {
@@ -86,7 +84,10 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
     const btnRect   = e.currentTarget.getBoundingClientRect();
     const panelRect = leftRef.current?.getBoundingClientRect();
     if (panelRect) {
-      setRightPos({ top: btnRect.top - btnRect.height, left: panelRect.right });
+      const PANEL_MAX_H = 340; // matches CSS max-height
+      const desiredTop  = btnRect.top - btnRect.height;
+      const top = Math.max(8, Math.min(desiredTop, window.innerHeight - PANEL_MAX_H - 8));
+      setRightPos({ top, left: panelRect.right });
     }
   };
 

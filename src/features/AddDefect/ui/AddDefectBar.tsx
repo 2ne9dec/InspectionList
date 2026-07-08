@@ -29,8 +29,9 @@ import { DefectPicker } from './DefectPicker';
 import { QuickDefectChips } from './QuickDefectChips';
 import cls from './AddDefectBar.module.scss';
 
-const GARLAND_OPTIONS   = Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }));
-const INSULATOR_OPTIONS = Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }));
+const GARLAND_CLEAR     = { value: '', label: '—' };
+const GARLAND_OPTIONS   = [GARLAND_CLEAR, ...Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))];
+const INSULATOR_OPTIONS = [GARLAND_CLEAR, ...Array.from({ length: 24 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))];
 
 /** Диапазон вида «1-10» или «1–10» → пролёт, иначе → опора */
 const detectRange = (val: string) => /\d[-–]\d/.test(val.trim());
@@ -162,6 +163,18 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
         ),
       );
       handleClearDraft();
+      // Автоскрол к конкретной опоре/пролёту по data-pole-key
+      const locationKey = spanRange ? `п:${spanRange}` : `о:${poleNum}`;
+      setTimeout(() => {
+        const wrap = document.querySelector('[data-defect-table-wrap]') as HTMLElement | null;
+        const target = wrap?.querySelector(`[data-pole-key="${locationKey}"]`) as HTMLElement | null;
+        if (wrap && target) {
+          const top = target.offsetTop - wrap.offsetTop - 8;
+          wrap.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        } else if (wrap) {
+          wrap.scrollTo({ top: 9_999_999, behavior: 'smooth' });
+        }
+      }, 500);
       toast.success(
         phaseIdsToCreate.length > 1
           ? `Дефект добавлен для ${phaseIdsToCreate.length} фаз`

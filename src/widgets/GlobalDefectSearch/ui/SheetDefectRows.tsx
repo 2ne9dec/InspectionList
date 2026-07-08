@@ -12,7 +12,7 @@ interface SheetDefectRowsProps {
   lineName: string;
   filialName: string;
   voltageName: string;
-  query: string;
+  defectTypeIds: number[];
   defects: DefectRecord[];
   defectTypes: DefectType[];
   elements: Element[];
@@ -20,25 +20,14 @@ interface SheetDefectRowsProps {
 }
 
 export const SheetDefectRows = memo((props: SheetDefectRowsProps) => {
-  const { sheetId, lineName, filialName, voltageName, query, defects, defectTypes, elements, navigate } = props;
+  const { sheetId, lineName, filialName, voltageName, defectTypeIds, defects, defectTypes, elements, navigate } = props;
+
+  const idSet = useMemo(() => new Set(defectTypeIds), [defectTypeIds]);
 
   const matches = useMemo(() => {
-    if (!query.trim()) return [];
-    const q = query.toLowerCase();
-    return defects
-      .filter((d: DefectRecord) => {
-        const dt = defectTypes.find((t: DefectType) => t.id === d.defectId);
-        const el = elements.find((e: Element) => e.id === dt?.elementId);
-        return (
-          dt?.name.toLowerCase().includes(q) ||
-          el?.name.toLowerCase().includes(q) ||
-          String(d.poleNumber).includes(q) ||
-          d.dateFound.includes(q) ||
-          d.inspectorFind.toLowerCase().includes(q)
-        );
-      })
-      .slice(0, 5);
-  }, [defects, query, defectTypes, elements]);
+    if (idSet.size === 0) return [];
+    return defects.filter((d: DefectRecord) => idSet.has(d.defectId));
+  }, [defects, idSet]);
 
   if (matches.length === 0) return null;
 

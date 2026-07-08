@@ -157,7 +157,7 @@ export function useJournalFilters() {
     || selectedDefectTypeIds.size > 0 || inspectorFilter || dateFrom || dateTo,
   );
 
-  const isGated = !showAll && !lineFilter && selectedDefectTypeIds.size === 0;
+  const isGated = !showAll && !lineFilter && selectedDefectTypeIds.size === 0 && !inspectorFilter;
 
   const filialDefectCount = useMemo(
     () => defects.filter((d) => sheetMap.has(d.sheetId)).length,

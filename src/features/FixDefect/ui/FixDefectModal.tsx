@@ -7,8 +7,9 @@ import {
   getLocationKey,
   formatLocationLabel,
   locationKeyType,
+  enrichDefects,
 } from '@/entities/DefectRecord';
-import { useGetDefectTypesQuery } from '@/entities/InspectionLine';
+import { useGetDefectTypesQuery, useGetElementsQuery, useGetPhasesQuery } from '@/entities/InspectionLine';
 import { Button, EmptyState, FormField, Input, Modal, SeverityDot } from '@/shared/ui';
 import { SEVERITY_LABELS } from '@/shared/const/severity';
 import { toast } from '@/shared/lib/toast';
@@ -28,18 +29,16 @@ export const FixDefectModal = memo(({ sheetId }: FixDefectModalProps) => {
 
   const { data: allDefects = [] } = useGetDefectsBySheetQuery(sheetId);
   const { data: defectTypes = [] } = useGetDefectTypesQuery();
+  const { data: elements = [] } = useGetElementsQuery();
+  const { data: phases = [] } = useGetPhasesQuery();
   const [fixDefect, { isLoading }] = useFixDefectMutation();
 
   const enriched = useMemo(() => {
     const targetKey = fix?.targetKey;
     if (!targetKey) return [];
-    return allDefects
-      .filter((d) => getLocationKey(d) === targetKey && !d.isFixed)
-      .map((d) => {
-        const dt = defectTypes.find((t) => t.id === d.defectId);
-        return { ...d, defectName: dt?.name ?? '—', severity: dt?.severity ?? ('low' as const) };
-      });
-  }, [allDefects, defectTypes, fix?.targetKey]);
+    const filtered = allDefects.filter((d) => getLocationKey(d) === targetKey && !d.isFixed);
+    return enrichDefects(filtered, defectTypes, elements, phases);
+  }, [allDefects, defectTypes, elements, phases, fix?.targetKey]);
 
   const allIds = useMemo(() => enriched.map((d) => d.id), [enriched]);
   const selectedSet = useMemo(() => new Set(fix?.selectedIds ?? []), [fix?.selectedIds]);

@@ -1,4 +1,4 @@
-import { memo, useState, useCallback } from 'react';
+import { memo, useState, useCallback, useMemo } from 'react';
 import { formatDate } from '@/shared/lib/helpers/formatDate';
 import { useParams } from 'react-router-dom';
 import { DynamicModuleLoader } from '@/shared/lib/components/DynamicModuleLoader/DynamicModuleLoader';
@@ -41,6 +41,13 @@ const SheetDetailPage = () => {
   const [sidebarDefect, setSidebarDefect] = useState<DefectRecordFull | null>(null);
   const [showTimeline,  setShowTimeline]  = useState(false);
 
+  // Порядковый номер дефекта в текущем листке (позиция в списке defectsFull)
+  const sidebarDefectNumber = useMemo(() => {
+    if (!sidebarDefect) return null;
+    const idx = defectsFull.findIndex((d) => d.id === sidebarDefect.id);
+    return idx >= 0 ? idx + 1 : null;
+  }, [defectsFull, sidebarDefect]);
+
   const { openModal: openFixModal }  = fixDefectActions.useActions();
   const { openModal: openCopyModal } = copyDefectActions.useActions();
   const { handleDelete: deleteDefectById, confirmProps } = useDeleteDefect();
@@ -64,6 +71,10 @@ const SheetDetailPage = () => {
     const ok = await deleteDefectById(defectId);
     if (ok) setSidebarDefect(null);
   }, [deleteDefectById]);
+
+  const handleSaveInspector = useCallback((id: number, value: string) => {
+    setSidebarDefect((prev) => prev && prev.id === id ? { ...prev, inspectorFind: value } : prev);
+  }, []);
 
   const handleCloseSidebar  = useCallback(() => setSidebarDefect(null), []);
   const handleCloseTimeline = useCallback(() => setShowTimeline(false), []);
@@ -134,9 +145,11 @@ const SheetDetailPage = () => {
         {sidebarDefect && (
           <DefectSidebar
             defect={sidebarDefect}
+            defectNumber={sidebarDefectNumber}
             onClose={handleCloseSidebar}
             onFix={handleSidebarFix}
             onDelete={handleSidebarDelete}
+            onSaveInspector={handleSaveInspector}
           />
         )}
 

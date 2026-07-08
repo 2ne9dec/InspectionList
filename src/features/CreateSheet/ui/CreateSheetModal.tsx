@@ -9,7 +9,7 @@ import {
   useGetLinesQuery,
   useGetVoltagesQuery,
 } from '@/entities/InspectionLine';
-import { getUserAuthData, getUserFilialId, getUserIsAdmin } from '@/entities/User';
+import { getUserFilialId, getUserIsAdmin } from '@/entities/User';
 import { getRouteSheetDetail } from '@/shared/const/router';
 import { Button, FormField, Input, Modal, SelectMenu } from '@/shared/ui';
 import { toast } from '@/shared/lib/toast';
@@ -38,7 +38,6 @@ export const CreateSheetModal = memo(() => {
 
   const userFilialId = useSelector(getUserFilialId);
   const isAdmin = useSelector(getUserIsAdmin);
-  useSelector(getUserAuthData);
 
   const { closeModal, setVoltageId, setLineId, setCreatedBy, setCreatedDate, setFilialId } =
     createSheetActions.useActions();

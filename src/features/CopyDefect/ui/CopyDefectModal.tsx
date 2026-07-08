@@ -4,6 +4,7 @@ import type { StateSchema } from '@/app/providers/StoreProvider';
 import {
   useCreateDefectMutation,
   useGetDefectsBySheetQuery,
+  enrichDefects,
   getLocationKey,
   formatLocationLabel,
   locationKeyType,
@@ -45,19 +46,7 @@ export const CopyDefectModal = memo((props: CopyDefectModalProps) => {
   }, [allDefects, copy?.sourceKey]);
 
   const enriched = useMemo(
-    () =>
-      sourceDefects.map((d) => {
-        const dt = defectTypes.find((t) => t.id === d.defectId);
-        const el = elements.find((e) => e.id === dt?.elementId);
-        const ph = d.phaseId != null ? phases.find((p) => p.id === d.phaseId) : undefined;
-        return {
-          ...d,
-          elementName: el?.name ?? '—',
-          defectName: dt?.name ?? '—',
-          severity: dt?.severity ?? ('low' as const),
-          phaseName: ph?.name ?? null,
-        };
-      }),
+    () => enrichDefects(sourceDefects, defectTypes, elements, phases),
     [sourceDefects, defectTypes, elements, phases],
   );
 
@@ -85,10 +74,7 @@ export const CopyDefectModal = memo((props: CopyDefectModalProps) => {
           const exists = allDefects.some(
             (ex) => ex.poleNumber === pole && ex.defectId === d.defectId && ex.phaseId === d.phaseId,
           );
-          if (exists) {
-            skipped += 1;
-            return false;
-          }
+          if (exists) { skipped += 1; return false; }
           return true;
         });
 
@@ -129,7 +115,7 @@ export const CopyDefectModal = memo((props: CopyDefectModalProps) => {
   const sourceKey = copy?.sourceKey ?? '';
   const isSpan = locationKeyType(sourceKey) === 'span';
   const locationLabel = sourceKey ? formatLocationLabel(sourceKey) : '';
-  const locationPrefix = isSpan ? 'Пролётыа' : 'опоры';
+  const locationPrefix = isSpan ? 'Пролёты' : 'опоры';
 
   const inputError =
     hasInput && targetPoles.length === 0 ? `Нет допустимых опор в диапазоне ${poleStart}–${poleEnd}` : undefined;
@@ -178,9 +164,7 @@ export const CopyDefectModal = memo((props: CopyDefectModalProps) => {
                 <span className={cls.elementLabel}>{d.elementName}</span>
                 <span className={cls.defectLabel}>{d.defectName}</span>
                 {d.phaseName && (
-                  <span className={cls.phaseLabel} title={`Фаза ${d.phaseName}`}>
-                    {d.phaseName}
-                  </span>
+                  <span className={cls.phaseTag}>{d.phaseName}</span>
                 )}
                 <span className={cls.sevLabel}>{SEVERITY_LABELS[d.severity]}</span>
               </label>

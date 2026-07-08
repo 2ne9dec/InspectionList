@@ -11,6 +11,7 @@ export interface SheetCardProps {
   onOpen: (id: number) => void;
   onDelete: (id: number) => void;
   onClone: (id: number) => void;
+  onEdit?: (id: number) => void;
   showFilial?: boolean;
   selected?: boolean;
   onSelect?: (id: number, checked: boolean) => void;
@@ -19,12 +20,13 @@ export interface SheetCardProps {
 }
 
 export const SheetCard = memo((props: SheetCardProps) => {
-  const { sheet, index, onOpen, onDelete, onClone, showFilial = true, selected, onSelect, disabledForMerge } = props;
+  const { sheet, index, onOpen, onDelete, onClone, onEdit, showFilial = true, selected, onSelect, disabledForMerge } = props;
 
   const handleRowClick = useCallback(() => onOpen(sheet.id), [onOpen, sheet.id]);
   const stopRowClick   = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
   const handleDelete   = useCallback(() => onDelete(sheet.id), [onDelete, sheet.id]);
   const handleClone    = useCallback(() => onClone(sheet.id), [onClone, sheet.id]);
+  const handleEdit     = useCallback(() => onEdit?.(sheet.id), [onEdit, sheet.id]);
   const handleCheck    = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
     onSelect?.(sheet.id, e.target.checked);
@@ -89,9 +91,15 @@ export const SheetCard = memo((props: SheetCardProps) => {
                 onClick={() => { close(); onOpen(sheet.id); }}>
                 Открыть
               </button>
+              {onEdit && (
+                <button type="button" role="menuitem" className={cls.menuItem}
+                  onClick={() => { close(); handleEdit(); }}>
+                  Редактировать
+                </button>
+              )}
               <button type="button" role="menuitem" className={cls.menuItem}
                 onClick={() => { close(); handleClone(); }}>
-                Копировать с новой датой
+                Копировать
               </button>
               <button type="button" role="menuitem"
                 className={`${cls.menuItem} ${cls.menuItemDanger}`}

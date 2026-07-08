@@ -12,7 +12,9 @@
     "lint:ts": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:ts:fix": "eslint --fix \"src/**/*.{ts,tsx}\"",
     "lint:scss": "stylelint \"src/**/*.scss\"",
-    "lint:scss:fix": "stylelint --fix \"src/**/*.scss\""
+    "lint:scss:fix": "stylelint --fix \"src/**/*.scss\"",
+    "check:truncation": "node scripts/check-truncation.cjs",
+    "check:all": "tsc --noEmit && yarn lint:ts && yarn lint:scss && yarn check:truncation"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",

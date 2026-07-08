@@ -1,7 +1,10 @@
 import { pb } from '@/shared/lib/pocketbase/pbClient';
 import { localDb, type SyncTask } from '@/shared/lib/db/localDb';
+import { logger } from '@/shared/lib/logger';
 
 const MAX_ATTEMPTS = 10;
+const SYNC_PAGE_SIZE_REFS    = 500;
+const SYNC_PAGE_SIZE_RECORDS = 2000;
 
 // ─── Маппинг: локальные поля → PocketBase ───────────────────────────────────
 
@@ -47,7 +50,6 @@ function defectToPb(defect: any, sheetServerId: string) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function pbToSheet(r: any) {
-  console.log('[sync] pbToSheet raw:', JSON.stringify(r));
   return {
     serverId:       String(r.id ?? ''),
     filialId:       Number(r.filial_id ?? 0),
@@ -95,7 +97,7 @@ const REFERENCE_COLLECTIONS = [
 async function pullReferences(): Promise<void> {
   for (const col of REFERENCE_COLLECTIONS) {
     try {
-      const result = await pb.collection(col).getList(1, 500);
+      const result = await pb.collection(col).getList(1, SYNC_PAGE_SIZE_REFS);
       const records = result.items;
       await localDb.referenceCache.put({
         key:       col,
@@ -116,7 +118,7 @@ async function pbGetAll(collection: string): Promise<unknown[]> {
   // и делает столько запросов, сколько нужно). Сырой fetch без пагинации возвращал
   // только первые 30 записей — всё остальное считалось удалённым и стиралось локально.
   // PocketBase v0.39 compat: no sort, smaller batch, avoid skipTotal via getList
-  const page1 = await pb.collection(collection).getList(1, 2000, {});
+  const page1 = await pb.collection(collection).getList(1, SYNC_PAGE_SIZE_RECORDS, {});
   return page1.items;
 }
 
@@ -124,7 +126,7 @@ async function pull(): Promise<void> {
   // 1. Листки
   try {
     const pbSheets = await pbGetAll('sheets') as ReturnType<typeof pbToSheet>[];
-    console.log(`[sync] pull: got ${pbSheets.length} sheets from server`);
+    logger.info(`[sync] pull: got ${pbSheets.length} sheets from server`);
     const serverSheetIds = new Set<string>();
 
     for (const r of pbSheets) {
@@ -161,22 +163,22 @@ async function pull(): Promise<void> {
         // Удаляем дефекты этого листка и сам листок
         await localDb.defectRecords.where('sheetId').equals(sheet.id!).delete();
         await localDb.sheets.delete(sheet.id!);
-        console.log(`[sync] pull: deleted sheet localId=${sheet.id} (removed from server)`);
+        logger.info(`[sync] pull: deleted sheet localId=${sheet.id} (removed from server)`);
       }
     }
   } catch (err) {
     if (err && typeof err === 'object' && 'status' in err) {
       const pbErr = err as { status: number; data?: unknown };
-      console.error('[sync] pull sheets error, status:', pbErr.status, pbErr.data);
+      logger.error('[sync] pull sheets error, status:', pbErr.status, pbErr.data);
     } else {
-      console.warn('[sync] pull sheets offline/error:', err);
+      logger.warn('[sync] pull sheets offline/error:', err);
     }
   }
 
   // 2. Дефекты (после листков, чтобы serverId листков уже были в Dexie)
   try {
     const pbDefects = await pbGetAll('defect_records') as unknown[];
-    console.log(`[sync] pull: got ${pbDefects.length} defects from server`);
+    logger.info(`[sync] pull: got ${pbDefects.length} defects from server`);
     const serverDefectIds = new Set<string>();
 
     for (const r of pbDefects) {
@@ -200,15 +202,15 @@ async function pull(): Promise<void> {
     for (const defect of localSyncedDefects) {
       if (!serverDefectIds.has(defect.serverId!)) {
         await localDb.defectRecords.delete(defect.id!);
-        console.log(`[sync] pull: deleted defect localId=${defect.id} (removed from server)`);
+        logger.info(`[sync] pull: deleted defect localId=${defect.id} (removed from server)`);
       }
     }
   } catch (err) {
     if (err && typeof err === 'object' && 'status' in err) {
       const pbErr = err as { status: number; data?: unknown };
-      console.error('[sync] pull defects error, status:', pbErr.status, pbErr.data);
+      logger.error('[sync] pull defects error, status:', pbErr.status, pbErr.data);
     } else {
-      console.warn('[sync] pull defects offline/error:', err);
+      logger.warn('[sync] pull defects offline/error:', err);
     }
   }
 
@@ -218,10 +220,19 @@ async function pull(): Promise<void> {
 
 // ─── Push: Dexie → сервер (очередь) ─────────────────────────────────────────
 
+function is4xxError(err: unknown): boolean {
+  if (err instanceof Error) return /\b4\d\d\b/.test(err.message);
+  if (err && typeof err === 'object' && 'status' in err) {
+    const status = (err as { status: number }).status;
+    return typeof status === 'number' && status >= 400 && status < 500;
+  }
+  return false;
+}
+
 async function push(): Promise<void> {
   // Порядок важен: сначала создаём листки, потом дефекты, потом удаляем
   const queue = await localDb.syncQueue.orderBy('createdAt').toArray();
-  console.log(`[sync] push: ${queue.length} tasks in queue`);
+  logger.info(`[sync] push: ${queue.length} tasks in queue`);
 
   const order = ['create:sheets', 'create:defect_records', 'update:sheets', 'update:defect_records', 'delete:defect_records', 'delete:sheets'];
   const sorted = queue.sort((a, b) => {
@@ -238,19 +249,18 @@ async function push(): Promise<void> {
     }
 
     try {
-      console.log(`[sync] processing: ${task.action}:${task.collection} localId=${task.localId}`);
+      logger.info(`[sync] processing: ${task.action}:${task.collection} localId=${task.localId}`);
       await processTask(task);
-      console.log(`[sync] done: ${task.action}:${task.collection} localId=${task.localId}`);
+      logger.info(`[sync] done: ${task.action}:${task.collection} localId=${task.localId}`);
       await localDb.syncQueue.delete(task.id!);
     } catch (err: unknown) {
       // Логируем детали ошибки для отладки
-      console.error(`[sync] FAILED: ${task.action}:${task.collection} localId=${task.localId}`, err);
+      logger.error(`[sync] FAILED: ${task.action}:${task.collection} localId=${task.localId}`, err);
       if (err && typeof err === 'object' && 'status' in err) {
         const pbErr = err as { status: number; data?: unknown; message?: string };
-        console.error(`  → status=${pbErr.status}`, pbErr.data ?? pbErr.message);
+        logger.error(`  → status=${pbErr.status}`, pbErr.data ?? pbErr.message);
       }
-      const is4xx = err instanceof Error && /\b4\d\d\b/.test(err.message)
-        || (err && typeof err === 'object' && 'status' in err && typeof (err as { status: number }).status === 'number' && (err as { status: number }).status >= 400 && (err as { status: number }).status < 500);
+      const is4xx = is4xxError(err);
       if (is4xx) {
         // Клиентская ошибка (404, 409 и т.д.) — удаляем задачу, повторять смысла нет
         await localDb.syncQueue.delete(task.id!);
@@ -365,7 +375,7 @@ async function bootstrapQueue(): Promise<void> {
   }
 
   if (unsyncedSheets.length || unsyncedDefects.length) {
-    console.log(`[sync] bootstrapped: ${unsyncedSheets.length} sheets, ${unsyncedDefects.length} defects queued`);
+    logger.info(`[sync] bootstrapped: ${unsyncedSheets.length} sheets, ${unsyncedDefects.length} defects queued`);
   }
 }
 
@@ -383,7 +393,7 @@ async function sync(): Promise<void> {
     await pullReferences();
     window.dispatchEvent(new Event('sync:complete'));
   } catch (err) {
-    console.error('[sync] error:', err);
+    logger.error('[sync] error:', err);
   } finally {
     syncing = false;
   }
@@ -393,7 +403,7 @@ async function sync(): Promise<void> {
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 function scheduleSync(delayMs = 2000): void {
   if (debounceTimer) clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => { sync().catch(console.error); }, delayMs);
+  debounceTimer = setTimeout(() => { sync().catch((err) => logger.error('[sync] schedule error', err)); }, delayMs);
 }
 
 export const syncService = {

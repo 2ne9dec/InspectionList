@@ -8,7 +8,7 @@ export interface CreateSheetSchema {
   createdDate: string;
   isOpen: boolean;
   search: string;
-  defectSearch: string;
+  selectedDefectTypeIds: number[];
 }
 
 const getToday = () => new Date().toISOString().split('T')[0];
@@ -21,7 +21,7 @@ const initialState: CreateSheetSchema = {
   createdDate: getToday(),
   isOpen: false,
   search: '',
-  defectSearch: '',
+  selectedDefectTypeIds: [],
 };
 
 export const createSheetSlice = buildSlice({
@@ -61,8 +61,8 @@ export const createSheetSlice = buildSlice({
     setSearch: (state, action: { payload: string }) => {
       state.search = action.payload;
     },
-    setDefectSearch: (state, action: { payload: string }) => {
-      state.defectSearch = action.payload;
+    setSelectedDefectTypeIds: (state, action: { payload: number[] }) => {
+      state.selectedDefectTypeIds = action.payload;
     },
   },
 });

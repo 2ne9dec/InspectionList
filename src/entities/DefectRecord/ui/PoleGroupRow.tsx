@@ -123,7 +123,7 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
 
   return (
     <>
-      <tr className={`${cls.groupRow} ${isExpanded ? cls.open : ''}`} onClick={() => onToggle(locationKey)}>
+      <tr className={`${cls.groupRow} ${isExpanded ? cls.open : ''}`} onClick={() => onToggle(locationKey)} data-pole-key={locationKey}>
         {/* Порядковый номер */}
         <td className={`${cls.cell} ${cls.cellIndex}`}>
           {index}

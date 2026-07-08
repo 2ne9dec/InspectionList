@@ -110,13 +110,15 @@ export const JournalFilters = memo(({
         onClick={handleOpenPopup}
       >
         <span className={cls.defectFilterLabel}>{buttonLabel}</span>
-        {selectedDefectTypeIds.size > 0 && (
+        {selectedDefectTypeIds.size > 0 ? (
           <span
             className={cls.defectFilterClear}
             role="button"
             aria-label="Сбросить"
             onClick={(e) => { e.stopPropagation(); setSelectedDefectTypeIds(new Set()); }}
           >×</span>
+        ) : (
+          <span className={cls.defectFilterChevron} aria-hidden>▾</span>
         )}
       </button>
 
