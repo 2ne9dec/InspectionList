@@ -42,16 +42,12 @@ function border(style: ExcelJS.BorderStyle = 'thin', argb: string = C.border): P
   return { top: s, left: s, bottom: s, right: s };
 }
 
-export async function exportToExcel(params: ExportParams): Promise<void> {
-  const ExcelJS = (await import('exceljs')).default;
-  const { sheet, defects, defectTypes, elements, phases = [] } = params;
-
-  const wb = new ExcelJS.Workbook();
-  wb.creator = 'Журнал дефектов';
-  wb.created = new Date();
-
-  const sorted = [...defects].sort((a, b) => (a.poleNumber ?? Infinity) - (b.poleNumber ?? Infinity));
-
+// ── Лист 1: Журнал неисправностей ───────────────────────────────────────────
+function buildJournalSheet(
+  wb: ExcelJS.Workbook,
+  { sheet, defectTypes, elements, phases = [] }: ExportParams,
+  sorted: DefectRecord[],
+): void {
   const ws = wb.addWorksheet('Журнал неисправностей', {
     pageSetup: {
       orientation: 'landscape', paperSize: 9,
@@ -71,7 +67,7 @@ export async function exportToExcel(params: ExportParams): Promise<void> {
     { width: 22 }, // G — ФИО производителя работ
   ];
 
-  // ── Строка 1: Заголовок ──────────────────────────────────────────────────────
+  // Строка 1: Заголовок
   ws.mergeCells('A1:G1');
   const r1 = ws.getCell('A1');
   r1.value = 'ЖУРНАЛ НЕИСПРАВНОСТЕЙ';
@@ -81,7 +77,7 @@ export async function exportToExcel(params: ExportParams): Promise<void> {
   r1.border = border('medium', C.borderDark);
   ws.getRow(1).height = 28;
 
-  // ── Строка 2: Инфо о линии ───────────────────────────────────────────────────
+  // Строка 2: Инфо о линии
   ws.mergeCells('A2:G2');
   const r2 = ws.getCell('A2');
   r2.value = [
@@ -97,7 +93,7 @@ export async function exportToExcel(params: ExportParams): Promise<void> {
   r2.border = border('thin', C.borderDark);
   ws.getRow(2).height = 18;
 
-  // ── Строки 3–4: Заголовки таблицы ───────────────────────────────────────────
+  // Строки 3–4: Заголовки таблицы
   ws.mergeCells('A3:A4');
   ws.mergeCells('B3:B4');
   ws.mergeCells('C3:C4');
@@ -133,10 +129,9 @@ export async function exportToExcel(params: ExportParams): Promise<void> {
   hdr2(ws.getCell('G4'), 'Ф.И.О. производителя работ');
   ws.getRow(4).height = 36;
 
-  // Фильтр по всем колонкам (строка 4 — нижний заголовок)
   ws.autoFilter = { from: { row: 4, column: 1 }, to: { row: 4, column: 7 } };
 
-  // ── Данные ───────────────────────────────────────────────────────────────────
+  // Данные
   sorted.forEach((d, i) => {
     const dt    = defectTypes.find((t) => t.id === d.defectId);
     const el    = elements.find((e) => e.id === dt?.elementId);
@@ -172,7 +167,7 @@ export async function exportToExcel(params: ExportParams): Promise<void> {
     set('G', d.isFixed && d.inspectorFix ? d.inspectorFix           : '');
   });
 
-  // ── Строка итогов ────────────────────────────────────────────────────────────
+  // Строка итогов
   const totalRow = sorted.length + 5;
   ws.mergeCells(`A${totalRow}:G${totalRow}`);
   const tc = ws.getCell(`A${totalRow}`);
@@ -184,24 +179,29 @@ export async function exportToExcel(params: ExportParams): Promise<void> {
   tc.alignment = { horizontal: 'center', vertical: 'middle' };
   tc.border = border('medium', C.borderDark);
   ws.getRow(totalRow).height = 20;
+}
 
-  // ── Лист 2: Статистика ───────────────────────────────────────────────────────
-  const ws2 = wb.addWorksheet('Статистика');
-  ws2.columns = [{ width: 35 }, { width: 35 }, { width: 14 }, { width: 14 }];
+// ── Лист 2: Статистика ───────────────────────────────────────────────────────
+function buildStatsSheet(
+  wb: ExcelJS.Workbook,
+  { defects, defectTypes, elements }: ExportParams,
+): void {
+  const ws = wb.addWorksheet('Статистика');
+  ws.columns = [{ width: 35 }, { width: 35 }, { width: 14 }, { width: 14 }];
 
-  const addHdr2 = (cell: string, v: string) => {
-    const c = ws2.getCell(cell);
+  const addHdr = (cell: string, v: string) => {
+    const c = ws.getCell(cell);
     c.value = v;
     c.font = { bold: true, name: 'Times New Roman', size: 10, color: { argb: C.hdr1Fg } };
     c.fill = fill(C.hdr1Bg);
     c.border = border('medium', C.borderDark);
     c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
   };
-  addHdr2('A1', 'Элемент');
-  addHdr2('B1', 'Вид дефекта');
-  addHdr2('C1', 'Активных');
-  addHdr2('D1', 'Устранено');
-  ws2.getRow(1).height = 22;
+  addHdr('A1', 'Элемент');
+  addHdr('B1', 'Вид дефекта');
+  addHdr('C1', 'Активных');
+  addHdr('D1', 'Устранено');
+  ws.getRow(1).height = 22;
 
   const statMap = new Map<string, { elem: string; defect: string; active: number; fixed: number }>();
   for (const d of defects) {
@@ -215,62 +215,85 @@ export async function exportToExcel(params: ExportParams): Promise<void> {
   const statRows = [...statMap.values()].sort((a, b) => b.active - a.active);
   statRows.forEach((row, i) => {
     const r = i + 2;
-    ws2.getCell(`A${r}`).value = row.elem;
-    ws2.getCell(`B${r}`).value = row.defect;
-    ws2.getCell(`C${r}`).value = row.active;
-    ws2.getCell(`D${r}`).value = row.fixed;
+    ws.getCell(`A${r}`).value = row.elem;
+    ws.getCell(`B${r}`).value = row.defect;
+    ws.getCell(`C${r}`).value = row.active;
+    ws.getCell(`D${r}`).value = row.fixed;
     ['A', 'B', 'C', 'D'].forEach((col) => {
-      const c = ws2.getCell(`${col}${r}`);
+      const c = ws.getCell(`${col}${r}`);
       c.font  = { name: 'Times New Roman', size: 10 };
       c.border = border('thin');
       c.fill  = fill(i % 2 === 0 ? C.rowEven : C.rowOdd);
       c.alignment = { vertical: 'middle', wrapText: true };
     });
-    ws2.getRow(r).height = 18;
+    ws.getRow(r).height = 18;
   });
 
-  const s2tot = statRows.length + 2;
-  ws2.mergeCells(`A${s2tot}:B${s2tot}`);
-  ws2.getCell(`A${s2tot}`).value = 'ИТОГО';
-  ws2.getCell(`C${s2tot}`).value = statRows.reduce((s, r) => s + r.active, 0);
-  ws2.getCell(`D${s2tot}`).value = statRows.reduce((s, r) => s + r.fixed, 0);
+  const totRow = statRows.length + 2;
+  ws.mergeCells(`A${totRow}:B${totRow}`);
+  ws.getCell(`A${totRow}`).value = 'ИТОГО';
+  ws.getCell(`C${totRow}`).value = statRows.reduce((s, r) => s + r.active, 0);
+  ws.getCell(`D${totRow}`).value = statRows.reduce((s, r) => s + r.fixed, 0);
   ['A', 'C', 'D'].forEach((col) => {
-    const c = ws2.getCell(`${col}${s2tot}`);
+    const c = ws.getCell(`${col}${totRow}`);
     c.font  = { bold: true, name: 'Times New Roman', size: 10 };
     c.fill  = fill(C.totalBg);
     c.border = border('medium', C.borderDark);
     c.alignment = { horizontal: 'center', vertical: 'middle' };
   });
-  ws2.getRow(s2tot).height = 20;
+  ws.getRow(totRow).height = 20;
+}
 
-  // ── Лист 3: Сводка ───────────────────────────────────────────────────────────
-  const ws3 = wb.addWorksheet('Сводка');
-  ws3.columns = [{ width: 32 }, { width: 28 }];
-  let ws3Row = 0;
-  const addSummary = (label: string, value: string | number, isTitle = false) => {
-    ws3Row++;
-    const cA = ws3.getCell(`A${ws3Row}`);
-    const cB = ws3.getCell(`B${ws3Row}`);
+// ── Лист 3: Сводка ───────────────────────────────────────────────────────────
+function buildSummarySheet(
+  wb: ExcelJS.Workbook,
+  { sheet, defects }: ExportParams,
+): void {
+  const ws = wb.addWorksheet('Сводка');
+  ws.columns = [{ width: 32 }, { width: 28 }];
+  let rowIdx = 0;
+
+  const addRow = (label: string, value: string | number, isTitle = false) => {
+    rowIdx++;
+    const cA = ws.getCell(`A${rowIdx}`);
+    const cB = ws.getCell(`B${rowIdx}`);
     cA.value = label;
     cB.value = value;
     [cA, cB].forEach((c, idx) => {
       c.font   = { name: 'Times New Roman', size: 11, bold: idx === 0 || isTitle };
       c.border = border('thin');
-      c.fill   = fill(isTitle ? C.hdr1Bg : (ws3Row % 2 === 0 ? C.rowOdd : C.rowEven));
+      c.fill   = fill(isTitle ? C.hdr1Bg : (rowIdx % 2 === 0 ? C.rowOdd : C.rowEven));
       if (isTitle) c.font = { ...c.font, color: { argb: C.hdr1Fg } };
       c.alignment = { vertical: 'middle' };
     });
-    ws3.getRow(ws3Row).height = 18;
+    ws.getRow(rowIdx).height = 18;
   };
-  addSummary('Филиал',              sheet.filialName);
-  addSummary('Класс напряжения',    sheet.voltageName);
-  addSummary('Линия',               sheet.lineName);
-  addSummary('Дата осмотра',        sheet.createdDate);
-  addSummary('Инспектор',           sheet.createdBy);
-  addSummary('Всего дефектов',      defects.length);
-  addSummary('Активных',            defects.filter((d) => !d.isFixed).length);
-  addSummary('Устранено',           defects.filter((d) => d.isFixed).length);
-  addSummary('Мест с дефектами',    new Set(defects.map((d) => d.spanRange ?? String(d.poleNumber))).size);
+
+  addRow('Филиал',              sheet.filialName);
+  addRow('Класс напряжения',    sheet.voltageName);
+  addRow('Линия',               sheet.lineName);
+  addRow('Дата осмотра',        sheet.createdDate);
+  addRow('Инспектор',           sheet.createdBy);
+  addRow('Всего дефектов',      defects.length);
+  addRow('Активных',            defects.filter((d) => !d.isFixed).length);
+  addRow('Устранено',           defects.filter((d) => d.isFixed).length);
+  addRow('Мест с дефектами',    new Set(defects.map((d) => d.spanRange ?? String(d.poleNumber))).size);
+}
+
+// ── Публичный API ─────────────────────────────────────────────────────────────
+export async function exportToExcel(params: ExportParams): Promise<void> {
+  const ExcelJS = (await import('exceljs')).default;
+  const { sheet, defects } = params;
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Журнал дефектов';
+  wb.created = new Date();
+
+  const sorted = [...defects].sort((a, b) => (a.poleNumber ?? Infinity) - (b.poleNumber ?? Infinity));
+
+  buildJournalSheet(wb, params, sorted);
+  buildStatsSheet(wb, params);
+  buildSummarySheet(wb, params);
 
   // ── Скачиваем ────────────────────────────────────────────────────────────────
   const buf      = await wb.xlsx.writeBuffer();
@@ -289,14 +312,12 @@ export async function exportToExcel(params: ExportParams): Promise<void> {
       new Uint8Array(buf as ArrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), ''),
     );
 
-    // Пишем во временную папку
     const result = await Filesystem.writeFile({
       path: fileName,
       data: base64,
       directory: Directory.Cache,
     });
 
-    // Открываем нативный диалог — пользователь сам выбирает куда сохранить
     await Share.share({
       title: fileName,
       url: result.uri,

@@ -27,6 +27,30 @@ export interface JournalRow {
  * Управляет состоянием фильтров, вычисляет строки таблицы и выбором строк.
  * UI-компонент получает готовые rows и коллбэки — сам ничего не считает.
  */
+
+// -- Helpers for pole/span filter
+function parsePoleFilter(filter: string): { min: number; max: number } | null {
+  const f = filter.trim();
+  if (!f) return null;
+  const range = f.match(/^(\d+)\s*[\-\u2013]\s*(\d+)$/);
+  if (range) return { min: parseInt(range[1], 10), max: parseInt(range[2], 10) };
+  const single = f.match(/^(\d+)$/);
+  if (single) { const n = parseInt(single[1], 10); return { min: n, max: n }; }
+  return null;
+}
+
+function matchesSpanRange(spanRange: string | null | undefined, min: number, max: number): boolean {
+  if (!spanRange) return false;
+  const rangeM = spanRange.match(/^(\d+)\s*[\-\u2013]\s*(\d+)$/);
+  if (rangeM) {
+    const sMin = parseInt(rangeM[1], 10);
+    const sMax = parseInt(rangeM[2], 10);
+    return sMin <= max && sMax >= min;
+  }
+  const singleM = spanRange.match(/^(\d+)$/);
+  if (singleM) { const n = parseInt(singleM[1], 10); return n >= min && n <= max; }
+  return false;
+}
 export function useJournalFilters() {
   const userFilialId = useSelector(getUserFilialId);
   const isAdmin      = useSelector(getUserIsAdmin);
@@ -48,6 +72,7 @@ export function useJournalFilters() {
   const [inspectorFilter,       setInspectorFilter]       = useState('');
   const [dateFrom,              setDateFrom]              = useState('');
   const [dateTo,                setDateTo]                = useState('');
+  const [poleFilter,            setPoleFilter]            = useState('');
 
   // ── Выбор строк ────────────────────────────────────────────────────────────────────────
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -110,6 +135,15 @@ export function useJournalFilters() {
         if (inspectorFilter) {
           if (!d.inspectorFind.toLowerCase().includes(inspectorFilter.toLowerCase())) return false;
         }
+        if (poleFilter) {
+          const parsed = parsePoleFilter(poleFilter);
+          if (parsed) {
+            const { min, max } = parsed;
+            const poleMatch = d.poleNumber >= min && d.poleNumber <= max;
+            const spanMatch = matchesSpanRange(d.spanRange, min, max);
+            if (!poleMatch && !spanMatch) return false;
+          }
+        }
         return true;
       })
       .map((d) => {
@@ -129,7 +163,7 @@ export function useJournalFilters() {
       .sort((a, b) => (a.d.dateFound < b.d.dateFound ? 1 : -1));
   }, [
     defects, statusFilter, dateFrom, dateTo, voltageFilter, lineFilter,
-    selectedDefectTypeIds, inspectorFilter, sheetMap, defectTypeMap, elementMap,
+    selectedDefectTypeIds, inspectorFilter, poleFilter, sheetMap, defectTypeMap, elementMap,
     phaseMap, lineMap, voltageMap,
   ]);
 
@@ -154,10 +188,10 @@ export function useJournalFilters() {
 
   const hasFilters = Boolean(
     statusFilter !== 'all' || voltageFilter || lineFilter
-    || selectedDefectTypeIds.size > 0 || inspectorFilter || dateFrom || dateTo,
+    || selectedDefectTypeIds.size > 0 || inspectorFilter || poleFilter || dateFrom || dateTo,
   );
 
-  const isGated = !showAll && !lineFilter && selectedDefectTypeIds.size === 0;
+  const isGated = !showAll;
 
   const filialDefectCount = useMemo(
     () => defects.filter((d) => sheetMap.has(d.sheetId)).length,
@@ -170,6 +204,7 @@ export function useJournalFilters() {
     setLineFilter('');
     setSelectedDefectTypeIds(new Set());
     setInspectorFilter('');
+    setPoleFilter('');
     setDateFrom('');
     setDateTo('');
     setShowAll(false);
@@ -177,9 +212,18 @@ export function useJournalFilters() {
 
   const handleShowAll = useCallback(() => setShowAll(true), []);
 
+  const handleSetStatusFilter    = useCallback((v: StatusFilter) => { setStatusFilter(v);              setShowAll(false); }, []);
+  const handleSetLineFilter      = useCallback((v: string)       => { setLineFilter(v);               setShowAll(false); }, []);
+  const handleSetInspectorFilter = useCallback((v: string)       => { setInspectorFilter(v);          setShowAll(false); }, []);
+  const handleSetPoleFilter      = useCallback((v: string)       => { setPoleFilter(v);               setShowAll(false); }, []);
+  const handleSetDateFrom        = useCallback((v: string)       => { setDateFrom(v);                 setShowAll(false); }, []);
+  const handleSetDateTo          = useCallback((v: string)       => { setDateTo(v);                   setShowAll(false); }, []);
+  const handleSetDefectTypeIds   = useCallback((ids: Set<number>) => { setSelectedDefectTypeIds(ids); setShowAll(false); }, []);
+
   const handleVoltageChange = useCallback((value: string) => {
     setVoltageFilter(value);
     setLineFilter('');
+    setShowAll(false);
   }, []);
 
   return {
@@ -205,13 +249,15 @@ export function useJournalFilters() {
     hasFilters,
     isGated,
     handleShowAll,
-    setStatusFilter,
+    setStatusFilter: handleSetStatusFilter,
     handleVoltageChange,
-    setLineFilter,
-    setSelectedDefectTypeIds,
-    setInspectorFilter,
-    setDateFrom,
-    setDateTo,
+    setLineFilter: handleSetLineFilter,
+    setSelectedDefectTypeIds: handleSetDefectTypeIds,
+    setInspectorFilter: handleSetInspectorFilter,
+    poleFilter,
+    setPoleFilter: handleSetPoleFilter,
+    setDateFrom: handleSetDateFrom,
+    setDateTo: handleSetDateTo,
     resetFilters,
   };
 }

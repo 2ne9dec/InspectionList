@@ -51,7 +51,11 @@ const referenceApi = rtkApi.injectEndpoints({
       keepUnusedDataFor: Infinity,
     }),
     getElements: build.query<Element[], void>({
-      queryFn: async () => ({ data: await getCachedReference('elements', '', elementsData as Element[]) }),
+      queryFn: async () => {
+        // Миграция v2: сбрасываем старый кеш 'елементс' (Шунт-грозотроса → Шунт)
+        await localDb.referenceCache.delete('elements');
+        return { data: await getCachedReference('elements_v2', '', elementsData as Element[]) };
+      },
       providesTags: ['References'],
       keepUnusedDataFor: Infinity,
     }),
@@ -66,7 +70,12 @@ const referenceApi = rtkApi.injectEndpoints({
       keepUnusedDataFor: Infinity,
     }),
     getPhases: build.query<Phase[], void>({
-      queryFn: async () => ({ data: await getCachedReference('phases', '', phasesData as Phase[]) }),
+      queryFn: async () => {
+        // Миграция v2: удаляем старый ключ ‘phases’, используем ‘phases_v2’
+        // Гарантирует что все пользователи получат Фаза A/B/C
+        await localDb.referenceCache.delete('phases');
+        return { data: await getCachedReference('phases_v2', '', phasesData as Phase[]) };
+      },
       providesTags: ['References'],
       keepUnusedDataFor: Infinity,
     }),

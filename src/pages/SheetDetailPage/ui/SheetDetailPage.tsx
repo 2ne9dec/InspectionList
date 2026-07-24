@@ -41,6 +41,8 @@ const SheetDetailPage = () => {
   const [sidebarDefect, setSidebarDefect] = useState<DefectRecordFull | null>(null);
   const [showTimeline,  setShowTimeline]  = useState(false);
 
+  // Порядковый номер дефекта в текущем листке (позиция в списке defectsFull)
+
   const { openModal: openFixModal }  = fixDefectActions.useActions();
   const { openModal: openCopyModal } = copyDefectActions.useActions();
   const { handleDelete: deleteDefectById, confirmProps } = useDeleteDefect();
@@ -64,6 +66,10 @@ const SheetDetailPage = () => {
     const ok = await deleteDefectById(defectId);
     if (ok) setSidebarDefect(null);
   }, [deleteDefectById]);
+
+  const handleSaveInspector = useCallback((id: number, value: string) => {
+    setSidebarDefect((prev) => prev && prev.id === id ? { ...prev, inspectorFind: value } : prev);
+  }, []);
 
   const handleCloseSidebar  = useCallback(() => setSidebarDefect(null), []);
   const handleCloseTimeline = useCallback(() => setShowTimeline(false), []);
@@ -137,6 +143,7 @@ const SheetDetailPage = () => {
             onClose={handleCloseSidebar}
             onFix={handleSidebarFix}
             onDelete={handleSidebarDelete}
+            onSaveInspector={handleSaveInspector}
           />
         )}
 

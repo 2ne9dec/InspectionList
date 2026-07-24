@@ -180,6 +180,20 @@ const defectsApi = rtkApi.injectEndpoints({
       ],
     }),
 
+    patchDefectBasic: build.mutation<DefectRecord, { id: number; inspectorFind: string }>({
+      queryFn: async ({ id, inspectorFind }) => {
+        await localDb.defectRecords.update(id, { inspectorFind });
+        const updated = await localDb.defectRecords.get(id);
+        await enqueueSyncTask('update', 'defect_records', id, updated?.serverId);
+        syncService.scheduleSync();
+        return { data: updated! };
+      },
+      invalidatesTags: (_result, _err, { id }) => [
+        { type: 'Defect' as const, id },
+        { type: 'Defect' as const, id: 'LIST' },
+      ],
+    }),
+
     deleteDefectsBySheet: build.mutation<void, number>({
       queryFn: async (sheetId) => {
         const records = await localDb.defectRecords.where('sheetId').equals(sheetId).toArray();
@@ -205,5 +219,6 @@ export const {
   usePatchDefectNotesMutation,
   usePatchDefectStatusMutation,
   usePatchDefectMasterMutation,
+  usePatchDefectBasicMutation,
   useDeleteDefectsBySheetMutation,
 } = defectsApi;

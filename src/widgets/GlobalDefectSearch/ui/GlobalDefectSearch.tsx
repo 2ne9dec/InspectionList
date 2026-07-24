@@ -14,12 +14,11 @@ import { SheetDefectRows } from './SheetDefectRows';
 import cls from './GlobalDefectSearch.module.scss';
 
 interface GlobalDefectSearchProps {
-  query: string;
+  defectTypeIds: number[];
 }
 
-export const GlobalDefectSearch = memo(({ query }: GlobalDefectSearchProps) => {
+export const GlobalDefectSearch = memo(({ defectTypeIds }: GlobalDefectSearchProps) => {
   const navigate = useNavigate();
-  const trimmed  = query.trim();
 
   const { data: sheets   = [] } = useGetSheetsQuery();
   const { data: filials  = [] } = useGetFilialsQuery();
@@ -27,7 +26,9 @@ export const GlobalDefectSearch = memo(({ query }: GlobalDefectSearchProps) => {
   const { data: lines    = [] } = useGetLinesQuery();
   const { data: defTypes = [] } = useGetDefectTypesQuery();
   const { data: elements = [] } = useGetElementsQuery();
-  const { data: allDefects = [] } = useGetAllDefectsQuery(undefined, { skip: !trimmed });
+  const { data: allDefects = [] } = useGetAllDefectsQuery(undefined, { skip: defectTypeIds.length === 0 });
+
+  const idSet = useMemo(() => new Set(defectTypeIds), [defectTypeIds]);
 
   const filialById  = useMemo(() => new Map(filials.map((f) => [f.id, f])),  [filials]);
   const voltageById = useMemo(() => new Map(voltages.map((v) => [v.id, v])), [voltages]);
@@ -43,38 +44,33 @@ export const GlobalDefectSearch = memo(({ query }: GlobalDefectSearchProps) => {
     return map;
   }, [allDefects]);
 
-  const defectRowsCount = useMemo(() => {
-    if (!trimmed) return 0;
-    const q = trimmed.toLowerCase();
+  const totalCount = useMemo(() => {
+    if (idSet.size === 0) return 0;
     let count = 0;
     for (const [, defs] of defectsBySheet) {
-      count += defs.filter((d) => {
-        const dt   = defTypes.find((t) => t.id === d.defectId);
-        const elem = elements.find((e) => e.id === dt?.elementId)?.name ?? '';
-        return (
-          (dt?.name ?? '').toLowerCase().includes(q) ||
-          elem.toLowerCase().includes(q) ||
-          String(d.poleNumber ?? '').includes(q) ||
-          (d.dateFound ?? '').includes(q) ||
-          (d.inspectorFind ?? '').toLowerCase().includes(q)
-        );
-      }).length;
+      count += defs.filter((d) => idSet.has(d.defectId)).length;
     }
     return count;
-  }, [defectsBySheet, trimmed, elements, defTypes]);
+  }, [defectsBySheet, idSet]);
 
-  if (!trimmed) return null;
+  // Названия выбранных типов дефектов
+  const selectedNames = useMemo(
+    () => defTypes.filter((dt) => idSet.has(dt.id)).map((dt) => dt.name),
+    [defTypes, idSet],
+  );
+
+  if (defectTypeIds.length === 0) return null;
 
   return (
     <div className={cls.wrap}>
       <div className={cls.title}>
-        Поиск: <strong>«{query}»</strong>
+        Дефекты: <strong>{selectedNames.join(', ')}</strong>
       </div>
 
       <div className={cls.tabs}>
         <button className={[cls.tab, cls['tab--active']].join(' ')}>
           <IconWarning size={12} /> Дефекты
-          <span className={cls.tabCount}>{defectRowsCount}</span>
+          <span className={cls.tabCount}>{totalCount}</span>
         </button>
       </div>
 
@@ -95,7 +91,7 @@ export const GlobalDefectSearch = memo(({ query }: GlobalDefectSearchProps) => {
                 lineName={lineById.get(s.lineId)?.name ?? '—'}
                 filialName={filialById.get(s.filialId)?.name ?? '—'}
                 voltageName={voltageById.get(s.voltageId)?.name ?? '—'}
-                query={trimmed}
+                defectTypeIds={defectTypeIds}
                 defects={defectsBySheet.get(s.id) ?? []}
                 defectTypes={defTypes}
                 elements={elements}

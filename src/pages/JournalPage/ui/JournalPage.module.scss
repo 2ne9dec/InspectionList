@@ -136,6 +136,13 @@
   &:hover { color: var(--color-error); }
 }
 
+.defectFilterChevron {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  line-height: 1;
+}
+
 .dateSep {
   color: var(--color-text-secondary);
   font-size: var(--font-size-s);

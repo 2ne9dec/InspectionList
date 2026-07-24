@@ -14,6 +14,7 @@ export interface SheetsTableProps {
   onOpen: (id: number) => void;
   onDelete: (id: number) => void;
   onClone: (id: number) => void;
+  onEdit?: (id: number) => void;
   selectedIds?: ReadonlySet<number>;
   onSelect?: (id: number, checked: boolean) => void;
   /** lineId of the first selected sheet — disables other lines */
@@ -21,7 +22,7 @@ export interface SheetsTableProps {
 }
 
 export const SheetsTable = memo((props: SheetsTableProps) => {
-  const { sheets, showFilial, sortKey, sortDir, onSort, onOpen, onDelete, onClone, selectedIds, onSelect, mergeLineId } = props;
+  const { sheets, showFilial, sortKey, sortDir, onSort, onOpen, onDelete, onClone, onEdit, selectedIds, onSelect, mergeLineId } = props;
   return (
     <table className={cls.table}>
       <thead>
@@ -47,6 +48,7 @@ export const SheetsTable = memo((props: SheetsTableProps) => {
             onOpen={onOpen}
             onDelete={onDelete}
             onClone={onClone}
+            onEdit={onEdit}
             showFilial={showFilial}
             selected={selectedIds?.has(sheet.id)}
             onSelect={onSelect}

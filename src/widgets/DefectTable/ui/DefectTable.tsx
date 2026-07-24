@@ -5,6 +5,7 @@ import { ConfirmModal, EmptyState, Loader } from '@/shared/ui';
 import { useDefectTable } from '../model/useDefectTable';
 import { DefectTableHeader } from './DefectTableHeader';
 import { DefectTableToolbar } from './DefectTableToolbar';
+import { useIsMobile } from '@/shared/lib/hooks';
 import cls from './DefectTable.module.scss';
 
 interface DefectTableProps {
@@ -30,10 +31,8 @@ export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy }: DefectT
   const {
     isLoading,
     groupedByPole,
-    severityStats,
     elementOptions,
     defectTypeOptions,
-    severityOptions,
     activeCount,
     fixedCount,
     hasFilters,
@@ -43,13 +42,11 @@ export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy }: DefectT
     setSearch,
     filterElementId,
     filterDefectTypeId,
-    filterSeverity,
     sortDir,
     toggleSort,
     clearFilters,
     handleElementChange,
     setFilterDefectTypeId,
-    setFilterSeverity,
     handleDelete,
     handleDeleteAll,
     confirmProps,
@@ -71,12 +68,9 @@ export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy }: DefectT
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   // На телефоне (< 480px) страница скроллит нативно — root должен быть null (viewport)
-  const isMobilePhone = useMemo(
-    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 479px)').matches,
-    [],
-  );
+  const isMobilePhone = useIsMobile();
 
-  const filtersKey = [tab, search, filterElementId, filterDefectTypeId, filterSeverity, sortDir].join('|');
+  const filtersKey = [tab, search, filterElementId, filterDefectTypeId, sortDir].join('|');
   useEffect(() => {
     setDisplayCount(INITIAL_POLES);
     setExpandedPoles(new Set());
@@ -99,6 +93,17 @@ export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy }: DefectT
     return () => observer.disconnect();
   }, [hasMore, isMobilePhone]);
   // ────────────────────────────────────────────────────────────────────────────
+
+  // Авто-расширение displayCount: если появился новый ряд опоры за пределами окна — включаем её
+  const prevGroupCountRef = useRef(groupedByPole.length);
+  useEffect(() => {
+    const curr = groupedByPole.length;
+    if (curr > prevGroupCountRef.current && curr > displayCount) {
+      setDisplayCount(curr);
+    }
+    prevGroupCountRef.current = curr;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupedByPole.length]);
 
   const isFixedTab = tab === 'fixed';
   const anyExpanded = expandedPoles.size > 0;
@@ -129,13 +134,12 @@ export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy }: DefectT
         onTabChange={handleTabChange}
         activeCount={activeCount}
         fixedCount={fixedCount}
-        severityStats={severityStats}
         search={search}
         onSearchChange={setSearch}
         hasFilters={hasFilters}
         onClearFilters={clearFilters}
       />
-      <div className={cls.tableWrapper} ref={tableWrapperRef}>
+      <div className={cls.tableWrapper} ref={tableWrapperRef} data-defect-table-wrap>
         {isLoading ? (
           <div className={cls.center}><Loader /></div>
         ) : groupedByPole.length === 0 ? (
@@ -159,20 +163,23 @@ export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy }: DefectT
                 isFixed={isFixedTab}
                 filterElementId={filterElementId}
                 filterDefectTypeId={filterDefectTypeId}
-                filterSeverity={filterSeverity}
-                elements={elementOptions}
+                    elements={elementOptions}
                 defectTypes={defectTypeOptions}
-                severityOptions={severityOptions}
-                onElementChange={handleElementChange}
+                    onElementChange={handleElementChange}
                 onDefectTypeChange={setFilterDefectTypeId}
-                onSeverityChange={setFilterSeverity}
-              />
+                  />
               <tbody>
-                {visibleGroups.map(([locationKey, records], idx) => (
+                {(() => {
+                  let defectOffset = 0;
+                  return visibleGroups.map(([locationKey, records], idx) => {
+                    const startIdx = defectOffset;
+                    defectOffset += records.length;
+                    return (
                   <PoleGroupRow
                     key={locationKey}
                     locationKey={locationKey}
                     index={idx + 1}
+                    defectStartIndex={startIdx}
                     records={records}
                     isExpanded={expandedPoles.has(locationKey)}
                     anyExpanded={anyExpanded}
@@ -185,7 +192,9 @@ export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy }: DefectT
                     onDeleteAll={handleDeleteAll}
                     onRowClick={onRowClick}
                   />
-                ))}
+                    );
+                  });
+                })()}
               </tbody>
             </table>
             {hasMore && (

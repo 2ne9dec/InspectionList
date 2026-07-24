@@ -21,10 +21,7 @@ export const JournalPage = memo(() => {
 
       <div className={cls.pageHeader}>
         <span className={cls.title}>Журнал дефектов</span>
-        {filters.isGated
-          ? <span className={cls.count}>{filters.filialDefectCount} зап.</span>
-          : <span className={cls.count}>{filters.rows.length} зап.</span>
-        }
+        <span className={cls.count}>{filters.rows.length} зап.</span>
       </div>
 
       <JournalFilters
@@ -37,6 +34,7 @@ export const JournalPage = memo(() => {
         lineFilter={filters.lineFilter}
         selectedDefectTypeIds={filters.selectedDefectTypeIds}
         inspectorFilter={filters.inspectorFilter}
+        poleFilter={filters.poleFilter}
         dateFrom={filters.dateFrom}
         dateTo={filters.dateTo}
         hasFilters={filters.hasFilters}
@@ -45,6 +43,7 @@ export const JournalPage = memo(() => {
         setLineFilter={filters.setLineFilter}
         setSelectedDefectTypeIds={filters.setSelectedDefectTypeIds}
         setInspectorFilter={filters.setInspectorFilter}
+        setPoleFilter={filters.setPoleFilter}
         setDateFrom={filters.setDateFrom}
         setDateTo={filters.setDateTo}
         resetFilters={filters.resetFilters}
@@ -72,7 +71,13 @@ export const JournalPage = memo(() => {
       </div>
 
       {filters.isGated ? (
-        <JournalEmptyState totalCount={filters.filialDefectCount} onShowAll={filters.handleShowAll} />
+        <JournalEmptyState
+          filteredCount={filters.rows.length}
+          statusFilter={filters.statusFilter}
+          hasFilters={filters.hasFilters}
+          lineLabel={filters.filteredLines.find((l) => String(l.id) === filters.lineFilter)?.name ?? ''}
+          onShowAll={filters.handleShowAll}
+        />
       ) : (
         <JournalTable
           rows={filters.rows}

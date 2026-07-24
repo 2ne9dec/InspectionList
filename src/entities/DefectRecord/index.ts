@@ -17,9 +17,12 @@ export {
   usePatchDefectStatusMutation,
   useDeleteDefectsBySheetMutation,
   usePatchDefectMasterMutation,
+  usePatchDefectBasicMutation,
 } from './api/defectsApi';
 
 export { DefectRow } from './ui/DefectRow';
 export { PoleGroupRow } from './ui/PoleGroupRow';
 export { useDeleteDefect } from './model/useDeleteDefect';
 export { getLocationKey, formatLocationLabel, locationKeyType } from './lib/locationKey';
+
+export { enrichDefects } from './lib/enrichDefects';

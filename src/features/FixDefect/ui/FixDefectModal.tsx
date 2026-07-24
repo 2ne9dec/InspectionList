@@ -7,10 +7,10 @@ import {
   getLocationKey,
   formatLocationLabel,
   locationKeyType,
+  enrichDefects,
 } from '@/entities/DefectRecord';
-import { useGetDefectTypesQuery } from '@/entities/InspectionLine';
-import { Button, EmptyState, FormField, Input, Modal, SeverityDot } from '@/shared/ui';
-import { SEVERITY_LABELS } from '@/shared/const/severity';
+import { useGetDefectTypesQuery, useGetElementsQuery, useGetPhasesQuery } from '@/entities/InspectionLine';
+import { Button, EmptyState, FormField, Input, Modal } from '@/shared/ui';
 import { toast } from '@/shared/lib/toast';
 import { logger } from '@/shared/lib/logger';
 import { fixDefectActions } from '../model/fixDefectSlice';
@@ -22,24 +22,65 @@ interface FixDefectModalProps {
   sheetId: number;
 }
 
+interface DefectGroup {
+  key: string;
+  elementName: string;
+  defectName: string;
+  ids: number[];
+  phases: string[];
+  insulatorCount: number | null | undefined;
+}
+
 export const FixDefectModal = memo(({ sheetId }: FixDefectModalProps) => {
   const fix = useSelector(selectFixDefect);
-  const { closeModal, toggleId, selectAll, clearAll, setDateFixed, setInspectorFix } = fixDefectActions.useActions();
+  const { closeModal, selectAll, clearAll, setDateFixed, setInspectorFix } = fixDefectActions.useActions();
 
   const { data: allDefects = [] } = useGetDefectsBySheetQuery(sheetId);
   const { data: defectTypes = [] } = useGetDefectTypesQuery();
+  const { data: elements = [] } = useGetElementsQuery();
+  const { data: phases = [] } = useGetPhasesQuery();
   const [fixDefect, { isLoading }] = useFixDefectMutation();
 
+  // Сортируем: элемент → дефект → фаза (алфавитно)
   const enriched = useMemo(() => {
     const targetKey = fix?.targetKey;
     if (!targetKey) return [];
-    return allDefects
-      .filter((d) => getLocationKey(d) === targetKey && !d.isFixed)
-      .map((d) => {
-        const dt = defectTypes.find((t) => t.id === d.defectId);
-        return { ...d, defectName: dt?.name ?? '—', severity: dt?.severity ?? ('low' as const) };
-      });
-  }, [allDefects, defectTypes, fix?.targetKey]);
+    const filtered = allDefects.filter((d) => getLocationKey(d) === targetKey && !d.isFixed);
+    const list = enrichDefects(filtered, defectTypes, elements, phases);
+    return [...list].sort((a, b) => {
+      const elCmp = (a.elementName ?? '').localeCompare(b.elementName ?? '');
+      if (elCmp !== 0) return elCmp;
+      const defCmp = (a.defectName ?? '').localeCompare(b.defectName ?? '');
+      if (defCmp !== 0) return defCmp;
+      return (a.phaseName ?? '').localeCompare(b.phaseName ?? '');
+    });
+  }, [allDefects, defectTypes, elements, phases, fix?.targetKey]);
+
+  // Группируем по elementName + defectName
+  const groups = useMemo<DefectGroup[]>(() => {
+    const result: DefectGroup[] = [];
+    for (const d of enriched) {
+      const key = `${d.elementName}||${d.defectName}`;
+      const last = result[result.length - 1];
+      if (last && last.key === key) {
+        last.ids.push(d.id);
+        if (d.phaseName) last.phases.push(d.phaseName);
+        if (d.insulatorCount != null && d.insulatorCount > 0) {
+          last.insulatorCount = (last.insulatorCount ?? 0) + d.insulatorCount;
+        }
+      } else {
+        result.push({
+          key,
+          elementName: d.elementName,
+          defectName: d.defectName,
+          ids: [d.id],
+          phases: d.phaseName ? [d.phaseName] : [],
+          insulatorCount: d.insulatorCount,
+        });
+      }
+    }
+    return result;
+  }, [enriched]);
 
   const allIds = useMemo(() => enriched.map((d) => d.id), [enriched]);
   const selectedSet = useMemo(() => new Set(fix?.selectedIds ?? []), [fix?.selectedIds]);
@@ -47,6 +88,17 @@ export const FixDefectModal = memo(({ sheetId }: FixDefectModalProps) => {
   const selectedCount = selectedSet.size;
 
   const isValid = selectedCount > 0 && !!fix?.inspectorFix.trim() && !!fix?.dateFixed;
+
+  const handleGroupToggle = useCallback((groupIds: number[]) => {
+    const allGroupSelected = groupIds.every((id) => selectedSet.has(id));
+    const next = new Set(selectedSet);
+    if (allGroupSelected) {
+      groupIds.forEach((id) => next.delete(id));
+    } else {
+      groupIds.forEach((id) => next.add(id));
+    }
+    selectAll([...next]);
+  }, [selectedSet, selectAll]);
 
   const handleFix = useCallback(async () => {
     if (!isValid || !fix) return;
@@ -105,14 +157,32 @@ export const FixDefectModal = memo(({ sheetId }: FixDefectModalProps) => {
           </div>
 
           <div className={cls.list}>
-            {enriched.map((d) => (
-              <label key={d.id} className={cls.checkRow}>
-                <input type='checkbox' checked={selectedSet.has(d.id)} onChange={() => toggleId(d.id)} />
-                <SeverityDot severity={d.severity} />
-                <span className={cls.defectName}>{d.defectName}</span>
-                <span className={cls.severityLabel}>{SEVERITY_LABELS[d.severity]}</span>
-              </label>
-            ))}
+            {groups.map((g) => {
+              const groupAllSelected = g.ids.every((id) => selectedSet.has(id));
+              return (
+                <label key={g.key} className={cls.checkRow}>
+                  <input
+                    type='checkbox'
+                    checked={groupAllSelected}
+                    onChange={() => handleGroupToggle(g.ids)}
+                  />
+                  <span className={cls.defectLabel}>
+                    <span className={cls.elementName}>{g.elementName}</span>
+                    <span className={cls.defectRow}>
+                      <span className={cls.defectName}>{g.defectName}</span>
+                      <span className={cls.tags}>
+                        {g.phases.map((ph) => (
+                          <span key={ph} className={cls.phaseTag}>{ph}</span>
+                        ))}
+                        {g.insulatorCount != null && g.insulatorCount > 0 && (
+                          <span className={cls.phaseTag}>{g.insulatorCount} шт.</span>
+                        )}
+                      </span>
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
           </div>
 
           <div className={cls.fields}>

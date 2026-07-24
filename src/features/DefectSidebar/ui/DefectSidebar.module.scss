@@ -27,7 +27,7 @@
 }
 
 .title    { font-size: var(--font-size-m); font-weight: 700; color: var(--color-text-primary); }
-.subtitle { font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: 2px; }
+.subtitle { font-size: var(--font-size-m); font-weight: 700; color: var(--color-text-primary); margin-top: 0; }
 
 .body {
   flex: 1;
@@ -103,4 +103,91 @@
   margin-top: auto;
   padding-top: var(--space-2);
   border-top: 1px solid var(--color-border);
+}
+
+.inspectorValue {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.editInspectorBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  color: var(--color-accent);
+  padding: 0 var(--space-1);
+  line-height: 1;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  opacity: 0.7;
+  &:hover { opacity: 1; }
+}
+
+.inspectorEdit {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.noteField {
+  width: 100%;
+}
+
+.noteValue {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  width: 100%;
+}
+
+.notePlaceholder {
+  color: var(--color-text-muted);
+}
+
+.editNoteBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  color: var(--color-accent);
+  padding: 0 var(--space-1);
+  line-height: 1;
+  flex-shrink: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  opacity: 0.7;
+  &:hover { opacity: 1; }
+}
+
+.noteEditRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+}
+
+.notesTextarea {
+  width: 100%;
+  min-height: 72px;
+  padding: var(--space-2);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radii);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-s);
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+  line-height: 1.5;
+
+  &::placeholder { color: var(--color-text-secondary); }
+  &:focus { outline: none; border-color: var(--color-accent); }
+}
+
+.noteEditActions {
+  display: flex;
+  gap: var(--space-1);
 }

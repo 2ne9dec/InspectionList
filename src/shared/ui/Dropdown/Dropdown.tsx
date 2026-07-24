@@ -54,8 +54,17 @@ export const Dropdown = memo((props: DropdownProps) => {
     }
     // Всегда открываем вниз, ограничиваем доступным пространством
     const spaceBelow = window.innerHeight - tr.bottom - 8;
-    panel.style.top = `${tr.bottom + 4}px`;
-    panel.style.maxHeight = `${Math.min(spaceBelow, 360)}px`;
+    const spaceAbove = tr.top - 8;
+    if (spaceBelow < 100 && spaceAbove > spaceBelow) {
+      // Открываем вверх: нижний край панели прибит к верху кнопки
+      panel.style.top = 'auto';
+      panel.style.bottom = `${window.innerHeight - tr.top + 4}px`;
+      panel.style.maxHeight = `${Math.min(spaceAbove, 360)}px`;
+    } else {
+      panel.style.bottom = 'auto';
+      panel.style.top = `${tr.bottom + 4}px`;
+      panel.style.maxHeight = `${Math.min(spaceBelow, 360)}px`;
+    }
     panel.style.visibility = 'visible';
   }, [placement, panelWidth]);
 

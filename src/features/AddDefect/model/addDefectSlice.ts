@@ -1,15 +1,22 @@
 import { buildSlice } from '@/shared/lib/store/buildSlice';
 
+export type LocationMode = 'pole' | 'span';
+
 export interface AddDefectSchema {
   selectedDefectId: number | null;
   selectedElementId: number | null;
   selectedPhaseIds: number[];
   garlandNumber: string;
+  /** Opory: odna ili neskolko cherez zapyatuyu: "1, 3, 5" */
   poleNumber: string;
   inspector: string;
   dateFound: string;
   insulatorCount: string;
   spanRange: string;
+  /** Rezhim dobavleniya: pora ili prolet */
+  mode: LocationMode;
+  /** Primechanie k defektu */
+  notes: string;
   isFormOpen: boolean;
 }
 
@@ -25,6 +32,8 @@ const initialState: AddDefectSchema = {
   dateFound: '',
   insulatorCount: '',
   spanRange: '',
+  mode: 'pole',
+  notes: '',
   isFormOpen: false,
 };
 
@@ -45,7 +54,8 @@ export const addDefectSlice = buildSlice({
       state.selectedElementId = null;
       state.selectedPhaseIds = [];
       state.insulatorCount = '';
-      // poleNumber и spanRange сохраняем — будут предзаполнены при следующем открытии
+      state.notes = '';
+      // poleNumber i spanRange sohranyaem
     },
     selectDefect: (state, action: { payload: { defectId: number; elementId: number } }) => {
       state.selectedDefectId = action.payload.defectId;
@@ -81,6 +91,14 @@ export const addDefectSlice = buildSlice({
     },
     setGarlandNumber: (state, action: { payload: string }) => {
       state.garlandNumber = action.payload;
+    },
+    setMode: (state, action: { payload: LocationMode }) => {
+      state.mode = action.payload;
+      state.poleNumber = '';
+      state.spanRange = '';
+    },
+    setNotes: (state, action: { payload: string }) => {
+      state.notes = action.payload;
     },
   },
 });
