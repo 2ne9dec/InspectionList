@@ -11,7 +11,7 @@ import { getApiUrl } from '@/shared/lib/api/apiUrl';
 
 /**
  * Корневой RTK Query API.
- * baseQuery — динамический: читает URL из localStorage при каждом запросе.
+ * baseQuery — динамический: читает URL из sessionStorage при каждом запросе.
  * Это позволяет менять адрес сервера без пересборки (нужно для Capacitor/Android).
  */
 const dynamicBaseQuery: BaseQueryFn<
@@ -26,7 +26,7 @@ const dynamicBaseQuery: BaseQueryFn<
       const state = getState() as StateSchema;
       const user  = state.user?.authData;
 
-      const token = user?.token ?? localStorage.getItem(STORAGE_KEYS.TOKEN);
+      const token = user?.token ?? sessionStorage.getItem(STORAGE_KEYS.TOKEN);
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       } else {

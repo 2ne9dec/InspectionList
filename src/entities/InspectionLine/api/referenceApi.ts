@@ -96,7 +96,7 @@ const referenceApi = rtkApi.injectEndpoints({
           await localDb.referenceCache.put(cached);
         }
         try {
-          const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+          const token = sessionStorage.getItem(STORAGE_KEYS.TOKEN);
           const headers: Record<string, string> = { 'Content-Type': 'application/json' };
           if (token) headers['Authorization'] = `Bearer ${token}`;
           await fetch(`${getApiUrl()}/lines/${id}`, {

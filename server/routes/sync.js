@@ -121,6 +121,17 @@ router.post('/sync/batch', async (req, res) => {
     }
   }
 
+  // Process deletes (defects first due to FK)
+  const { deletedDefectIds = [], deletedSheetIds = [] } = req.body;
+  for (const id of deletedDefectIds) {
+    try { await execute('DELETE FROM DEFECT_RECORDS WHERE ID = ?', [Number(id)]); }
+    catch (e) { errors.push({ type: 'defect_delete', id, reason: e.message }); }
+  }
+  for (const id of deletedSheetIds) {
+    try { await execute('DELETE FROM INSPECTION_SHEETS WHERE ID = ?', [Number(id)]); }
+    catch (e) { errors.push({ type: 'sheet_delete', id, reason: e.message }); }
+  }
+
   res.json({ ok: errors.length === 0, sheetsUpserted, defectsUpserted, errors });
 });
 
@@ -148,36 +159,36 @@ router.get('/sync/pull', async (req, res) => {
   );
 
   const sheets = rawSheets.map(s => ({
-    id:          s.ID,
-    filialId:    s.FILIAL_ID,
-    voltageId:   s.VOLTAGE_ID,
-    lineId:      s.LINE_ID,
-    createdBy:   s.CREATED_BY != null ? s.CREATED_BY : null,
-    createdDate: fmt(s.CREATED_DATE),
-    status:      s.STATUS != null ? s.STATUS : 'active',
-    notes:       s.NOTES != null ? s.NOTES : null,
+    id:          s.id,
+    filialId:    s.filial_id,
+    voltageId:   s.voltage_id,
+    lineId:      s.line_id,
+    createdBy:   s.created_by   != null ? s.created_by   : null,
+    createdDate: fmt(s.created_date),
+    status:      s.status       != null ? s.status       : 'active',
+    notes:       s.notes        != null ? s.notes        : null,
   }));
 
   const defectRecords = rawDefects.map(d => ({
-    id:                 d.ID,
-    sheetId:            d.SHEET_ID,
-    poleNumber:         d.POLE_NUMBER,
-    defectId:           d.DEFECT_ID,
-    phaseId:            d.PHASE_ID != null ? d.PHASE_ID : null,
-    elementId:          d.ELEMENT_ID != null ? d.ELEMENT_ID : null,
-    dateFound:          fmt(d.DATE_FOUND),
-    inspectorFind:      d.INSPECTOR_FIND != null ? d.INSPECTOR_FIND : null,
-    isFixed:            d.IS_FIXED === 1,
-    dateFixed:          fmt(d.DATE_FIXED),
-    inspectorFix:       d.INSPECTOR_FIX != null ? d.INSPECTOR_FIX : null,
-    insulatorCount:     d.INSULATOR_COUNT != null ? d.INSULATOR_COUNT : null,
-    spanRange:          d.SPAN_RANGE != null ? d.SPAN_RANGE : null,
-    notes:              d.NOTES != null ? d.NOTES : null,
-    status:             d.STATUS != null ? d.STATUS : null,
-    masterConclusion:   d.MASTER_CONCLUSION != null ? d.MASTER_CONCLUSION : null,
-    resolutionDeadline: fmt(d.RESOLUTION_DEADLINE),
-    masterName:         d.MASTER_NAME != null ? d.MASTER_NAME : null,
-    fixWorkVolume:      d.FIX_WORK_VOLUME != null ? d.FIX_WORK_VOLUME : null,
+    id:                 d.id,
+    sheetId:            d.sheet_id,
+    poleNumber:         d.pole_number,
+    defectId:           d.defect_id,
+    phaseId:            d.phase_id            != null ? d.phase_id            : null,
+    elementId:          d.element_id          != null ? d.element_id          : null,
+    dateFound:          fmt(d.date_found),
+    inspectorFind:      d.inspector_find      != null ? d.inspector_find      : null,
+    isFixed:            d.is_fixed === 1,
+    dateFixed:          fmt(d.date_fixed),
+    inspectorFix:       d.inspector_fix       != null ? d.inspector_fix       : null,
+    insulatorCount:     d.insulator_count     != null ? d.insulator_count     : null,
+    spanRange:          d.span_range          != null ? d.span_range          : null,
+    notes:              d.notes               != null ? d.notes               : null,
+    status:             d.status              != null ? d.status              : null,
+    masterConclusion:   d.master_conclusion   != null ? d.master_conclusion   : null,
+    resolutionDeadline: fmt(d.resolution_deadline),
+    masterName:         d.master_name         != null ? d.master_name         : null,
+    fixWorkVolume:      d.fix_work_volume     != null ? d.fix_work_volume     : null,
   }));
 
   res.setHeader('Cache-Control', 'no-store');

@@ -39,9 +39,9 @@ export const loginByUsername = createAsyncThunk<User, { username: string; passwo
 
       if (res.ok) {
         const data: User & { token?: string } = await res.json();
-        if (data.token) localStorage.setItem(TOKEN_KEY, data.token);
+        if (data.token) sessionStorage.setItem(TOKEN_KEY, data.token);
         const { token: _t, ...user } = data;
-        localStorage.setItem(USER_KEY, JSON.stringify(user));
+        sessionStorage.setItem(USER_KEY, JSON.stringify(user));
         dispatch(rtkApi.util.resetApiState());
         dispatch(userActions.setAuthData(user));
         return user;
@@ -62,7 +62,7 @@ export const loginByUsername = createAsyncThunk<User, { username: string; passwo
     if (hash !== found.password) return rejectWithValue('Неверный пароль');
 
     const { password: _omit, ...user } = found;
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    sessionStorage.setItem(USER_KEY, JSON.stringify(user));
     dispatch(userActions.setAuthData(user));
     return user;
   },

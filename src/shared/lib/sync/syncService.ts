@@ -4,7 +4,7 @@ import { getApiUrl } from '@/shared/lib/api/apiUrl';
 import { STORAGE_KEYS } from '@/shared/const/storageKeys';
 
 function getToken(): string | null {
-  return localStorage.getItem(STORAGE_KEYS.TOKEN);
+  return sessionStorage.getItem(STORAGE_KEYS.TOKEN);
 }
 
 function authHeaders(): Record<string, string> {
@@ -18,15 +18,31 @@ function authHeaders(): Record<string, string> {
 async function push(): Promise<void> {
   const sheets = await localDb.sheets.toArray();
   const defectRecords = await localDb.defectRecords.toArray();
-  if (sheets.length === 0 && defectRecords.length === 0) return;
+
+  // Pending deletes from syncQueue
+  const deleteQueue = await localDb.syncQueue.where('action').equals('delete').toArray();
+  const deletedSheetIds  = deleteQueue.filter(t => t.collection === 'sheets').map(t => t.localId);
+  const deletedDefectIds = deleteQueue.filter(t => t.collection === 'defect_records').map(t => t.localId);
+
+  const hasChanges =
+    sheets.length > 0 || defectRecords.length > 0 ||
+    deletedSheetIds.length > 0 || deletedDefectIds.length > 0;
+  if (!hasChanges) return;
 
   const response = await fetch(`${getApiUrl()}/sync/batch`, {
     method: 'POST',
     headers: authHeaders(),
-    body: JSON.stringify({ sheets, defectRecords }),
+    body: JSON.stringify({ sheets, defectRecords, deletedSheetIds, deletedDefectIds }),
   });
 
   if (!response.ok) throw new Error(`Sync push failed: ${response.status}`);
+
+  // Clear processed delete queue
+  if (deleteQueue.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    await localDb.syncQueue.bulkDelete(deleteQueue.map(t => t.id!));
+  }
+
   logger.info('[sync] push complete');
 }
 
@@ -51,8 +67,10 @@ async function pull(): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const defectRecords: unknown[] = data.defectRecords ?? [];
 
-  // Upsert into Dexie (server wins)
+  // Server is authoritative: replace all local data
   await localDb.transaction('rw', [localDb.sheets, localDb.defectRecords], async () => {
+    await localDb.sheets.clear();
+    await localDb.defectRecords.clear();
     for (const sheet of sheets) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await localDb.sheets.put(sheet);

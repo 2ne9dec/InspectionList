@@ -24,8 +24,20 @@ const app = express();
 // Внутреннее приложение — разрешаем все origin. JWT защищает API.
 
 // ── Middleware ────────────────────────────────────────────────────────────────────────────
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: false }));
+// Блокировка нежелательных IP (например, виртуальные адаптеры)
+const ALLOWED_HOST = process.env.BIND_HOST;
+if (ALLOWED_HOST && ALLOWED_HOST !== '0.0.0.0') {
+  app.use((req, res, next) => {
+    const localAddr = (req.socket.localAddress || '').replace('::ffff:', '');
+    if (localAddr !== ALLOWED_HOST && localAddr !== '127.0.0.1') {
+      return res.status(403).end();
+    }
+    next();
+  });
+}
+
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: false }));
 
 app.use((req, res, next) => {
   const origin = req.headers.origin || '';
@@ -85,14 +97,17 @@ async function start() {
     await initTenancy();
 
     // 3. Запустить HTTP-сервер
-    app.listen(PORT, '0.0.0.0', () => {
+    const BIND_HOST = process.env.BIND_HOST || '0.0.0.0';
+    app.listen(PORT, BIND_HOST, () => {
       const os = require('os');
       const lanIps = Object.values(os.networkInterfaces())
         .flat()
         .filter((i) => i.family === 'IPv4' && !i.internal)
         .map((i) => i.address);
       console.log(`[boot] Сервер запущен: http://0.0.0.0:${PORT}`);
-      lanIps.forEach((ip) => console.log(`[boot] Локальная сеть:  http://${ip}:${PORT}`));
+      lanIps
+        .filter((ip) => !ip.startsWith('10.255.'))
+        .forEach((ip) => console.log(`[boot] Локальная сеть:  http://${ip}:${PORT}`));
     });
   } catch (err) {
     console.error('[FATAL] Не удалось запустить сервер:', err.message);
