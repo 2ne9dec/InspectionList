@@ -22,6 +22,7 @@ import {
   selectAddDefectInsulatorCount,
   selectAddDefectSpanRange,
   selectAddDefectGarlandNumber,
+  selectAddDefectMode,
 } from '../model/selectors';
 import { useDraft } from '../model/useDraft';
 import { useTopDefects } from '../model/useTopDefects';
@@ -33,8 +34,43 @@ const GARLAND_CLEAR     = { value: '', label: '—' };
 const GARLAND_OPTIONS   = [GARLAND_CLEAR, ...Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))];
 const INSULATOR_OPTIONS = [GARLAND_CLEAR, ...Array.from({ length: 24 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))];
 
-/** Диапазон вида «1-10» или «1–10» → пролёт, иначе → опора */
-const detectRange = (val: string) => /\d[-–]\d/.test(val.trim());
+/**
+ * Parses "1, 3, 5-7" -> [1, 3, 5, 6, 7].
+ * Returns empty array if any value is outside [min, max].
+ */
+function parsePoleList(raw: string, min: number, max: number): number[] {
+  const result: number[] = [];
+  for (const part of raw.split(',')) {
+    const t = part.trim();
+    const range = t.match(/^(\d+)\s*[-–]\s*(\d+)$/);
+    if (range) {
+      const a = Number(range[1]), b = Number(range[2]);
+      if (a > b || a < min || b > max) return [];
+      for (let i = a; i <= b; i++) result.push(i);
+    } else {
+      const n = Number(t);
+      if (!Number.isInteger(n) || n < min || n > max) return [];
+      result.push(n);
+    }
+  }
+  return result;
+}
+
+/**
+ * Validates span range string e.g. "3-7" or "5".
+ * maxSpan = poleEnd - 1 (number of spans = number of poles - 1).
+ */
+function isSpanValid(raw: string, maxSpan: number): boolean {
+  const t = raw.trim();
+  if (!t) return false;
+  const range = t.match(/^(\d+)\s*[-–]\s*(\d+)$/);
+  if (range) {
+    const a = Number(range[1]), b = Number(range[2]);
+    return a >= 1 && b <= maxSpan && a <= b;
+  }
+  const n = Number(t);
+  return Number.isInteger(n) && n >= 1 && n <= maxSpan;
+}
 
 interface AddDefectBarProps {
   sheetId: number;
@@ -55,7 +91,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
   const dateFound  = dateFoundRaw  || sheetDate      || '';
   const insulatorCount    = useSelector(selectAddDefectInsulatorCount);
   const spanRange         = useSelector(selectAddDefectSpanRange);
-
+  const mode              = useSelector(selectAddDefectMode);
   const {
     selectDefect,
     clearDefectSelection,
@@ -66,6 +102,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
     setDateFound,
     setInsulatorCount,
     setSpanRange,
+    setMode,
     resetDate,
   } = addDefectSlice.useActions();
 
@@ -74,22 +111,14 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
     if (sheetInspector) setInspector(sheetInspector);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Черновик ──────────────────────────────────────────────────────────
-  const { handleClearDraft } = useDraft({
-    sheetId,
-    selectedDefectId,
-    poleNumber,
-    selectedPhaseIds,
-  });
+  const { handleClearDraft } = useDraft({ sheetId, selectedDefectId, poleNumber, selectedPhaseIds });
 
-  // ── Топ-дефекты ───────────────────────────────────────────────────────
   const { data: elements    = [] } = useGetElementsQuery();
   const { data: defectTypes = [] } = useGetDefectTypesQuery();
   const { data: phases      = [] } = useGetPhasesQuery();
 
   const topDefects = useTopDefects(sheetId, defectTypes);
 
-  // ── Вычисляемые ───────────────────────────────────────────────────────
   const selectedDefect = useMemo(
     () => defectTypes.find((d) => d.id === selectedDefectId),
     [defectTypes, selectedDefectId],
@@ -99,39 +128,33 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
     [elements, selectedDefect],
   );
 
-  const poleNum = Number.parseInt(poleNumber, 10);
-  const isPoleValid = Number.isFinite(poleNum) && poleNum >= poleStart && poleNum <= poleEnd;
-  const hasLocation = (!!poleNumber && isPoleValid) || !!spanRange.trim();
+  // Валидация
+  const maxSpan = poleEnd;
+  const isPoleValid  = mode === 'pole' && poleNumber.trim().length > 0
+    && parsePoleList(poleNumber, poleStart, poleEnd).length > 0;
+  const isSpanOk = mode === 'span' && isSpanValid(spanRange, maxSpan);
+  const hasLocation = isPoleValid || isSpanOk;
   const isValid = !!selectedDefectId && hasLocation && inspector.trim().length > 0 && !!dateFound;
+
+  // Подсветка ошибок
+  const poleInvalid = mode === 'pole' && !!poleNumber.trim() && !isPoleValid;
+  const spanInvalid = mode === 'span' && !!spanRange.trim() && !isSpanOk;
 
   const phaseOptions = useMemo<SelectOption<number>[]>(
     () => phases.map((p) => ({ value: p.id, label: capitalizeFirst(p.name) })),
     [phases],
   );
 
-  // ── Handlers ──────────────────────────────────────────────────────────
   const handlePoleStep = useCallback(
     (delta: number) => {
+      if (mode !== 'pole') return;
+      // Работает только если одна опора без запятых
       const cur = Number.parseInt(poleNumber, 10);
       const next = Number.isFinite(cur) ? cur + delta : delta > 0 ? poleStart : poleEnd;
       const clamped = Math.min(poleEnd, Math.max(poleStart, next));
       setPoleNumber(String(clamped));
-      setSpanRange('');
     },
-    [poleNumber, poleStart, poleEnd, setPoleNumber, setSpanRange],
-  );
-
-  const handleLocationChange = useCallback(
-    (val: string) => {
-      if (detectRange(val)) {
-        setSpanRange(val);
-        setPoleNumber('');
-      } else {
-        setPoleNumber(val);
-        setSpanRange('');
-      }
-    },
-    [setPoleNumber, setSpanRange],
+    [poleNumber, poleStart, poleEnd, mode, setPoleNumber],
   );
 
   const handlePickDefect = useCallback(
@@ -143,67 +166,104 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
 
   const handleSubmit = useCallback(async () => {
     if (!isValid || !selectedDefectId) return;
-    const phaseIdsToCreate = selectedPhaseIds.length > 0 ? selectedPhaseIds : [null];
+    const sortedPhaseIds = selectedPhaseIds.length > 0
+      ? [...selectedPhaseIds].sort((a, b) => {
+          const nameA = phases.find((p) => p.id === a)?.name ?? '';
+          const nameB = phases.find((p) => p.id === b)?.name ?? '';
+          return nameA.localeCompare(nameB);
+        })
+      : [];
+    const phaseIdsToCreate = sortedPhaseIds.length > 0 ? sortedPhaseIds : [null];
     const insCount   = insulatorCount ? Number(insulatorCount) : null;
     const garlandNum = garlandNumber  ? Number(garlandNumber)  : null;
     try {
-      await Promise.all(
-        phaseIdsToCreate.map((phaseId) =>
-          createDefect({
-            sheetId,
-            poleNumber:     poleNumber ? poleNum : 0,
-            defectId:       selectedDefectId,
-            phaseId:        phaseId ?? null,
-            dateFound,
-            inspectorFind:  inspector.trim(),
-            insulatorCount: insCount,
-            spanRange:      spanRange || null,
-            garlandNumber:  garlandNum,
-          }).unwrap(),
-        ),
-      );
+      if (mode === 'pole') {
+        const poles = parsePoleList(poleNumber, poleStart, poleEnd);
+        await Promise.all(
+          poles.flatMap((pole) =>
+            phaseIdsToCreate.map((phaseId) =>
+              createDefect({
+                sheetId,
+                poleNumber: pole,
+                defectId: selectedDefectId,
+                phaseId: phaseId ?? null,
+                dateFound,
+                inspectorFind: inspector.trim(),
+                insulatorCount: insCount,
+                spanRange: null,
+                garlandNumber: garlandNum,
+                notes: null,
+              }).unwrap(),
+            ),
+          ),
+        );
+        // Скрол к первой добавленной опоре
+        const firstPole = poles[0];
+        const locationKey = `о:${firstPole}`;
+        setTimeout(() => {
+          const wrap = document.querySelector('[data-defect-table-wrap]') as HTMLElement | null;
+          const target = wrap?.querySelector(`[data-pole-key="${locationKey}"]`) as HTMLElement | null;
+          if (wrap && target) {
+            wrap.scrollTo({ top: target.offsetTop - wrap.offsetTop - 8, behavior: 'smooth' });
+          } else if (wrap) {
+            wrap.scrollTo({ top: 9_999_999, behavior: 'smooth' });
+          }
+        }, 500);
+      } else {
+        // Span mode
+        await Promise.all(
+          phaseIdsToCreate.map((phaseId) =>
+            createDefect({
+              sheetId,
+              poleNumber: 0,
+              defectId: selectedDefectId,
+              phaseId: phaseId ?? null,
+              dateFound,
+              inspectorFind: inspector.trim(),
+              insulatorCount: insCount,
+              spanRange: spanRange.trim(),
+              garlandNumber: garlandNum,
+              notes: null,
+            }).unwrap(),
+          ),
+        );
+        const locationKey = `п:${spanRange.trim()}`;
+        setTimeout(() => {
+          const wrap = document.querySelector('[data-defect-table-wrap]') as HTMLElement | null;
+          const target = wrap?.querySelector(`[data-pole-key="${locationKey}"]`) as HTMLElement | null;
+          if (wrap && target) {
+            wrap.scrollTo({ top: target.offsetTop - wrap.offsetTop - 8, behavior: 'smooth' });
+          } else if (wrap) {
+            wrap.scrollTo({ top: 9_999_999, behavior: 'smooth' });
+          }
+        }, 500);
+      }
+
       handleClearDraft();
-      // Автоскрол к конкретной опоре/пролёту по data-pole-key
-      const locationKey = spanRange ? `п:${spanRange}` : `о:${poleNum}`;
-      setTimeout(() => {
-        const wrap = document.querySelector('[data-defect-table-wrap]') as HTMLElement | null;
-        const target = wrap?.querySelector(`[data-pole-key="${locationKey}"]`) as HTMLElement | null;
-        if (wrap && target) {
-          const top = target.offsetTop - wrap.offsetTop - 8;
-          wrap.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-        } else if (wrap) {
-          wrap.scrollTo({ top: 9_999_999, behavior: 'smooth' });
-        }
-      }, 500);
-      toast.success(
-        phaseIdsToCreate.length > 1
-          ? `Дефект добавлен для ${phaseIdsToCreate.length} фаз`
-          : 'Дефект добавлен',
-      );
+      const poleCount = mode === 'pole' ? parsePoleList(poleNumber, poleStart, poleEnd).length : 0;
+      if (mode === 'pole' && poleCount > 1) {
+        toast.success(`Дефект добавлен на ${poleCount} опор`);
+      } else if (phaseIdsToCreate.length > 1) {
+        toast.success(`Дефект добавлен для ${phaseIdsToCreate.length} фаз`);
+      } else {
+        toast.success('Дефект добавлен');
+      }
     } catch (err) {
       logger.error('AddDefect failed', err);
       const status = (err as { status?: number })?.status;
       if (status === 409) {
-        toast.warning('Такой дефект уже добавлен на эту опору в данном листке');
+        toast.warning('Такой дефект уже добавлен на эту опору');
       } else {
         toast.error('Ошибка при добавлении дефекта');
       }
     }
   }, [
-    handleClearDraft,
-    createDefect,
-    dateFound,
-    inspector,
-    isValid,
-    insulatorCount,
-    garlandNumber,
-    poleNumber,
-    poleNum,
-    selectedDefectId,
-    selectedPhaseIds,
-    sheetId,
-    spanRange,
+    handleClearDraft, createDefect, dateFound, inspector, isValid,
+    insulatorCount, garlandNumber, poleNumber, poleStart, poleEnd,
+    selectedDefectId, selectedPhaseIds, sheetId, spanRange, mode, phases,
   ]);
+
+  const isMultiPole = mode === 'pole' && poleNumber.includes(',');
 
   return (
     <HStack gap='2' align='end' wrap='wrap' className={cls.bar}>
@@ -232,34 +292,59 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
         </FormField>
       </div>
 
+      {/* Переключатель Оп. / Пр. + поле ввода */}
       <div className={cls.locationField}>
-        <FormField label='Опора / Пролёт' htmlFor='add-location'>
-          <div className={cls.stepWrap}>
-            <button
-              type='button'
-              className={cls.stepBtn}
-              onClick={() => handlePoleStep(-1)}
-              tabIndex={-1}
-              disabled={!!spanRange}
-            >−</button>
-            <Input
-              id='add-location'
-              name='location'
-              inputMode='tel'
-              placeholder={`${poleStart}–${poleEnd}`}
-              value={poleNumber || spanRange}
-              onChange={handleLocationChange}
-              invalid={!!poleNumber && !isPoleValid}
-              className={cls.stepInput}
-            />
-            <button
-              type='button'
-              className={cls.stepBtn}
-              onClick={() => handlePoleStep(1)}
-              tabIndex={-1}
-              disabled={!!spanRange}
-            >+</button>
+        <FormField
+          label='Опора / Пролёт'
+          htmlFor='add-location'
+        >
+          <div className={cls.locationRow}>
+            <div className={cls.modeToggle}>
+              <button
+                type='button'
+                className={`${cls.modeSegment} ${mode === 'pole' ? cls.modeSegmentActive : ''}`}
+                onClick={() => setMode('pole')}
+              >Оп.</button>
+              <button
+                type='button'
+                className={`${cls.modeSegment} ${mode === 'span' ? cls.modeSegmentActive : ''}`}
+                onClick={() => setMode('span')}
+              >Пр.</button>
+            </div>
+            <div className={cls.stepWrap}>
+              <button
+                type='button'
+                className={cls.stepBtn}
+                style={mode !== 'pole' ? { visibility: 'hidden' } : undefined}
+                onClick={() => handlePoleStep(-1)}
+                tabIndex={-1}
+                disabled={isMultiPole}
+              >−</button>
+              <Input
+                id='add-location'
+                name='location'
+                inputMode='tel'
+                placeholder={mode === 'pole' ? `${poleStart}–${poleEnd}` : `1–${maxSpan}`}
+                value={mode === 'pole' ? poleNumber : spanRange}
+                onChange={mode === 'pole' ? setPoleNumber : setSpanRange}
+                invalid={poleInvalid || spanInvalid}
+                className={cls.stepInput}
+              />
+              <button
+                type='button'
+                className={cls.stepBtn}
+                style={mode !== 'pole' ? { visibility: 'hidden' } : undefined}
+                onClick={() => handlePoleStep(1)}
+                tabIndex={-1}
+                disabled={isMultiPole}
+              >+</button>
+            </div>
           </div>
+          {spanInvalid && (
+            <span className={cls.fieldError}>
+              Макс. пролёт: {maxSpan}
+            </span>
+          )}
         </FormField>
       </div>
 

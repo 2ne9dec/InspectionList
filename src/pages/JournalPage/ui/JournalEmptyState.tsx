@@ -1,34 +1,61 @@
 import { memo } from 'react';
 import { Button } from '@/shared/ui';
+import type { StatusFilter } from '../model/useJournalFilters';
 import cls from './JournalEmptyState.module.scss';
 
 interface JournalEmptyStateProps {
-  totalCount: number;
-  onShowAll: () => void;
+  filteredCount: number;
+  statusFilter:  StatusFilter;
+  hasFilters:    boolean;
+  lineLabel:     string;
+  onShowAll:     () => void;
 }
 
-export const JournalEmptyState = memo(({ totalCount, onShowAll }: JournalEmptyStateProps) => (
-  <div className={cls.wrap}>
-    <div className={cls.icon} aria-hidden>📋</div>
+function buildText(
+  count: number,
+  status: StatusFilter,
+  hasFilters: boolean,
+  lineLabel: string,
+): { headline: string; hint: string } {
+  const byLine = lineLabel ? ` по линии «${lineLabel}»` : '';
+  if (!hasFilters) {
+    return {
+      headline: `В базе ${count} записей`,
+      hint: 'Выберите фильтры или нажмите «Показать», чтобы загрузить весь журнал',
+    };
+  }
+  if (status === 'active') {
+    return {
+      headline: `Обнаруженных дефектов${byLine}: ${count}`,
+      hint: 'Нажмите «Показать» для отображения результата',
+    };
+  }
+  if (status === 'fixed') {
+    return {
+      headline: `Устранённых дефектов${byLine}: ${count}`,
+      hint: 'Нажмите «Показать» для отображения результата',
+    };
+  }
+  return {
+    headline: `Найдено записей${byLine}: ${count}`,
+    hint: 'Нажмите «Показать» для отображения результата',
+  };
+}
 
-    <p className={cls.total}>
-      Всего дефектов в базе: <strong>{totalCount}</strong>
-    </p>
-
-    <p className={cls.hint}>
-      Выберите линию для просмотра журнала
-    </p>
-
-    <Button variant='primary' size='m' onClick={onShowAll}>
-      Показать все
-    </Button>
-
-    <ul className={cls.tips}>
-      <li>Или введите <strong>элемент / дефект</strong> для поиска по всем линиям</li>
-      <li>Фильтр по <strong>классу напряжения</strong> сузит список линий</li>
-      <li>Фильтр по <strong>статусу</strong> покажет только обнаруженные или устранённые</li>
-    </ul>
-  </div>
-));
+export const JournalEmptyState = memo((
+  { filteredCount, statusFilter, hasFilters, lineLabel, onShowAll }: JournalEmptyStateProps,
+) => {
+  const { headline, hint } = buildText(filteredCount, statusFilter, hasFilters, lineLabel);
+  return (
+    <div className={cls.wrap}>
+      <div className={cls.icon} aria-hidden>📋</div>
+      <p className={cls.total}>{headline}</p>
+      <p className={cls.hint}>{hint}</p>
+      <Button variant='primary' size='m' onClick={onShowAll}>
+        Показать
+      </Button>
+    </div>
+  );
+});
 
 JournalEmptyState.displayName = 'JournalEmptyState';

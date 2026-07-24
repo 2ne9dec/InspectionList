@@ -13,3 +13,5 @@ export const selectAddDefectInsulatorCount = (state: StateSchema) => state.addDe
 
 export const selectAddDefectSpanRange     = (state: StateSchema) => state.addDefect?.spanRange     ?? '';
 export const selectAddDefectGarlandNumber = (state: StateSchema) => state.addDefect?.garlandNumber ?? '';
+export const selectAddDefectMode  = (state: StateSchema) => state.addDefect?.mode  ?? 'pole';
+export const selectAddDefectNotes = (state: StateSchema) => state.addDefect?.notes ?? '';

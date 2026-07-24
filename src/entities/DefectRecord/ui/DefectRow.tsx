@@ -3,7 +3,6 @@ import { formatDate } from '@/shared/lib/helpers/formatDate';
 import type { DefectRecordFull } from '../model/types';
 import { usePatchDefectNotesMutation } from '../api/defectsApi';
 import { isOverdue, daysSince } from '@/shared/lib/helpers/isOverdue';
-import { SEVERITY_LABELS } from '@/shared/const/severity';
 import { IconWarning, IconClose, IconSave } from '@/shared/ui/Icons';
 import cls from './DefectRow.module.scss';
 
@@ -24,9 +23,8 @@ export const DefectRow = memo((props: DefectRowProps) => {
   const [patchNotes, { isLoading }]   = usePatchDefectNotesMutation();
   const textareaRef                   = useRef<HTMLTextAreaElement>(null);
 
-  const overdue       = !record.isFixed && isOverdue(record.dateFound);
-  const days          = overdue ? daysSince(record.dateFound) : 0;
-  const severityLabel = SEVERITY_LABELS[record.severity];
+  const overdue = !record.isFixed && isOverdue(record.dateFound);
+  const days    = overdue ? daysSince(record.dateFound) : 0;
 
   const handleNoteClick = useCallback(() => {
     setNoteVal(record.notes ?? '');
@@ -44,7 +42,7 @@ export const DefectRow = memo((props: DefectRowProps) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleNoteSave();
   }, [handleNoteSave, record.notes]);
 
-  const colSpanFull = record.isFixed ? 9 : 8;
+  const colSpanFull = record.isFixed ? 8 : 7;
 
   return (
     <>
@@ -56,11 +54,6 @@ export const DefectRow = memo((props: DefectRowProps) => {
         </td>
         <td className={cls.cell}>{record.elementName}</td>
         <td className={cls.cell}>{record.defectName}</td>
-        <td className={cls.cell}>
-          <span className={cls.severityBadge} data-severity={record.severity}>
-            {severityLabel}
-          </span>
-        </td>
         <td className={cls.cell}>{formatDate(record.dateFound)}</td>
         <td className={cls.cell}>{record.inspectorFind}</td>
         {record.isFixed && (

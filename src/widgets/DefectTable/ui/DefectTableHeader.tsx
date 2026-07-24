@@ -11,13 +11,10 @@ interface DefectTableHeaderProps {
   isFixed: boolean;
   filterElementId: string;
   filterDefectTypeId: string;
-  filterSeverity: string;
   elements: FilterOption[];
   defectTypes: FilterOption[];
-  severityOptions: FilterOption[];
   onElementChange: (v: string) => void;
   onDefectTypeChange: (v: string) => void;
-  onSeverityChange: (v: string) => void;
 }
 
 export const DefectTableHeader = memo((props: DefectTableHeaderProps) => {
@@ -28,13 +25,10 @@ export const DefectTableHeader = memo((props: DefectTableHeaderProps) => {
     isFixed,
     filterElementId,
     filterDefectTypeId,
-    filterSeverity,
     elements,
     defectTypes,
-    severityOptions,
     onElementChange,
     onDefectTypeChange,
-    onSeverityChange,
   } = props;
 
   return (
@@ -65,18 +59,14 @@ export const DefectTableHeader = memo((props: DefectTableHeaderProps) => {
               onChange={onDefectTypeChange}
               width='auto'
             />
-            <ThFilter
-              label='Серьёзность'
-              value={filterSeverity}
-              options={severityOptions}
-              onChange={onSeverityChange}
-              width='clamp(110px, 11vw, 140px)'
-            />
             <th className={cls.th} style={{ width: 'clamp(90px, 10vw, 120px)' }}>
               Дата обн.
             </th>
             <th className={cls.th} style={{ width: 'clamp(110px, 12vw, 160px)' }}>
               Обнаружил
+            </th>
+            <th className={cls.th} style={{ width: 'clamp(110px, 12vw, 200px)' }}>
+              Примечание
             </th>
             {isFixed && (
               <>

@@ -26,6 +26,7 @@ interface JournalFiltersProps {
   lineFilter:      string;
   selectedDefectTypeIds: ReadonlySet<number>;
   inspectorFilter: string;
+  poleFilter:      string;
   dateFrom:        string;
   dateTo:          string;
   hasFilters:      boolean;
@@ -34,6 +35,7 @@ interface JournalFiltersProps {
   setLineFilter:            (v: string) => void;
   setSelectedDefectTypeIds: (ids: Set<number>) => void;
   setInspectorFilter:       (v: string) => void;
+  setPoleFilter:            (v: string) => void;
   setDateFrom:              (v: string) => void;
   setDateTo:                (v: string) => void;
   resetFilters:             () => void;
@@ -42,9 +44,9 @@ interface JournalFiltersProps {
 export const JournalFilters = memo(({
   voltages, filteredLines, elements, defectTypes,
   statusFilter, voltageFilter, lineFilter, selectedDefectTypeIds,
-  inspectorFilter, dateFrom, dateTo, hasFilters,
+  inspectorFilter, poleFilter, dateFrom, dateTo, hasFilters,
   setStatusFilter, handleVoltageChange, setLineFilter, setSelectedDefectTypeIds,
-  setInspectorFilter, setDateFrom, setDateTo, resetFilters,
+  setInspectorFilter, setPoleFilter, setDateFrom, setDateTo, resetFilters,
 }: JournalFiltersProps) => {
   const [popupOpen, setPopupOpen] = useState(false);
   const [anchor, setAnchor]       = useState({ top: 0, left: 0 });
@@ -143,6 +145,17 @@ export const JournalFilters = memo(({
         placeholder='Обнаружил…'
         value={inspectorFilter}
         onChange={(e) => setInspectorFilter(e.target.value)}
+        autoComplete='off'
+      />
+
+      <input
+        id='journal-pole-filter'
+        name='journal-pole-filter'
+        className={cls.textInput}
+        type='text'
+        placeholder='Опора / пролёт…'
+        value={poleFilter}
+        onChange={(e) => setPoleFilter(e.target.value)}
         autoComplete='off'
       />
 

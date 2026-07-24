@@ -56,7 +56,7 @@
   align-items: center;
   gap: var(--space-1);
   padding: 2px 9px;
-  border: 1px solid var(--sev);  // data-severity на элементе
+  border: 1px solid var(--color-border);
   border-radius: var(--radii-full);
   font-size: var(--font-size-s);
   color: var(--color-text-primary);
@@ -69,7 +69,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--sev);  // data-severity на элементе
+  background: var(--color-accent);
   flex-shrink: 0;
 }
 
@@ -92,8 +92,8 @@
   border-radius: var(--radii-full);
   font-size: var(--font-size-s);
   font-weight: 700;
-  background: var(--sev);  // data-severity на элементе
-  color: var(--color-text-on-accent);
+  background: var(--color-accent-muted);
+  color: var(--color-accent);
   white-space: nowrap;
 }
 
@@ -176,4 +176,28 @@
   font-size: var(--font-size-s);
   font-weight: 600;
   white-space: nowrap;
+}
+
+.subCellNote {
+  padding: 7px var(--space-2);
+  font-size: var(--font-size-s);
+  color: var(--color-text-primary);
+  vertical-align: middle;
+  border-bottom: 1px solid var(--color-border);
+  max-width: 200px;
+  overflow: hidden;
+}
+
+.noteCell {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+}
+
+.noteCellEmpty {
+  color: var(--color-text-muted);
 }

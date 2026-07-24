@@ -31,10 +31,8 @@ export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy }: DefectT
   const {
     isLoading,
     groupedByPole,
-    severityStats,
     elementOptions,
     defectTypeOptions,
-    severityOptions,
     activeCount,
     fixedCount,
     hasFilters,
@@ -44,13 +42,11 @@ export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy }: DefectT
     setSearch,
     filterElementId,
     filterDefectTypeId,
-    filterSeverity,
     sortDir,
     toggleSort,
     clearFilters,
     handleElementChange,
     setFilterDefectTypeId,
-    setFilterSeverity,
     handleDelete,
     handleDeleteAll,
     confirmProps,
@@ -74,7 +70,7 @@ export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy }: DefectT
   // На телефоне (< 480px) страница скроллит нативно — root должен быть null (viewport)
   const isMobilePhone = useIsMobile();
 
-  const filtersKey = [tab, search, filterElementId, filterDefectTypeId, filterSeverity, sortDir].join('|');
+  const filtersKey = [tab, search, filterElementId, filterDefectTypeId, sortDir].join('|');
   useEffect(() => {
     setDisplayCount(INITIAL_POLES);
     setExpandedPoles(new Set());
@@ -138,7 +134,6 @@ export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy }: DefectT
         onTabChange={handleTabChange}
         activeCount={activeCount}
         fixedCount={fixedCount}
-        severityStats={severityStats}
         search={search}
         onSearchChange={setSearch}
         hasFilters={hasFilters}
@@ -168,20 +163,23 @@ export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy }: DefectT
                 isFixed={isFixedTab}
                 filterElementId={filterElementId}
                 filterDefectTypeId={filterDefectTypeId}
-                filterSeverity={filterSeverity}
-                elements={elementOptions}
+                    elements={elementOptions}
                 defectTypes={defectTypeOptions}
-                severityOptions={severityOptions}
-                onElementChange={handleElementChange}
+                    onElementChange={handleElementChange}
                 onDefectTypeChange={setFilterDefectTypeId}
-                onSeverityChange={setFilterSeverity}
-              />
+                  />
               <tbody>
-                {visibleGroups.map(([locationKey, records], idx) => (
+                {(() => {
+                  let defectOffset = 0;
+                  return visibleGroups.map(([locationKey, records], idx) => {
+                    const startIdx = defectOffset;
+                    defectOffset += records.length;
+                    return (
                   <PoleGroupRow
                     key={locationKey}
                     locationKey={locationKey}
                     index={idx + 1}
+                    defectStartIndex={startIdx}
                     records={records}
                     isExpanded={expandedPoles.has(locationKey)}
                     anyExpanded={anyExpanded}
@@ -194,7 +192,9 @@ export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy }: DefectT
                     onDeleteAll={handleDeleteAll}
                     onRowClick={onRowClick}
                   />
-                ))}
+                    );
+                  });
+                })()}
               </tbody>
             </table>
             {hasMore && (

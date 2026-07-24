@@ -1,7 +1,6 @@
 import { memo, useMemo } from 'react';
 import { formatDate } from '@/shared/lib/helpers/formatDate';
 import { KebabMenu } from '@/shared/ui/KebabMenu';
-import { SEVERITY_LABELS } from '@/shared/const/severity';
 import { formatLocationLabel, locationKeyType } from '../lib/locationKey';
 import type { DefectRecordFull } from '../model/types';
 import cls from './PoleGroupRow.module.scss';
@@ -19,6 +18,7 @@ interface PoleGroupRowProps {
   onFix: (key: string) => void;
   onFixOne: (defectId: number) => void;
   onCopy: (key: string) => void;
+  defectStartIndex?: number;
   onRowClick?: (defect: DefectRecordFull) => void;
   onDelete: (id: number) => void;
   onDeleteAll: (ids: number[]) => void;
@@ -52,20 +52,11 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
     onDelete,
     onDeleteAll,
     onRowClick,
+    defectStartIndex = 0,
   } = props;
 
   const locationLabel = formatLocationLabel(locationKey);
   const span = locationKeyType(locationKey) === 'span';
-
-  const maxSeverity = useMemo<'low' | 'medium' | 'critical'>(
-    () =>
-      records.reduce<'low' | 'medium' | 'critical'>((acc, r) => {
-        if (r.severity === 'critical') return 'critical';
-        if (r.severity === 'medium' && acc !== 'critical') return 'medium';
-        return acc;
-      }, 'low'),
-    [records],
-  );
 
   const uniqueElements = useMemo(() => Array.from(new Set(records.map((r) => r.elementName))), [records]);
   const isNoDefectPole = useMemo(() => records.every((r) => r.elementName === NO_DEFECT_ELEMENT), [records]);
@@ -79,7 +70,7 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
       const phaseKey    = r.phaseId        != null ? String(r.phaseId)        : 'null';
       const insulatorKey = r.insulatorCount != null ? String(r.insulatorCount) : 'null';
       const garlandKey  = r.garlandNumber  != null ? String(r.garlandNumber)  : 'null';
-      const key = `${r.elementName}||${r.defectName}||${phaseKey}||${insulatorKey}||${garlandKey}`;
+      const key = `${r.id}||${r.elementName}||${r.defectName}||${phaseKey}||${insulatorKey}||${garlandKey}`;
       const existing = map.get(key);
       if (existing) {
         existing.ids.push(r.id);
@@ -96,6 +87,21 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
       }
     }
     const groups = Array.from(map.values());
+    // Сорт: по порядку первого добавления (мин id), фазы внутри — алфавитно
+    const firstIdByType = new Map<string, number>();
+    for (const g of groups) {
+      const ek = `${g.first.elementName}||${g.first.defectName}`;
+      const minId = Math.min(...g.ids);
+      if (!firstIdByType.has(ek) || firstIdByType.get(ek)! > minId) firstIdByType.set(ek, minId);
+    }
+    groups.sort((a, b) => {
+      const ekA = `${a.first.elementName}||${a.first.defectName}`;
+      const ekB = `${b.first.elementName}||${b.first.defectName}`;
+      const fA = firstIdByType.get(ekA) ?? 0;
+      const fB = firstIdByType.get(ekB) ?? 0;
+      if (fA !== fB) return fA - fB;
+      return (a.first.phaseName ?? '').localeCompare(b.first.phaseName ?? '');
+    });
     for (const g of groups) {
       g.phaseItems.sort((a, b) => a.id - b.id);
       g.phases = g.phaseItems.map((p) => p.name).join(', ');
@@ -148,20 +154,12 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
             {!isExpanded &&
               uniqueElements.slice(0, MAX_CHIPS).map((elName) => {
                 const isNoDefect = elName === NO_DEFECT_ELEMENT;
-                const sev = records
-                  .filter((r) => r.elementName === elName)
-                  .reduce<'low' | 'medium' | 'critical'>((acc, r) => {
-                    if (r.severity === 'critical') return 'critical';
-                    if (r.severity === 'medium' && acc !== 'critical') return 'medium';
-                    return acc;
-                  }, 'low');
                 return (
                   <span
                     key={elName}
                     className={cls.chip}
-                    data-severity={isNoDefect ? 'low' : sev}
                   >
-                    {!isNoDefect && <span className={cls.chipDot} data-severity={sev} />}
+                    {!isNoDefect && <span className={cls.chipDot} />}
                     {elName}
                   </span>
                 );
@@ -179,7 +177,6 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
         <td className={cls.cell}>
           <span
             className={cls.badge}
-            data-severity={isNoDefectPole ? 'low' : maxSeverity}
           >
             {isNoDefectPole ? '0' : records.length} деф.
           </span>
@@ -217,7 +214,7 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
               style={onRowClick ? { cursor: 'pointer' } : undefined}
             >
               <td className={cls.subCell}>
-                <span className={cls.subIdx}>{idx + 1}</span>
+                <span className={cls.subIdx}>{defectStartIndex + idx + 1}</span>
               </td>
               <td className={cls.subCell} />
               <td className={cls.subCell}>{first.elementName}</td>
@@ -227,15 +224,13 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
                 {phases && <span className={cls.phaseTag}>{phases}</span>}
                 {insulatorCount != null && insulatorCount > 0 && <span className={cls.phaseTag}>{insulatorCount} шт.</span>}
               </td>
-              <td className={cls.subCell}>
-                {!isNoDefectRecord && (
-                  <span className={cls.badge} data-severity={first.severity}>
-                    {SEVERITY_LABELS[first.severity]}
-                  </span>
-                )}
-              </td>
               <td className={cls.subCell}>{formatDate(first.dateFound)}</td>
               <td className={cls.subCell}>{first.inspectorFind}</td>
+              <td className={cls.subCellNote}>
+                {first.notes
+                  ? <span className={cls.noteCell} title={first.notes ?? undefined}>{first.notes}</span>
+                  : <span className={cls.noteCellEmpty}>—</span>}
+              </td>
               {isFixed && (
                 <>
                   <td className={cls.subCell}>{first.dateFixed ? formatDate(first.dateFixed) : '—'}</td>

@@ -1,8 +1,7 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { formatDate } from '@/shared/lib/helpers/formatDate';
 import type { DefectRecordFull } from '@/entities/DefectRecord';
-import { usePatchDefectBasicMutation } from '@/entities/DefectRecord';
-import { SEVERITY_LABELS } from '@/shared/const/severity';
+import { usePatchDefectBasicMutation, usePatchDefectNotesMutation } from '@/entities/DefectRecord';
 import { Button, Input } from '@/shared/ui';
 import { IconClose, IconTasks, IconCheck, IconTrash } from '@/shared/ui/Icons';
 import cls from './DefectSidebar.module.scss';
@@ -10,7 +9,6 @@ import cls from './DefectSidebar.module.scss';
 interface DefectSidebarProps {
   defect: DefectRecordFull | null;
   /** Порядковый номер дефекта в листке (1-based). Если не передан — показывается id. */
-  defectNumber?: number | null;
   onClose: () => void;
   onFix?: (id: number) => void;
   onDelete?: (id: number) => void;
@@ -18,19 +16,27 @@ interface DefectSidebarProps {
   onSaveInspector?: (id: number, value: string) => void;
 }
 
-export const DefectSidebar = memo(({ defect, defectNumber, onClose, onFix, onDelete, onSaveInspector }: DefectSidebarProps) => {
+export const DefectSidebar = memo(({ defect, onClose, onFix, onDelete, onSaveInspector }: DefectSidebarProps) => {
   const isOpen = !!defect;
   const sidebarRef = useRef<HTMLElement>(null);
 
   const [editingInspector, setEditingInspector] = useState(false);
   const [inspectorDraft,   setInspectorDraft]   = useState('');
 
-  const [patchBasic, { isLoading: saving }] = usePatchDefectBasicMutation();
+  const [patchBasic,  { isLoading: saving }]      = usePatchDefectBasicMutation();
+  const [patchNotes,  { isLoading: savingNotes }] = usePatchDefectNotesMutation();
+
+  const [editingNotes,  setEditingNotes]  = useState(false);
+  const [notesDraft,    setNotesDraft]    = useState('');
+  const [currentNotes,  setCurrentNotes]  = useState<string | null | undefined>(undefined);
 
   // При смене дефекта — сбросить режим редактирования
   useEffect(() => {
     setEditingInspector(false);
     setInspectorDraft('');
+    setEditingNotes(false);
+    setNotesDraft('');
+    setCurrentNotes(undefined);
   }, [defect?.id]);
 
   const handleEditInspector = useCallback(() => {
@@ -45,6 +51,19 @@ export const DefectSidebar = memo(({ defect, defectNumber, onClose, onFix, onDel
     onSaveInspector?.(defect.id, trimmed);
     setEditingInspector(false);
   }, [defect, inspectorDraft, patchBasic, onSaveInspector]);
+
+  const handleEditNotes = useCallback(() => {
+    setNotesDraft(defect?.notes ?? '');
+    setEditingNotes(true);
+  }, [defect?.notes]);
+
+  const handleSaveNotes = useCallback(async () => {
+    if (!defect) return;
+    const trimmed = notesDraft.trim();
+    await patchNotes({ id: defect.id, notes: trimmed });
+    setCurrentNotes(trimmed || null);
+    setEditingNotes(false);
+  }, [defect, notesDraft, patchNotes]);
 
   // Закрытие по Esc
   useEffect(() => {
@@ -84,7 +103,6 @@ export const DefectSidebar = memo(({ defect, defectNumber, onClose, onFix, onDel
         <>
           <div className={cls.header}>
             <div>
-              <div className={cls.title}>Дефект №{defectNumber ?? defect.id}</div>
               <div className={cls.subtitle}>
                 {defect.spanRange ? `Пролёты ${defect.spanRange}` : `Опора ${defect.poleNumber}`}
                 {' · '}
@@ -98,10 +116,6 @@ export const DefectSidebar = memo(({ defect, defectNumber, onClose, onFix, onDel
           </div>
 
           <div className={cls.body}>
-            <span className={cls.severityBadge} data-severity={defect.severity}>
-              {SEVERITY_LABELS[defect.severity]}
-            </span>
-
             <dl className={cls.fields}>
               <dt>Вид дефекта</dt>
               <dd>{defect.defectName}</dd>
@@ -142,9 +156,7 @@ export const DefectSidebar = memo(({ defect, defectNumber, onClose, onFix, onDel
                 ) : (
                   <span className={cls.inspectorValue}>
                     {defect.inspectorFind}
-                    <button type='button' className={cls.editInspectorBtn} title='Редактировать' onClick={handleEditInspector}>
-                      ✏
-                    </button>
+                    <button type='button' className={cls.editInspectorBtn} onClick={handleEditInspector}>Изменить</button>
                   </span>
                 )}
               </dd>
@@ -158,12 +170,32 @@ export const DefectSidebar = memo(({ defect, defectNumber, onClose, onFix, onDel
                   <span className={cls.statusActive}>Активный</span>
                 )}
               </dd>
-              {defect.notes && (
-                <>
-                  <dt>Заметка</dt>
-                  <dd className={cls.noteText}>{defect.notes}</dd>
-                </>
-              )}
+              <dt>Примечание</dt>
+              <dd className={cls.noteField}>
+                {editingNotes ? (
+                  <span className={cls.noteEditRow}>
+                    <textarea
+                      className={cls.notesTextarea}
+                      value={notesDraft}
+                      onChange={(e) => setNotesDraft(e.target.value)}
+                      placeholder='Необязательно…'
+                      rows={3}
+                      autoFocus
+                    />
+                    <span className={cls.noteEditActions}>
+                      <Button size='s' variant='primary' onClick={handleSaveNotes} loading={savingNotes}>ОК</Button>
+                      <Button size='s' variant='ghost' onClick={() => setEditingNotes(false)}>✕</Button>
+                    </span>
+                  </span>
+                ) : (
+                  <span className={cls.noteValue}>
+                    {(currentNotes !== undefined ? currentNotes : defect.notes)
+                      ? <span>{currentNotes !== undefined ? currentNotes : defect.notes}</span>
+                      : <span className={cls.notePlaceholder}>Добавить…</span>}
+                    <button type='button' className={cls.editNoteBtn} onClick={handleEditNotes}>Изменить</button>
+                  </span>
+                )}
+              </dd>
             </dl>
 
             {!defect.isFixed && (

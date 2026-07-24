@@ -141,3 +141,50 @@
     font-size: var(--font-size-xs);
   }
 }
+.locationRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.modeToggle {
+  display: flex;
+  flex-direction: row;
+  height: var(--control-height-m);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radii);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.modeSegment {
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  &:first-child { border-right: 1px solid var(--color-border); }
+  &:hover:not(.modeSegmentActive) { background: var(--color-bg-surface-2); color: var(--color-accent); }
+}
+
+.modeSegmentActive {
+  background: var(--color-accent);
+  color: var(--color-text-on-accent);
+}
+
+.notesField {
+  flex: 1;
+  min-width: 120px;
+  max-width: 220px;
+}
+
+.fieldError {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--font-size-xs);
+  color: var(--color-error);
+}

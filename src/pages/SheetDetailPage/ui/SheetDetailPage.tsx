@@ -1,4 +1,4 @@
-import { memo, useState, useCallback, useMemo } from 'react';
+import { memo, useState, useCallback } from 'react';
 import { formatDate } from '@/shared/lib/helpers/formatDate';
 import { useParams } from 'react-router-dom';
 import { DynamicModuleLoader } from '@/shared/lib/components/DynamicModuleLoader/DynamicModuleLoader';
@@ -42,11 +42,6 @@ const SheetDetailPage = () => {
   const [showTimeline,  setShowTimeline]  = useState(false);
 
   // Порядковый номер дефекта в текущем листке (позиция в списке defectsFull)
-  const sidebarDefectNumber = useMemo(() => {
-    if (!sidebarDefect) return null;
-    const idx = defectsFull.findIndex((d) => d.id === sidebarDefect.id);
-    return idx >= 0 ? idx + 1 : null;
-  }, [defectsFull, sidebarDefect]);
 
   const { openModal: openFixModal }  = fixDefectActions.useActions();
   const { openModal: openCopyModal } = copyDefectActions.useActions();
@@ -145,7 +140,6 @@ const SheetDetailPage = () => {
         {sidebarDefect && (
           <DefectSidebar
             defect={sidebarDefect}
-            defectNumber={sidebarDefectNumber}
             onClose={handleCloseSidebar}
             onFix={handleSidebarFix}
             onDelete={handleSidebarDelete}
