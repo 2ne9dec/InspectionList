@@ -2,7 +2,7 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import type { ThunkConfig } from '@/app/providers/StoreProvider';
 import { userActions } from '@/entities/User';
 import type { User } from '@/entities/User';
-import { appConfig } from '@/shared/config';
+import { getApiUrl } from '@/shared/lib/api/apiUrl';
 import { STORAGE_KEYS } from '@/shared/const/storageKeys';
 import { rtkApi } from '@/shared/api/rtkApi';
 
@@ -29,7 +29,7 @@ export const loginByUsername = createAsyncThunk<User, { username: string; passwo
   async ({ username, password }, { dispatch, rejectWithValue }) => {
     // ── 1. Пытаемся войти через сервер (JWT) ────────────────────────────────
     try {
-      const res = await fetch(`${appConfig.apiUrl}/login`, {
+      const res = await fetch(`${getApiUrl()}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: username.trim().toLowerCase(), password }),
@@ -39,9 +39,9 @@ export const loginByUsername = createAsyncThunk<User, { username: string; passwo
 
       if (res.ok) {
         const data: User & { token?: string } = await res.json();
-        if (data.token) sessionStorage.setItem(TOKEN_KEY, data.token);
+        if (data.token) localStorage.setItem(TOKEN_KEY, data.token);
         const { token: _t, ...user } = data;
-        sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
         dispatch(rtkApi.util.resetApiState());
         dispatch(userActions.setAuthData(user));
         return user;
@@ -62,7 +62,7 @@ export const loginByUsername = createAsyncThunk<User, { username: string; passwo
     if (hash !== found.password) return rejectWithValue('Неверный пароль');
 
     const { password: _omit, ...user } = found;
-    sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
     dispatch(userActions.setAuthData(user));
     return user;
   },

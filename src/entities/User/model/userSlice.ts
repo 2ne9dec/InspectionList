@@ -3,7 +3,7 @@ import { STORAGE_KEYS } from '@/shared/const/storageKeys';
 import type { User, UserSchema } from './types';
 
 const USER_KEY = STORAGE_KEYS.USER;
-// sessionStorage очищается при закрытии браузера — автоматический разлогин
+// localStorage — сессия сохраняется при перезапуске Capacitor/браузера
 
 const initialState: UserSchema = {
   _inited: false,
@@ -17,7 +17,7 @@ export const userSlice = createSlice({
       state.authData = action.payload;
     },
     initAuthData: (state) => {
-      const raw = sessionStorage.getItem(USER_KEY);
+      const raw = localStorage.getItem(USER_KEY);
       if (raw) {
         try {
           state.authData = JSON.parse(raw);
@@ -27,7 +27,7 @@ export const userSlice = createSlice({
     },
     logout: (state) => {
       state.authData = undefined;
-      sessionStorage.removeItem(USER_KEY);
+      localStorage.removeItem(USER_KEY);
     },
   },
 });

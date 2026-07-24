@@ -43,7 +43,7 @@ module.exports = {
     'node_modules',
     'dist',
     'public',
-    'json-server',
+    'server',
     '*.config.ts',
     '*.config.js',
   ],

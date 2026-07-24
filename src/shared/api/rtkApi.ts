@@ -1,32 +1,35 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { appConfig } from '@/shared/config';
+import {
+  createApi,
+  fetchBaseQuery,
+  type BaseQueryFn,
+  type FetchArgs,
+  type FetchBaseQueryError,
+} from '@reduxjs/toolkit/query/react';
 import type { StateSchema } from '@/app/providers/StoreProvider';
 import { STORAGE_KEYS } from '@/shared/const/storageKeys';
+import { getApiUrl } from '@/shared/lib/api/apiUrl';
 
 /**
  * Корневой RTK Query API.
- * Все entities делают `rtkApi.injectEndpoints(...)`, что позволяет:
- *   1. иметь один кеш и один список тегов;
- *   2. писать endpoints по FSD-feature/entity (а не одним мега-файлом);
- *   3. не тащить лишние редьюсеры в bundle, если фича не используется.
- *
- * prepareHeaders добавляет Authorization: Bearer <token> если токен есть.
- * Для offline-режима (Dexie queryFn) заголовки не используются.
+ * baseQuery — динамический: читает URL из localStorage при каждом запросе.
+ * Это позволяет менять адрес сервера без пересборки (нужно для Capacitor/Android).
  */
-export const rtkApi = createApi({
-  reducerPath: 'api',
-  baseQuery: fetchBaseQuery({
-    baseUrl: appConfig.apiUrl,
+const dynamicBaseQuery: BaseQueryFn<
+  string | FetchArgs,
+  unknown,
+  FetchBaseQueryError
+> = async (args, api, extraOptions) => {
+  const baseUrl = getApiUrl();
+  const raw = fetchBaseQuery({
+    baseUrl,
     prepareHeaders: (headers, { getState }) => {
       const state = getState() as StateSchema;
       const user  = state.user?.authData;
 
-      // Токен читается из sessionStorage (сохраняется loginThunk при JWT-логине)
-      const token = user?.token ?? sessionStorage.getItem(STORAGE_KEYS.TOKEN);
+      const token = user?.token ?? localStorage.getItem(STORAGE_KEYS.TOKEN);
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       } else {
-        // Fallback: header-based auth для dev-режима без JWT
         if (user?.filialId != null) headers.set('X-Filial-Id', String(user.filialId));
         if (user?.id)               headers.set('X-User-Id',   String(user.id));
         if (user?.role === 'admin')  headers.set('X-Is-Admin',  'true');
@@ -34,7 +37,13 @@ export const rtkApi = createApi({
 
       return headers;
     },
-  }),
+  });
+  return raw(args, api, extraOptions);
+};
+
+export const rtkApi = createApi({
+  reducerPath: 'api',
+  baseQuery: dynamicBaseQuery,
   tagTypes: [
     'Sheet',
     'Defect',

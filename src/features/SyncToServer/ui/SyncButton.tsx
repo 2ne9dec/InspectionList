@@ -1,7 +1,7 @@
 import { memo, useState, useCallback } from 'react';
 import { Button, Input, Modal, VStack, Text } from '@/shared/ui';
 import { syncService } from '@/shared/lib/sync/syncService';
-import { getPbServerUrl, setPbServerUrl } from '@/shared/lib/pocketbase/pbClient';
+import { getApiUrl, setApiUrl } from '@/shared/lib/api/apiUrl';
 import cls from './SyncButton.module.scss';
 
 type SyncStatus = 'idle' | 'loading' | 'success' | 'error';
@@ -11,13 +11,19 @@ export const SyncButton = memo(() => {
   const [showSettings, setShowSettings] = useState(false);
   const [urlInput, setUrlInput] = useState('');
 
-  // Инициализируем при открытии чтобы всегда показывать актуальный URL
   const handleOpenSettings = useCallback(() => {
-    setUrlInput(getPbServerUrl());
+    setUrlInput(getApiUrl());
     setShowSettings(true);
   }, []);
 
   const handleCloseSettings = useCallback(() => setShowSettings(false), []);
+
+  const handleSaveUrl = useCallback(() => {
+    if (urlInput.trim()) {
+      setApiUrl(urlInput.trim());
+      window.location.reload();
+    }
+  }, [urlInput]);
 
   const handleSync = useCallback(async () => {
     setStatus('loading');
@@ -31,17 +37,10 @@ export const SyncButton = memo(() => {
     }
   }, []);
 
-  const handleSaveUrl = useCallback(() => {
-    if (urlInput.trim()) {
-      setPbServerUrl(urlInput.trim());
-    }
-  }, [urlInput]);
-
   const label =
     status === 'loading' ? 'Синхронизация...' :
     status === 'success' ? 'Синхронизировано ✓' :
-    status === 'error'   ? 'Ошибка ✗' :
-    'Синхронизировать';
+    status === 'error'   ? 'Ошибка ✗' : 'Синхронизировать';
 
   return (
     <>
@@ -54,19 +53,14 @@ export const SyncButton = memo(() => {
         {label}
       </Button>
 
-      <Button
-        variant='secondary'
-        size='s'
-        onClick={handleOpenSettings}
-        title='Настройки сервера'
-      >
+      <Button variant='ghost' size='s' onClick={handleOpenSettings}>
         ⚙
       </Button>
 
       <Modal
         isOpen={showSettings}
         onClose={handleCloseSettings}
-        title='Настройки сервера'
+        title='Адрес сервера'
         size='s'
         footer={
           <>
@@ -81,13 +75,13 @@ export const SyncButton = memo(() => {
       >
         <VStack gap='3'>
           <Input
-            name='pb-url'
+            name='api-url'
             value={urlInput}
             onChange={setUrlInput}
-            placeholder='http://192.168.X.X:8090'
+            placeholder='http://192.168.100.12:8443'
           />
           <Text
-            text={`Текущий: ${getPbServerUrl()}`}
+            text={`Текущий: ${getApiUrl()}`}
             variant='muted'
             size='xs'
             className={cls.hint}
