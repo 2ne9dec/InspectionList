@@ -5,9 +5,9 @@
  *
  * Клиент передаёт: Authorization: Bearer <token>
  * Сервер верифицирует подпись HS256 и читает payload:
- *   payload.sub      → req.userId
- *   payload.filialId → req.filialId
- *   payload.role     → req.isAdmin (role === 'admin')
+ *   payload.sub      → req.userId   (идентификатор пользователя)
+ *   payload.filialId → req.filialId (филиал пользователя)
+ *   payload.role     → req.role / req.isAdmin (роль пользователя)
  *
  * Публичные маршруты (POST /login) не требуют токена.
  *
@@ -60,9 +60,11 @@ function authMiddleware(req, res, next) {
     const rawUserId   = req.headers['x-user-id']   ?? req.query._userId;
     const rawFilialId = req.headers['x-filial-id'] ?? req.query._filialId;
     const rawIsAdmin  = req.headers['x-is-admin']  ?? req.query._isAdmin;
+    const rawRole = req.headers['x-role'] ?? req.query._role ?? 'admin';
     req.userId   = rawUserId   ? Number(rawUserId)   : null;
     req.filialId = rawFilialId ? Number(rawFilialId) : null;
-    req.isAdmin  = rawIsAdmin === 'true' || rawIsAdmin === true;
+    req.role     = rawRole;
+    req.isAdmin  = rawRole === 'admin';
     delete req.query._userId; delete req.query._filialId; delete req.query._isAdmin;
     return next();
   }
@@ -77,7 +79,7 @@ function authMiddleware(req, res, next) {
   }
 
   try {
-    const payload = jwt.verify(token, JWT_SECRET);
+    const payload = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
     req.userId            = payload.sub              ?? null;
     req.filialId          = payload.filialId         != null ? Number(payload.filialId)        : null;
     req.role              = payload.role             ?? 'viewer';
@@ -105,4 +107,28 @@ function signToken(user) {
   );
 }
 
-module.exports = { authMiddleware, signToken, JWT_SECRET };
+/** Отклоняет неавторизованные запросы с кодом 401. */
+function requireAuth(req, res, next) {
+  if (!req.userId) return res.status(401).json({ error: 'Не авторизован' });
+  next();
+}
+
+
+/**
+ * Роли с полным доступом (удаление, объединение).
+ * master/viewer: только создание листков и дефектов.
+ */
+const FULL_ACCESS_ROLES = new Set(['admin', 'director', 'engineer']);
+
+/** Middleware: требует наличие одной из указанных ролей. */
+function requireRole(...roles) {
+  return (req, res, next) => {
+    if (!roles.includes(req.role))
+      return res.status(403).json({
+        error: 'Недостаточно прав (роль: ' + (req.role ?? 'unknown') + ')'
+      });
+    next();
+  };
+}
+
+module.exports = { authMiddleware, signToken, JWT_SECRET, requireAuth, requireRole, FULL_ACCESS_ROLES };

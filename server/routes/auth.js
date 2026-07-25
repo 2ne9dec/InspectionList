@@ -88,7 +88,7 @@ async function verifyPass(plain, storedHash) {
   const isSha256 = /^[a-f0-9]{64}$/.test(storedHash);
   if (isSha256) {
     const sha = crypto.createHash('sha256').update(plain).digest('hex');
-    return sha === storedHash;
+    return crypto.timingSafeEqual(Buffer.from(sha), Buffer.from(storedHash));
   }
   return bcrypt.compare(plain, storedHash);
 }
@@ -276,15 +276,18 @@ router.post('/users/:id/resetPassword', requireAdmin, async (req, res) => {
 // ── POST /changePassword ──────────────────────────────────────────────────────
 router.post('/changePassword', async (req, res) => {
   try {
-    const { id, oldPass, newPass } = req.body ?? {};
-    if (!id || !oldPass || !newPass)
-      return res.status(400).json({ error: 'id, oldPass, newPass обязательны' });
-    const user = await findUserById(id);
+    if (!req.userId) return res.status(401).json({ error: 'Не авторизован' });
+    const { oldPass, newPass } = req.body ?? {};
+    if (!oldPass || !newPass)
+      return res.status(400).json({ error: 'oldPass и newPass обязательны' });
+    if (newPass.length < 6)
+      return res.status(400).json({ error: 'Пароль должен быть не менее 6 символов' });
+    const user = await findUserById(req.userId);
     if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
     const ok = await verifyPass(oldPass, user.password);
     if (!ok) return res.status(403).json({ error: 'Неверный текущий пароль' });
     const hash = bcrypt.hashSync(newPass, BCRYPT_ROUNDS);
-    await execute('UPDATE USERS SET PASSWORD = ? WHERE ID = ?', [hash, String(id)]);
+    await execute('UPDATE USERS SET PASSWORD = ? WHERE ID = ?', [hash, String(req.userId)]);
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });

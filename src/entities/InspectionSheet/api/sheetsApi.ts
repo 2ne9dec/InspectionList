@@ -1,5 +1,5 @@
 import { rtkApi } from '@/shared/api/rtkApi';
-import { localDb, enqueueSyncTask } from '@/shared/lib/db/localDb';
+import { localDb, enqueueSyncTask, generateSyncId } from '@/shared/lib/db/localDb';
 import { syncService } from '@/shared/lib/sync/syncService';
 import type { InspectionSheet } from '../model/types';
 
@@ -37,6 +37,7 @@ const sheetsApi = rtkApi.injectEndpoints({
       queryFn: async (body) => {
         try {
           const id = await localDb.sheets.add({
+            id:          generateSyncId(),
             filialId:    body.filialId,
             voltageId:   body.voltageId,
             lineId:      body.lineId,
@@ -75,6 +76,7 @@ const sheetsApi = rtkApi.injectEndpoints({
         const original = await localDb.sheets.get(id);
         if (!original) return { error: { status: 'CUSTOM_ERROR' as const, error: 'Not found' } };
         const newId = await localDb.sheets.add({
+          id:          generateSyncId(),
           filialId:    original.filialId,
           voltageId:   original.voltageId,
           lineId:      original.lineId,
@@ -112,6 +114,7 @@ const sheetsApi = rtkApi.injectEndpoints({
         if (!valid.length) return { error: { status: 'CUSTOM_ERROR' as const, error: 'No sheets' } };
         const base = valid[0];
         const newId = await localDb.sheets.add({
+          id:        generateSyncId(),
           filialId:  base.filialId,
           voltageId: base.voltageId,
           lineId:    base.lineId,
@@ -123,7 +126,7 @@ const sheetsApi = rtkApi.injectEndpoints({
           const defects = await localDb.defectRecords.where('sheetId').equals(id).toArray();
           for (const d of defects) {
             const { id: _did, serverId: _sid, ...dRest } = d;
-            const newDefectId = await localDb.defectRecords.add({ ...dRest, sheetId: newId as number } as any);
+            const newDefectId = await localDb.defectRecords.add({ id: generateSyncId(), ...dRest, sheetId: newId as number } as any);
             await enqueueSyncTask('create', 'defect_records', newDefectId as number);
             // Оригинальный дефект — ставим в очередь на удаление
             await enqueueSyncTask('delete', 'defect_records', d.id, d.serverId);

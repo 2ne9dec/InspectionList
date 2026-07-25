@@ -1,4 +1,5 @@
 'use strict';
+const { requireRole } = require('../lib/auth');
 
 /**
  * routes/sheets.js -- листки осмотра (Firebird).
@@ -38,7 +39,7 @@ const SELECT_SHEET = `
          STATUS, NOTES
   FROM INSPECTION_SHEETS`;
 
-// ── GET /inspectionSheets ─────────────────────────────────────────────────────
+// ── GET /inspectionSheets — список листков осмотра ─────────────────────────────────────────────────────
 router.get('/inspectionSheets', async (req, res) => {
   try {
     const { filialId, voltageId, lineId, createdBy, _page, _limit } = req.query;
@@ -71,7 +72,7 @@ router.get('/inspectionSheets', async (req, res) => {
   }
 });
 
-// ── GET /inspectionSheets/:id ─────────────────────────────────────────────────
+// ── GET /inspectionSheets/:id — один лист ─────────────────────────────────────────────────
 router.get('/inspectionSheets/:id', async (req, res) => {
   try {
     const id  = Number(req.params.id);
@@ -85,7 +86,7 @@ router.get('/inspectionSheets/:id', async (req, res) => {
   }
 });
 
-// ── POST /inspectionSheets ────────────────────────────────────────────────────
+// ── POST /inspectionSheets — создать лист ────────────────────────────────────────────────────
 router.post('/inspectionSheets', async (req, res) => {
   try {
     const { filialId, voltageId, lineId, createdDate, createdBy, status, notes } = req.body;
@@ -121,7 +122,7 @@ router.post('/inspectionSheets', async (req, res) => {
   }
 });
 
-// ── POST /inspectionSheets/:id/clone ─────────────────────────────────────────
+// ── POST /inspectionSheets/:id/clone — клонировать лист ─────────────────────────────────────────
 router.post('/inspectionSheets/:id/clone', async (req, res) => {
   try {
     const id      = Number(req.params.id);
@@ -160,7 +161,7 @@ router.post('/inspectionSheets/:id/clone', async (req, res) => {
   }
 });
 
-// ── PATCH /inspectionSheets/:id ───────────────────────────────────────────────
+// ── PATCH /inspectionSheets/:id — обновить лист ───────────────────────────────────────────────
 router.patch('/inspectionSheets/:id', async (req, res) => {
   try {
     const id  = Number(req.params.id);
@@ -185,8 +186,8 @@ router.patch('/inspectionSheets/:id', async (req, res) => {
   }
 });
 
-// ── DELETE /inspectionSheets/:id ──────────────────────────────────────────────
-router.delete('/inspectionSheets/:id', async (req, res) => {
+// ── DELETE /inspectionSheets/:id — удалить лист ──────────────────────────────────────────────
+router.delete('/inspectionSheets/:id', requireRole('admin', 'director', 'engineer'), async (req, res) => {
   try {
     const id  = Number(req.params.id);
     const row = await queryOne('SELECT ID, LINE_ID FROM INSPECTION_SHEETS WHERE ID = ?', [id]);
@@ -194,7 +195,9 @@ router.delete('/inspectionSheets/:id', async (req, res) => {
     if (!canAccessLine(req, row.line_id))
       return res.status(403).json({ error: 'Доступ запрещён' });
 
-    // Дефекты удаляются каскадно (ON DELETE CASCADE в схеме)
+    // FK constraint: сначала дефекты, потом лист
+    // (Firebird не даёт удалить лист, если есть дефекты — ON DELETE CASCADE нет)
+    await execute('DELETE FROM DEFECT_RECORDS WHERE SHEET_ID = ?', [id]);
     await execute('DELETE FROM INSPECTION_SHEETS WHERE ID = ?', [id]);
     res.json({ ok: true });
   } catch (err) {
@@ -202,8 +205,8 @@ router.delete('/inspectionSheets/:id', async (req, res) => {
   }
 });
 
-// ── POST /inspectionSheets/merge ──────────────────────────────────────────────
-router.post('/inspectionSheets/merge', async (req, res) => {
+// ── POST /inspectionSheets/merge — объединить листы ──────────────────────────────────────────────
+router.post('/inspectionSheets/merge', requireRole('admin', 'director', 'engineer'), async (req, res) => {
   try {
     const { ids, createdDate, createdBy } = req.body;
     if (!Array.isArray(ids) || ids.length < 2 || !createdDate)

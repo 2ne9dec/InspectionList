@@ -1,5 +1,5 @@
 import { rtkApi } from '@/shared/api/rtkApi';
-import { localDb, enqueueSyncTask } from '@/shared/lib/db/localDb';
+import { localDb, enqueueSyncTask, generateSyncId } from '@/shared/lib/db/localDb';
 import { syncService } from '@/shared/lib/sync/syncService';
 import type { DefectRecord, DefectCount, CreateDefectParams, FixDefectParams } from '../model/types';
 
@@ -70,7 +70,7 @@ const defectsApi = rtkApi.injectEndpoints({
         if (duplicate) {
           return { error: { status: 409, error: 'duplicate', data: duplicate } };
         }
-        const id = await localDb.defectRecords.add({ ...body, createdAt: new Date().toISOString() } as DefectRecord);
+        const id = await localDb.defectRecords.add({ id: generateSyncId(), ...body, createdAt: new Date().toISOString() } as DefectRecord);
         const created = await localDb.defectRecords.get(id as number);
         await enqueueSyncTask('create', 'defect_records', id as number);
         syncService.scheduleSync();

@@ -2,7 +2,7 @@
 
 /**
  * routes/sync.js -- пакетная синхронизация (Firebird).
- * POST /sync/batch  { sheets: [], defectRecords: [] }
+ * POST /sync/batch  { sheets: [], defectRecords: [] }  — пуш изменений на сервер
  * GET  /sync/pull   -- возвращает все листки филиала
  */
 
@@ -12,6 +12,12 @@ const { query, execute, queryOne, nextId } = require('../lib/fbDb');
 const router = Router();
 
 router.post('/sync/batch', async (req, res) => {
+  if (!req.userId) return res.status(401).json({ error: 'Не авторизован' });
+
+  // admin может работать без привязки к филиалу (filialId=null в базе).
+  // Для других ролей filialId обязателен.
+  if (!req.filialId && !req.isAdmin) return res.status(403).json({ error: 'Нет филиала' });
+
   const { sheets = [], defectRecords = [] } = req.body;
   let sheetsUpserted  = 0;
   let defectsUpserted = 0;
@@ -25,6 +31,11 @@ router.post('/sync/batch', async (req, res) => {
       const { id, filialId, voltageId, lineId, createdDate, createdBy, status, notes } = sheet;
       if (!filialId || !voltageId || !lineId || !createdDate) {
         errors.push({ type: 'sheet', id, reason: 'missing required fields' });
+        continue;
+      }
+      // Проверяем: filialId совпадает с филиалом авторизованного пользователя
+      if (req.filialId && Number(filialId) !== req.filialId) {
+        errors.push({ type: 'sheet', id, reason: 'filialId mismatch' });
         continue;
       }
 
@@ -59,10 +70,15 @@ router.post('/sync/batch', async (req, res) => {
   // ── Дефекты ─────────────────────────────────────────────────────────────────
   for (const defect of defectRecords) {
     try {
-      const parent = sheetMap[defect.sheetId];
-      if (!parent) {
-        errors.push({ type: 'defect', id: defect.id, reason: 'parent sheet not in payload' });
-        continue;
+      // Родительский лист может быть в текущем батче ИЛИ уже в Firebird (предыдущая синхронизация)
+      let lineId = sheetMap[defect.sheetId]?.lineId;
+      if (!lineId) {
+        const fbSheet = await queryOne('SELECT LINE_ID FROM INSPECTION_SHEETS WHERE ID=?', [Number(defect.sheetId)]);
+        if (!fbSheet) {
+          errors.push({ type: 'defect', id: defect.id, reason: 'parent sheet not found' });
+          continue;
+        }
+        lineId = fbSheet.line_id;
       }
 
       const existing = await queryOne('SELECT ID FROM DEFECT_RECORDS WHERE ID = ?', [Number(defect.id)]);
@@ -77,7 +93,7 @@ router.post('/sync/batch', async (req, res) => {
                MASTER_CONCLUSION=?, RESOLUTION_DEADLINE=CAST(? AS DATE),
                MASTER_NAME=?, FIX_WORK_VOLUME=?
            WHERE ID=?`,
-          [Number(defect.sheetId), Number(parent.lineId),
+          [Number(defect.sheetId), Number(lineId),
            defect.poleNumber, defect.defectId,
            defect.phaseId   ?? null, defect.elementId ?? null,
            defect.dateFound ?? null, defect.inspectorFind ?? null,
@@ -101,7 +117,7 @@ router.post('/sync/batch', async (req, res) => {
                    CAST(? AS DATE),?,?,CAST(? AS DATE),?,
                    ?,?,?,?,
                    ?,CAST(? AS DATE),?,?)`,
-          [Number(defect.id), Number(defect.sheetId), Number(parent.lineId),
+          [Number(defect.id), Number(defect.sheetId), Number(lineId),
            defect.poleNumber, defect.defectId,
            defect.phaseId   ?? null, defect.elementId ?? null,
            defect.dateFound ?? null, defect.inspectorFind ?? null,
@@ -121,41 +137,74 @@ router.post('/sync/batch', async (req, res) => {
     }
   }
 
-  // Process deletes (defects first due to FK)
+  // Удаления: сначала дефекты (из-за FK DEFECT_RECORDS.SHEET_ID)
   const { deletedDefectIds = [], deletedSheetIds = [] } = req.body;
-  for (const id of deletedDefectIds) {
-    try { await execute('DELETE FROM DEFECT_RECORDS WHERE ID = ?', [Number(id)]); }
-    catch (e) { errors.push({ type: 'defect_delete', id, reason: e.message }); }
+  const hasDeletes = deletedSheetIds.length > 0 || deletedDefectIds.length > 0;
+  const canDelete  = ['admin', 'director', 'engineer'].includes(req.role);
+
+  if (hasDeletes && !canDelete) {
+    // Недостаточно прав: возвращаем HTTP 403, чтобы response.ok на клиенте был фальшивым
+    // и syncQueue не очистился (иначе pull() восстановит удалённые записи)
+    return res.status(403).json({
+      ok: false,
+      error: 'Удаление недоступно для роли: ' + req.role,
+      errors: [{ type: 'permission', reason: 'Удаление недоступно для роли: ' + req.role }],
+    });
   }
-  for (const id of deletedSheetIds) {
-    try { await execute('DELETE FROM INSPECTION_SHEETS WHERE ID = ?', [Number(id)]); }
-    catch (e) { errors.push({ type: 'sheet_delete', id, reason: e.message }); }
+
+  if (hasDeletes) {
+    for (const id of deletedDefectIds) {
+      try { await execute('DELETE FROM DEFECT_RECORDS WHERE ID = ?', [Number(id)]); }
+      catch (e) { errors.push({ type: 'defect_delete', id, reason: e.message }); }
+    }
+    for (const id of deletedSheetIds) {
+      try {
+        // Каскад: сначала дефекты листа (иначе Firebird выбрасывает FK-ошибку)
+        await execute('DELETE FROM DEFECT_RECORDS WHERE SHEET_ID = ?', [Number(id)]);
+        await execute('DELETE FROM INSPECTION_SHEETS WHERE ID = ?', [Number(id)]);
+      } catch (e) { errors.push({ type: 'sheet_delete', id, reason: e.message }); }
+    }
   }
 
   res.json({ ok: errors.length === 0, sheetsUpserted, defectsUpserted, errors });
 });
 
 
-// Pull: return all data for filial to client
+// Pull: возвращаем все данные филиала на клиент
 router.get('/sync/pull', async (req, res) => {
-  const filialId = req.filialId;
-  if (!filialId) return res.status(403).json({ error: 'No filial' });
+  const filialId = req.filialId; // null для admin (видит все филиалы)
+  if (!filialId && !req.isAdmin) return res.status(403).json({ error: 'No filial' });
 
   function fmt(d) {
     if (!d) return null;
-    if (d instanceof Date) return d.toISOString().slice(0, 10);
+    if (d instanceof Date) {
+      // Используем локальную дату: UTC-смещение может сдвинуть дату на день
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
     return String(d).slice(0, 10);
   }
 
   try {
+  // admin с filialId=null видит все филиалы, остальные — только свой
+  const sheetsWhere = filialId ? 'WHERE FILIAL_ID = ?' : '';
+  const sheetsParams = filialId ? [filialId] : [];
+
   const rawSheets = await query(
-    'SELECT ID, FILIAL_ID, VOLTAGE_ID, LINE_ID, CREATED_BY, CREATED_DATE, STATUS, NOTES FROM INSPECTION_SHEETS WHERE FILIAL_ID = ?',
-    [filialId],
+    `SELECT ID, FILIAL_ID, VOLTAGE_ID, LINE_ID, CREATED_BY, CREATED_DATE, STATUS, NOTES FROM INSPECTION_SHEETS ${sheetsWhere}`,
+    sheetsParams,
   );
 
+  const defectsWhere = filialId
+    ? 'WHERE EXISTS (SELECT 1 FROM INSPECTION_SHEETS s WHERE s.ID = dr.SHEET_ID AND s.FILIAL_ID = ?)'
+    : '';
+  const defectsParams = filialId ? [filialId] : [];
+
   const rawDefects = rawSheets.length === 0 ? [] : await query(
-    'SELECT dr.ID, dr.SHEET_ID, dr.POLE_NUMBER, dr.DEFECT_ID, dr.PHASE_ID, dr.ELEMENT_ID, dr.DATE_FOUND, dr.INSPECTOR_FIND, dr.IS_FIXED, dr.DATE_FIXED, dr.INSPECTOR_FIX, dr.INSULATOR_COUNT, dr.SPAN_RANGE, dr.NOTES, dr.STATUS, dr.MASTER_CONCLUSION, dr.RESOLUTION_DEADLINE, dr.MASTER_NAME, dr.FIX_WORK_VOLUME FROM DEFECT_RECORDS dr WHERE EXISTS (SELECT 1 FROM INSPECTION_SHEETS s WHERE s.ID = dr.SHEET_ID AND s.FILIAL_ID = ?)',
-    [filialId],
+    `SELECT dr.ID, dr.SHEET_ID, dr.POLE_NUMBER, dr.DEFECT_ID, dr.PHASE_ID, dr.ELEMENT_ID, dr.DATE_FOUND, dr.INSPECTOR_FIND, dr.IS_FIXED, dr.DATE_FIXED, dr.INSPECTOR_FIX, dr.INSULATOR_COUNT, dr.SPAN_RANGE, dr.NOTES, dr.STATUS, dr.MASTER_CONCLUSION, dr.RESOLUTION_DEADLINE, dr.MASTER_NAME, dr.FIX_WORK_VOLUME FROM DEFECT_RECORDS dr ${defectsWhere}`,
+    defectsParams,
   );
 
   const sheets = rawSheets.map(s => ({

@@ -14,20 +14,32 @@ function authHeaders(): Record<string, string> {
   return h;
 }
 
-// Push: local Dexie -> server (Firebird)
+// Push: локальный Dexie -> сервер (Firebird).
+// Отправляет только записи с локальными изменениями (отслеживаются через syncQueue).
+// Это предотвращает перезапись данных между устройствами.
 async function push(): Promise<void> {
-  const sheets = await localDb.sheets.toArray();
-  const defectRecords = await localDb.defectRecords.toArray();
+  const allQueue = await localDb.syncQueue.toArray();
+  if (allQueue.length === 0) return;
 
-  // Pending deletes from syncQueue
-  const deleteQueue = await localDb.syncQueue.where('action').equals('delete').toArray();
+  const createUpdateQueue = allQueue.filter(t => t.action === 'create' || t.action === 'update');
+  const deleteQueue       = allQueue.filter(t => t.action === 'delete');
+
+  const sheetTasks  = createUpdateQueue.filter(t => t.collection === 'sheets');
+  const defectTasks = createUpdateQueue.filter(t => t.collection === 'defect_records');
+
   const deletedSheetIds  = deleteQueue.filter(t => t.collection === 'sheets').map(t => t.localId);
   const deletedDefectIds = deleteQueue.filter(t => t.collection === 'defect_records').map(t => t.localId);
 
-  const hasChanges =
-    sheets.length > 0 || defectRecords.length > 0 ||
-    deletedSheetIds.length > 0 || deletedDefectIds.length > 0;
-  if (!hasChanges) return;
+  // Загружаем только локально изменённые записи
+  const sheets = (await Promise.all(
+    sheetTasks.map(t => localDb.sheets.get(t.localId)),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  )).filter(Boolean) as any[];
+
+  const defectRecords = (await Promise.all(
+    defectTasks.map(t => localDb.defectRecords.get(t.localId)),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  )).filter(Boolean) as any[];
 
   const response = await fetch(`${getApiUrl()}/sync/batch`, {
     method: 'POST',
@@ -37,16 +49,29 @@ async function push(): Promise<void> {
 
   if (!response.ok) throw new Error(`Sync push failed: ${response.status}`);
 
-  // Clear processed delete queue
-  if (deleteQueue.length > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    await localDb.syncQueue.bulkDelete(deleteQueue.map(t => t.id!));
+  // ВАЖНО: проверяем JSON-тело ответа.
+  // Сервер может вернуть HTTP 200 с { ok: false, errors: [...] } —
+  // например, при ошибке прав на удаление или FK-нарушении в Firebird.
+  // Если только проверять response.ok (HTTP статус), syncQueue очистится,
+  // pull() восстановит удалённый лист из Firebird, и удаление «отменится».
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const body = await response.json() as {
+    ok: boolean;
+    errors?: Array<{ type: string; reason?: string }>;
+  };
+  if (!body.ok) {
+    const errMsg = body.errors?.map(e => e.reason ?? e.type).join('; ') ?? 'неизвестная ошибка';
+    throw new Error(`Sync push отклонён сервером: ${errMsg}`);
   }
+
+  // Очищаем очередь только при успешном подтверждении от сервера
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  await localDb.syncQueue.bulkDelete(allQueue.map(t => t.id!));
 
   logger.info('[sync] push complete');
 }
 
-// Pull: server (Firebird) -> local Dexie
+// Pull: сервер (Firebird) -> локальный Dexie
 async function pull(): Promise<void> {
   const token = getToken();
   if (!token) {
@@ -67,17 +92,34 @@ async function pull(): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const defectRecords: unknown[] = data.defectRecords ?? [];
 
-  // Server is authoritative: replace all local data
+  // Читаем ожидающие удаления, чтобы не восстанавливать их из Firebird.
+  // Это предотвращает ситуацию: удалил лист → push() вернулся пустым →
+  // pull() скачал лист заново → лист «ожил».
+  const pendingDeletes = await localDb.syncQueue.where('action').equals('delete').toArray();
+  const pendingDeletedSheetIds  = new Set(
+    pendingDeletes.filter(t => t.collection === 'sheets').map(t => t.localId),
+  );
+  const pendingDeletedDefectIds = new Set(
+    pendingDeletes.filter(t => t.collection === 'defect_records').map(t => t.localId),
+  );
+
+  // Сервер авторитетен: заменяем локальные данные, но не трогаем записи из очереди удаления
   await localDb.transaction('rw', [localDb.sheets, localDb.defectRecords], async () => {
     await localDb.sheets.clear();
     await localDb.defectRecords.clear();
     for (const sheet of sheets) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      await localDb.sheets.put(sheet);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+      if (!pendingDeletedSheetIds.has((sheet as any).id)) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        await localDb.sheets.put(sheet);
+      }
     }
     for (const defect of defectRecords) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      await localDb.defectRecords.put(defect);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+      if (!pendingDeletedDefectIds.has((defect as any).id)) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        await localDb.defectRecords.put(defect);
+      }
     }
   });
 
@@ -99,6 +141,8 @@ async function sync(): Promise<void> {
     await pull();
   } catch (err) {
     logger.error('[sync] error:', err);
+    // Всё равно диспатчим sync:complete, чтобы UI не завис при ошибке
+    window.dispatchEvent(new Event('sync:complete'));
     throw err;
   } finally {
     syncing = false;

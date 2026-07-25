@@ -1,4 +1,5 @@
 'use strict';
+const { requireRole } = require('../lib/auth');
 
 /**
  * routes/defects.js -- дефекты (Firebird).
@@ -78,18 +79,18 @@ const SELECT_DEFECT = `
          MASTER_NAME, FIX_WORK_VOLUME
   FROM DEFECT_RECORDS`;
 
-// ── GET /defectCounts ─────────────────────────────────────────────────────────
+// ── GET /defectCounts — количество дефектов по листам ─────────────────────────────────────────────────────────
 router.get('/defectCounts', async (req, res) => {
   try {
     const lf = lineWhereClause(req, 'd.LINE_ID');
-    const rows = await query(`
-      SELECT d.SHEET_ID,
-             SUM(CASE WHEN d.IS_FIXED = 0 THEN 1 ELSE 0 END) AS ACTIVE,
-             SUM(CASE WHEN d.IS_FIXED = 1 THEN 1 ELSE 0 END) AS FIXED
-      FROM DEFECT_RECORDS d
-      WHERE d.DEFECT_ID != ${NO_DEFECT_ID} ${lf.sql}
-      GROUP BY d.SHEET_ID
-    `, lf.params);
+    const rows = await query(
+      'SELECT d.SHEET_ID,' +
+      ' SUM(CASE WHEN d.IS_FIXED = 0 THEN 1 ELSE 0 END) AS ACTIVE,' +
+      ' SUM(CASE WHEN d.IS_FIXED = 1 THEN 1 ELSE 0 END) AS FIXED' +
+      ' FROM DEFECT_RECORDS d' +
+      ' WHERE d.DEFECT_ID != ?' + lf.sql +
+      ' GROUP BY d.SHEET_ID',
+      [NO_DEFECT_ID, ...lf.params]);
 
     res.json(rows.map(r => ({
       sheetId: r.sheet_id,
@@ -101,27 +102,27 @@ router.get('/defectCounts', async (req, res) => {
   }
 });
 
-// ── GET /defectRecords ────────────────────────────────────────────────────────
+// ── GET /defectRecords — список дефектов ────────────────────────────────────────────────────────
 router.get('/defectRecords', async (req, res) => {
   try {
     const { sheetId } = req.query;
     const lf = lineWhereClause(req, 'd.LINE_ID');
 
     let sql = SELECT_DEFECT.replace('FROM DEFECT_RECORDS', 'FROM DEFECT_RECORDS d')
-      + ` WHERE d.DEFECT_ID != ${NO_DEFECT_ID}` + lf.sql;
+      + ' WHERE d.DEFECT_ID != ?' + lf.sql;
     const params = [...lf.params];
 
     if (sheetId) { sql += ' AND d.SHEET_ID = ?'; params.push(Number(sheetId)); }
     sql += ' ORDER BY d.POLE_NUMBER';
 
-    const rows = await query(sql, params);
+    const rows = await query(sql, [NO_DEFECT_ID, ...params]);
     res.json(rows.map(toDefect));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// ── POST /defectRecords ───────────────────────────────────────────────────────
+// ── POST /defectRecords — создать дефект ───────────────────────────────────────────────────────
 router.post('/defectRecords', async (req, res) => {
   try {
     const body = req.body;
@@ -184,7 +185,7 @@ router.post('/defectRecords', async (req, res) => {
   }
 });
 
-// ── PATCH /defectRecords/:id ──────────────────────────────────────────────────
+// ── PATCH /defectRecords/:id — обновить дефект ──────────────────────────────────────────────────
 router.patch('/defectRecords/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -230,8 +231,8 @@ router.patch('/defectRecords/:id', async (req, res) => {
   }
 });
 
-// ── DELETE /defectRecords/:id ─────────────────────────────────────────────────
-router.delete('/defectRecords/:id', async (req, res) => {
+// ── DELETE /defectRecords/:id — удалить дефект ─────────────────────────────────────────────────
+router.delete('/defectRecords/:id', requireRole('admin', 'director', 'engineer'), async (req, res) => {
   try {
     const id = Number(req.params.id);
     const row = await queryOne('SELECT ID, LINE_ID FROM DEFECT_RECORDS WHERE ID = ?', [id]);
@@ -245,8 +246,8 @@ router.delete('/defectRecords/:id', async (req, res) => {
   }
 });
 
-// ── DELETE /defectRecordsBySheet/:sheetId ─────────────────────────────────────
-router.delete('/defectRecordsBySheet/:sheetId', async (req, res) => {
+// ── DELETE /defectRecordsBySheet/:sheetId — удалить дефекты листа ─────────────────────────────────────
+router.delete('/defectRecordsBySheet/:sheetId', requireRole('admin', 'director', 'engineer'), async (req, res) => {
   try {
     const sheetId = Number(req.params.sheetId);
     const sheet   = await queryOne(
@@ -262,7 +263,7 @@ router.delete('/defectRecordsBySheet/:sheetId', async (req, res) => {
   }
 });
 
-// ── GET /defectTrends?lineId=N ────────────────────────────────────────────────
+// ── GET /defectTrends?lineId=N — тренды дефектов по линии ────────────────────────────────────────────────
 router.get('/defectTrends', async (req, res) => {
   try {
     const lineId = req.query.lineId ? Number(req.query.lineId) : null;
@@ -273,7 +274,7 @@ router.get('/defectTrends', async (req, res) => {
              SUM(CASE WHEN IS_FIXED = 0 THEN 1 ELSE 0 END) AS ACTIVE,
              SUM(CASE WHEN IS_FIXED = 1 THEN 1 ELSE 0 END) AS FIXED
       FROM DEFECT_RECORDS d
-      WHERE DEFECT_ID != ${NO_DEFECT_ID}
+      WHERE DEFECT_ID != ?
         AND DATE_FOUND IS NOT NULL
         AND DATE_FOUND >= CAST(? AS DATE) ${lf.sql}`;
 
@@ -281,7 +282,7 @@ router.get('/defectTrends', async (req, res) => {
     const now      = new Date();
     const cutoff   = new Date(now.getFullYear(), now.getMonth() - 11, 1);
     const cutoffStr = `${cutoff.getFullYear()}-${String(cutoff.getMonth()+1).padStart(2,'0')}-01`;
-    const params   = [cutoffStr, ...lf.params];
+    const params   = [NO_DEFECT_ID, cutoffStr, ...lf.params];
 
     if (lineId) { sql += ' AND d.LINE_ID = ?'; params.push(lineId); }
     sql += ' GROUP BY CAST(DATE_FOUND AS VARCHAR(7)) ORDER BY 1';
@@ -308,7 +309,7 @@ router.get('/defectTrends', async (req, res) => {
   }
 });
 
-// ── GET /poleDefectStatus?lineId=N ────────────────────────────────────────────
+// ── GET /poleDefectStatus?lineId=N — статус дефектов по опорам ────────────────────────────────────────────
 router.get('/poleDefectStatus', async (req, res) => {
   try {
     const lineId = Number(req.query.lineId);
@@ -321,9 +322,9 @@ router.get('/poleDefectStatus', async (req, res) => {
              SUM(CASE WHEN IS_FIXED = 0 THEN 1 ELSE 0 END) AS ACTIVE,
              SUM(CASE WHEN IS_FIXED = 1 THEN 1 ELSE 0 END) AS FIXED
       FROM DEFECT_RECORDS
-      WHERE LINE_ID = ? AND DEFECT_ID != ${NO_DEFECT_ID}
+      WHERE LINE_ID = ? AND DEFECT_ID != ?
       GROUP BY POLE_NUMBER
-    `, [lineId]);
+    `, [lineId, NO_DEFECT_ID]);
 
     res.json(rows.map(r => ({
       poleNumber: r.pole_number,

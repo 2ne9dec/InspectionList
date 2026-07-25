@@ -48,7 +48,8 @@ export const CreateSheetModal = memo(() => {
   const { data: voltageFilter = {} } = useGetFilialVoltageFilterQuery();
   const [createSheet, { isLoading }] = useCreateSheetMutation();
 
-  const effectiveFilialId = isAdmin ? adminFilialId : userFilialId;
+  // Если admin выбрал филиал вручную — используем его, иначе берём филиал из его JWT профиля.
+  const effectiveFilialId = isAdmin ? (adminFilialId ?? userFilialId) : userFilialId;
 
   const filteredVoltages = useMemo(() => {
     if (!effectiveFilialId) return [];
@@ -123,7 +124,8 @@ export const CreateSheetModal = memo(() => {
       }
     >
       <div className={cls.fields}>
-        {isAdmin ? (
+        {userFilialId === null ? (
+          // Глобальный admin без филиала — показываем дропдаун
           <FormField label='Филиал' htmlFor='cs-filial' required>
             <SelectMenu
               options={filialOptions}
@@ -133,6 +135,7 @@ export const CreateSheetModal = memo(() => {
             />
           </FormField>
         ) : (
+          // Пользователь ваприван к филиалу — показываем неизменяемый бейдж
           <div className={cls.filialBadge}>{userFilialName}</div>
         )}
 

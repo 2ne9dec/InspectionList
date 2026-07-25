@@ -10,20 +10,19 @@
  */
 
 const path = require('path');
+const fs   = require('fs');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const express = require('express');
 const { PORT } = require('./lib/config');
-const { authMiddleware } = require('./lib/auth');
+const { authMiddleware, requireAuth } = require('./lib/auth');
 const { tenancyMiddleware, initTenancy } = require('./lib/tenancy');
 const { testConnection } = require('./lib/fbDb');
 
-const app = express();
+const app      = express();
+const distPath = path.join(__dirname, '..', 'dist');
 
-// ── CORS ──────────────────────────────────────────────────────────────────────────────────
-// Внутреннее приложение — разрешаем все origin. JWT защищает API.
-
-// ── Middleware ────────────────────────────────────────────────────────────────────────────
+// ── Фильтр IP ─────────────────────────────────────────────────────────────────
 // Блокировка нежелательных IP (например, виртуальные адаптеры)
 const ALLOWED_HOST = process.env.BIND_HOST;
 if (ALLOWED_HOST && ALLOWED_HOST !== '0.0.0.0') {
@@ -39,14 +38,13 @@ if (ALLOWED_HOST && ALLOWED_HOST !== '0.0.0.0') {
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: false }));
 
+// ── CORS ──────────────────────────────────────────────────────────────────────
+// Внутреннее приложение — разрешаем все origin. JWT защищает API.
 app.use((req, res, next) => {
   const origin = req.headers.origin || '';
-
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-
-  // Разрешаем любой origin (браузер, Capacitor/Android, мобильне приложение)
   res.setHeader('Access-Control-Allow-Origin', origin || '*');
   if (origin) res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -56,47 +54,52 @@ app.use((req, res, next) => {
   next();
 });
 
-// ── Auth & Tenancy ─────────────────────────────────────────────────────────────
+// ── Статика React (prod) ──────────────────────────────────────────────────────
+// Отдаём JS/CSS/картинки до auth guard — токен не нужен
+if (fs.existsSync(distPath)) app.use(express.static(distPath));
+
+// ── Авторизация ───────────────────────────────────────────────────────────────
 app.use(authMiddleware);
 app.use(tenancyMiddleware);
 
-// ── API роуты ──────────────────────────────────────────────────────────────────
+// Guard пропускает:
+//   1. POST /login — публичный маршрут
+//   2. GET-запросы браузера (Accept: text/html) — обновление страницы SPA,
+//      они всё равно попадут на SPA fallback и получат index.html
+// Всё остальное (fetch API без токена) получает 401.
+app.use((req, res, next) => {
+  if (req.path === '/login' && req.method === 'POST') return next();
+  if (req.method === 'GET' && req.accepts('html')) return next();
+  return requireAuth(req, res, next);
+});
+
+// ── API роуты ─────────────────────────────────────────────────────────────────
 app.use(require('./routes/reference'));
 app.use(require('./routes/auth'));
 app.use(require('./routes/sheets'));
 app.use(require('./routes/defects'));
 app.use(require('./routes/sync'));
 
-// ── Раздача статики React (prod) ───────────────────────────────────────────────
-// В production кладём папку dist/ рядом с server/
-const distPath = path.join(__dirname, '..', 'dist');
-const fs = require('fs');
+// ── SPA fallback ──────────────────────────────────────────────────────────────
+// Все неизвестные GET → index.html; React Router обработает маршрут.
+// Работает и при обновлении страницы (F5) без токена — показывает экран входа.
 if (fs.existsSync(distPath)) {
-  app.use(express.static(distPath));
-  // SPA fallback: все не-API пути отдают index.html
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(distPath, 'index.html'));
-  });
+  app.get('*', (req, res) => res.sendFile(path.join(distPath, 'index.html')));
 }
 
 // ── Глобальный обработчик ошибок ──────────────────────────────────────────────
 app.use((err, req, res, _next) => {
   console.error('[ERROR]', req.method, req.path, err.message);
-  res.status(500).json({ error: err.message || 'Internal server error' });
+  res.status(500).json({ error: err.message || 'Внутренняя ошибка сервера' });
 });
 
 // ── Запуск ────────────────────────────────────────────────────────────────────
 async function start() {
   try {
-    // 1. Проверить подключение к Firebird
     console.log('[boot] Подключение к Firebird...');
     await testConnection();
     console.log('[boot] Firebird OK');
-
-    // 2. Загрузить карту линий для мультитенантности
     await initTenancy();
-
-    // 3. Запустить HTTP-сервер
     const BIND_HOST = process.env.BIND_HOST || '0.0.0.0';
     app.listen(PORT, BIND_HOST, () => {
       const os = require('os');
