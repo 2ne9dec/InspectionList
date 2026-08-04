@@ -1,4 +1,8 @@
 'use strict';
+// Resolve deps from server/node_modules
+process.env.NODE_PATH = require('path').resolve(__dirname, '../server/node_modules');
+require('module').Module._initPaths();
+
 
 /**
  * migrate-to-firebird.js -- одноразовый перенос данных из JSON-файлов в Firebird.
@@ -17,7 +21,7 @@
  */
 
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+require('dotenv').config({ path: path.join(__dirname, '../server/.env') });
 
 const fs       = require('fs');
 const Firebird = require('node-firebird');
@@ -33,8 +37,8 @@ const options = {
 };
 
 // ── Пути к исходным файлам ────────────────────────────────────────────────────
-const SEED_DIR  = path.join(__dirname, 'seed');
-const STORE_DIR = path.join(__dirname, 'store', 'data');
+const SEED_DIR  = path.join(__dirname, '../server/seed');
+const STORE_DIR = path.join(__dirname, '../server/store', 'data');
 const LISTS_DIR = path.join(STORE_DIR, 'lists');
 
 // ── Вспомогательные функции ───────────────────────────────────────────────────

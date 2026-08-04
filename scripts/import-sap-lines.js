@@ -1,4 +1,8 @@
 'use strict';
+// Resolve deps from server/node_modules
+process.env.NODE_PATH = require('path').resolve(__dirname, '../server/node_modules');
+require('module').Module._initPaths();
+
 
 /**
  * import-sap-lines.js
@@ -6,7 +10,7 @@
  * Импортирует линии электропередачи из Excel-экспорта SAP Logon в Firebird.
  *
  * Использование:
- *   node server/import-sap-lines.js --file="C:\export\sap_lines.xlsx" [--dry-run] [--sheet=0]
+ *   node scripts/import-sap-lines.js --file="C:\export\sap_lines.xlsx" [--dry-run] [--sheet=0]
  *
  * Опции:
  *   --file=<path>   Путь к Excel-файлу (обязательно)
@@ -71,9 +75,9 @@ try {
 
 // ── Загружаем Firebird-клиент (из проекта) ───────────────────────────────────
 // Загружаем .env для DATABASE_URL / FIREBIRD_* переменных
-try { require('dotenv').config({ path: path.join(__dirname, '.env') }); } catch {}
+try { require('dotenv').config({ path: path.join(__dirname, '../server/.env') }); } catch {}
 
-const { query, execute, transaction } = require('./lib/fbDb');
+const { query, execute, transaction } = require('../server/lib/fbDb');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Утилиты определения колонок

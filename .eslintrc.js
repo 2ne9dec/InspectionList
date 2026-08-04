@@ -44,6 +44,7 @@ module.exports = {
     'dist',
     'public',
     'server',
+    'scripts',
     '*.config.ts',
     '*.config.js',
   ],

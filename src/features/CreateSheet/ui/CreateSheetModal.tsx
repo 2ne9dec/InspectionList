@@ -43,7 +43,7 @@ export const CreateSheetModal = memo(() => {
     createSheetActions.useActions();
 
   const { data: filials = [] } = useGetFilialsQuery();
-  const { data: voltages = [] } = useGetVoltagesQuery();
+  const { data: voltages = [], isFetching: voltagesFetching } = useGetVoltagesQuery();
   const { data: lines = [] } = useGetLinesQuery();
   const { data: voltageFilter = {} } = useGetFilialVoltageFilterQuery();
   const [createSheet, { isLoading }] = useCreateSheetMutation();
@@ -144,7 +144,8 @@ export const CreateSheetModal = memo(() => {
             options={voltageOptions}
             value={String(voltageId ?? '')}
             onChange={(v) => setVoltageId(v === '' ? 0 : Number(v))}
-            placeholder='— выберите напряжение —'
+            placeholder={voltagesFetching && voltages.length === 0 ? 'Загрузка...' : '— выберите напряжение —'}
+            disabled={voltagesFetching && voltages.length === 0}
           />
         </FormField>
 
@@ -154,13 +155,17 @@ export const CreateSheetModal = memo(() => {
             options={lineOptions}
             value={String(lineId ?? '')}
             onChange={(v) => setLineId(v === '' ? 0 : Number(v))}
-            placeholder='— выберите линию —'
+            placeholder={!voltageId ? '— сначала выберите напряжение —' : '— выберите линию —'}
+            disabled={!voltageId}
           />
         </FormField>
 
-        {selectedLine && (
+        {selectedLine && selectedLine.poleCount != null && (
           <div className={cls.info}>
-            Опоры: <strong>{selectedLine.poleRange}</strong> ({selectedLine.poleCount} шт.)
+            {selectedLine.poleRange
+              ? <>Опоры: <strong>{selectedLine.poleRange}</strong>{' '}</>
+              : null}
+            ({selectedLine.poleCount} шт.)
           </div>
         )}
 

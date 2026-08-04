@@ -1,0 +1,2438 @@
+[
+  {
+    "sapCode": "VL035-000002",
+    "name": "ВЛ 35 кВ Буда-Кошелево - Коммунар",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 186
+  },
+  {
+    "sapCode": "VL035-000003",
+    "name": "ВЛ 35 кВ Ветка - Неглюбка",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 210
+  },
+  {
+    "sapCode": "VL035-000018",
+    "name": "ВЛ 35 кВ Зябровка 110 - Зябровка 35",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 14
+  },
+  {
+    "sapCode": "VL035-000019",
+    "name": "ВЛ 35 кВ Зябровка 110 - Кравцовка",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 164
+  },
+  {
+    "sapCode": "VL035-000020",
+    "name": "ВЛ 35 кВ Тереховка - Дубровка",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 46
+  },
+  {
+    "sapCode": "VL035-000021",
+    "name": "ВЛ 35 кВ Буда-Кошелево - Люшево",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 95
+  },
+  {
+    "sapCode": "VL035-000022",
+    "name": "ВЛ 35 кВ Буда-Кошелево - Дуравичи",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 60
+  },
+  {
+    "sapCode": "VL035-000023",
+    "name": "ВЛ 35 кВ Буда-Кошелево - Боец",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 55
+  },
+  {
+    "sapCode": "VL035-000024",
+    "name": "ВЛ 35 кВ Радиоаппаратура - Хальч",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 75
+  },
+  {
+    "sapCode": "VL035-000025",
+    "name": "ВЛ 35 кВ Ветка - Светиловичи",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 138
+  },
+  {
+    "sapCode": "VL035-000058",
+    "name": "ВЛ 35 кВ Светиловичи - Неглюбка",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 89
+  },
+  {
+    "sapCode": "VL035-000059",
+    "name": "ВЛ 35 кВ Светиловичи - Нисимковичи",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 80
+  },
+  {
+    "sapCode": "VL035-000060",
+    "name": "ВЛ 35 кВ Светиловичи - Большие Немки",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 48
+  },
+  {
+    "sapCode": "VL035-000063",
+    "name": "ВЛ 35 кВ Огородня - Кузьминичи",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 41
+  },
+  {
+    "sapCode": "VL035-000064",
+    "name": "ВЛ 35 кВ Коммунар - Коминтерн",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 57
+  },
+  {
+    "sapCode": "VL035-000067",
+    "name": "ВЛ 35 кВ Дятловичи - Михайловская",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 41
+  },
+  {
+    "sapCode": "VL035-000068",
+    "name": "ВЛ 35 кВ Кравцовка - Марковичи",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 58
+  },
+  {
+    "sapCode": "VL035-000072",
+    "name": "ВЛ 35 кВ Бардино - АБЗ",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 106
+  },
+  {
+    "sapCode": "VL035-000081",
+    "name": "ВЛ 35 кВ Дуравичи - Дудичи",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 40
+  },
+  {
+    "sapCode": "VL035-000082",
+    "name": "ВЛ 35 кВ Ветка - Хальч",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 30
+  },
+  {
+    "sapCode": "VL035-000083",
+    "name": "ВЛ 35 кВ Хальч - Присно",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 68
+  },
+  {
+    "sapCode": "VL035-000084",
+    "name": "ВЛ 35 кВ Боец - Телеши",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 72
+  },
+  {
+    "sapCode": "VL035-000085",
+    "name": "ВЛ 35 кВ Телеши - Тереничи",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 37
+  },
+  {
+    "sapCode": "VL035-000105",
+    "name": "ВЛ 35 кВ Дудичи - Присно",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 97
+  },
+  {
+    "sapCode": "VL035-000106",
+    "name": "ВЛ 35 кВ Присно - Лопатино",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 48
+  },
+  {
+    "sapCode": "VL035-000110",
+    "name": "ВЛ 35 кВ Тереховка - Зябровка 35",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 134
+  },
+  {
+    "sapCode": "VL035-000120",
+    "name": "ВЛ 35 кВ Дубровка - Ленино",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 68
+  },
+  {
+    "sapCode": "VL035-000121",
+    "name": "ВЛ 35 кВ Карповка - Михайловская",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 51
+  },
+  {
+    "sapCode": "VL035-000122",
+    "name": "ВЛ 35 кВ Фестивальная-Гомель Центральная",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 28
+  },
+  {
+    "sapCode": "VL035-000241",
+    "name": "ВЛ 35 кВ АБЗ - Уваровичи",
+    "filialId": 1,
+    "voltageId": 6,
+    "poleCount": 47
+  },
+  {
+    "sapCode": "VL110-000001",
+    "name": "ВЛ 110 кВ Гомелькабель - Тепловая",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 7
+  },
+  {
+    "sapCode": "VL110-000002",
+    "name": "ВЛ 110 кВ Тереховка - Добрянка",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 214
+  },
+  {
+    "sapCode": "VL110-000003",
+    "name": "ВЛ 110 кВ Гомельская ТЭЦ-2 - Приречная",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 42
+  },
+  {
+    "sapCode": "VL110-000005",
+    "name": "ВЛ 110 кВ Чечерск - Светиловичи",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 77
+  },
+  {
+    "sapCode": "VL110-000008",
+    "name": "ВЛ 110 кВ Волотова - Восточная",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 21
+  },
+  {
+    "sapCode": "VL110-000009",
+    "name": "ВЛ 110 кВ Гомсельмаш - Центролит",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 23
+  },
+  {
+    "sapCode": "VL110-000035",
+    "name": "ВЛ 110 кВ Гомельская ТЭЦ-2 - Речица",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 116
+  },
+  {
+    "sapCode": "VL110-000036",
+    "name": "ВЛ 110 кВ Гомельская ТЭЦ-2 - Борщевка",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 47
+  },
+  {
+    "sapCode": "VL110-000037",
+    "name": "ВЛ 110 кВ Гомельская ТЭЦ-2 - ГХЗ-1",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 38
+  },
+  {
+    "sapCode": "VL110-000038",
+    "name": "ВЛ 110 кВ Гомельская ТЭЦ-2 - ГПП-4",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 25
+  },
+  {
+    "sapCode": "VL110-000041",
+    "name": "ВЛ 110 кВ №3 Гомельская ТЭЦ-2-Гомсельмаш",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 41
+  },
+  {
+    "sapCode": "VL110-000042",
+    "name": "ВЛ 110 кВ №4 Гомельская ТЭЦ-2-Гомсельмаш",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 41
+  },
+  {
+    "sapCode": "VL110-000043",
+    "name": "ВЛ 110 кВ Гомельская ТЭЦ-2 - Урицкое",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 24
+  },
+  {
+    "sapCode": "VL110-000044",
+    "name": "ВЛ 110 кВ №1 Гомельская ТЭЦ-2-Гомсельмаш",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 47
+  },
+  {
+    "sapCode": "VL110-000045",
+    "name": "ВЛ 110 кВ №2 Гомельская ТЭЦ-2-Гомсельмаш",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 42
+  },
+  {
+    "sapCode": "VL110-000046",
+    "name": "ВЛ 110 кВ Новобелица - Зябровка",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 132
+  },
+  {
+    "sapCode": "VL110-000048",
+    "name": "ВЛ 110 кВ Тереховка - Зябровка",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 81
+  },
+  {
+    "sapCode": "VL110-000049",
+    "name": "ВЛ 110 кВ Зябровка - Бобовичи",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 99
+  },
+  {
+    "sapCode": "VL110-000050",
+    "name": "ВЛ 110 кВ Буда-Кошелево - Коммунар",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 87
+  },
+  {
+    "sapCode": "VL110-000051",
+    "name": "ВЛ 110 кВ Ветка - Светиловичи",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 108
+  },
+  {
+    "sapCode": "VL110-000076",
+    "name": "ВЛ 110 кВ Стеклозавод - Урицкое",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 68
+  },
+  {
+    "sapCode": "VL110-000077",
+    "name": "ВЛ 110 кВ Стеклозавод - Коммунар",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 67
+  },
+  {
+    "sapCode": "VL110-000083",
+    "name": "ВЛ 110 кВ Гомель Западная - Фестивальная",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 28
+  },
+  {
+    "sapCode": "VL110-000088",
+    "name": "ВЛ 110 кВ Дятловичи - Холмеч",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 99
+  },
+  {
+    "sapCode": "VL110-000092",
+    "name": "ВЛ 110 кВ Жлобин 330 - Рогинь",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 68
+  },
+  {
+    "sapCode": "VL110-000099",
+    "name": "ВЛ 110 кВ Гомель - Новобелица",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 93
+  },
+  {
+    "sapCode": "VL110-000100",
+    "name": "ВЛ 110 кВ № 1 Гомель - Бумфабрика",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 45
+  },
+  {
+    "sapCode": "VL110-000101",
+    "name": "ВЛ 110 кВ Гомель - Ветка",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 124
+  },
+  {
+    "sapCode": "VL110-000102",
+    "name": "ВЛ 110 кВ № 2 Гомель - Бумфабрика",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 54
+  },
+  {
+    "sapCode": "VL110-000103",
+    "name": "ВЛ 110 кВ Гомель - Индуктор",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 9
+  },
+  {
+    "sapCode": "VL110-000104",
+    "name": "КВЛ 110 кВ Гомель - Центролит",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 211
+  },
+  {
+    "sapCode": "VL110-000105",
+    "name": "ВЛ 110 кВ № 1 Гомель - Тереховка",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 107
+  },
+  {
+    "sapCode": "VL110-000106",
+    "name": "ВЛ 110 кВ № 2 Гомель - Новозыбков",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL110-000107",
+    "name": "ВЛ 110 кВ № 2 Гомель - Тереховка",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 121
+  },
+  {
+    "sapCode": "VL110-000108",
+    "name": "ВЛ 110 кВ Гомель - Радиоаппаратура",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 6
+  },
+  {
+    "sapCode": "VL110-000110",
+    "name": "ВЛ 110 кВ № 1 Гомель - Новозыбков",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 93
+  },
+  {
+    "sapCode": "VL110-000111",
+    "name": "ВЛ 110 кВ Гомсельмаш - Гомелькабель",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 91
+  },
+  {
+    "sapCode": "VL110-000112",
+    "name": "ВЛ 110 кВ Гомсельмаш - Радиоаппаратура",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL110-000113",
+    "name": "ВЛ 110 кВ Гомсельмаш - Стеклозавод",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 51
+  },
+  {
+    "sapCode": "VL110-000114",
+    "name": "ВЛ 110 кВ Гомсельмаш - ГХЗ-1",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 21
+  },
+  {
+    "sapCode": "VL110-000116",
+    "name": "ВЛ 110 кВ № 1 Гомсельмаш-Гомель Западная",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 22
+  },
+  {
+    "sapCode": "VL110-000117",
+    "name": "ВЛ 110 кВ № 2 Гомсельмаш-Гомель Западная",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 29
+  },
+  {
+    "sapCode": "VL110-000118",
+    "name": "ВЛ 110 кВ № 3 Гомсельмаш-Гомель Западная",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 38
+  },
+  {
+    "sapCode": "VL110-000122",
+    "name": "КВЛ 110 кВ Гомельская ТЭЦ-2 - ТЭЦ-1",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 145
+  },
+  {
+    "sapCode": "VL110-000123",
+    "name": "КВЛ 110 кВ Гомелькая ТЭЦ-1 - Новобелица",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL110-000124",
+    "name": "ВЛ 110 кВ Новобелица - Приречная",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 53
+  },
+  {
+    "sapCode": "VL110-000125",
+    "name": "ВЛ 110 кВ Гомель - Гомсельмаш",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 201
+  },
+  {
+    "sapCode": "VL110-000126",
+    "name": "ВЛ 110 кВ Жлобин 110 - Буда-Кошелево",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 86
+  },
+  {
+    "sapCode": "VL110-000127",
+    "name": "ВЛ 110 кВ Новобелица - Восточная",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 33
+  },
+  {
+    "sapCode": "VL110-000128",
+    "name": "ВЛ 110 кВ Жлобин 330 - Буда-Кошелево",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 101
+  },
+  {
+    "sapCode": "VL110-000129",
+    "name": "КВЛ 110 кВ № 1 Гомсельмаш - Костюковка",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 45
+  },
+  {
+    "sapCode": "VL110-000130",
+    "name": "КВЛ 110 кВ № 2 Гомсельмаш - Костюковка",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 33
+  },
+  {
+    "sapCode": "VL110-000371",
+    "name": "КВЛ 110 кВ Светлогорск 220 - Центролит.",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 203
+  },
+  {
+    "sapCode": "VL110-000381",
+    "name": "ВЛ 110 кВ Центролит - Бобовичи",
+    "filialId": 1,
+    "voltageId": 7,
+    "poleCount": 125
+  },
+  {
+    "sapCode": "VL220-000021",
+    "name": "ВЛ 220 кВ Мирадино - Осиповичи",
+    "filialId": 1,
+    "voltageId": 8,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL330-000001",
+    "name": "ВЛ 330 кВ Гомель - Кричев 330",
+    "filialId": 1,
+    "voltageId": 9,
+    "poleCount": 217
+  },
+  {
+    "sapCode": "VL330-000002",
+    "name": "ВЛ 330 кВ Чернигов - Гомель",
+    "filialId": 1,
+    "voltageId": 9,
+    "poleCount": 179
+  },
+  {
+    "sapCode": "VL330-000004",
+    "name": "ВЛ 330 кВ Гомель - Гомсельмаш",
+    "filialId": 1,
+    "voltageId": 9,
+    "poleCount": 263
+  },
+  {
+    "sapCode": "VL330-000006",
+    "name": "ВЛ 330 кВ Гомсельмаш - Жлобин 330",
+    "filialId": 1,
+    "voltageId": 9,
+    "poleCount": 192
+  },
+  {
+    "sapCode": "VL330-000007",
+    "name": "ВЛ 330 кВ Гомсельмаш - Мозырь",
+    "filialId": 1,
+    "voltageId": 9,
+    "poleCount": 122
+  },
+  {
+    "sapCode": "VL330-000061",
+    "name": "ВЛ 330 кВ Белорусская - Калийная",
+    "filialId": 1,
+    "voltageId": 9,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL330-000062",
+    "name": "ВЛ 330 кВ Белорусская - Микашевичи",
+    "filialId": 1,
+    "voltageId": 9,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL330-000063",
+    "name": "ВЛ 330 кВ Белорусская - Мирадино",
+    "filialId": 1,
+    "voltageId": 9,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL330-000064",
+    "name": "ВЛ 330 кВ Белорусская - ТЭЦ-5",
+    "filialId": 1,
+    "voltageId": 9,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL330-000065",
+    "name": "ВЛ 330 кВ Мирадино - ГРЭС-20",
+    "filialId": 1,
+    "voltageId": 9,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL330-000066",
+    "name": "ВЛ 330 кВ Славутич - Чернигов",
+    "filialId": 1,
+    "voltageId": 9,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL330-000067",
+    "name": "ВЛ 750 кВ Белорусская - Смоленская АЭС",
+    "filialId": 1,
+    "voltageId": 9,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL035-000080",
+    "name": "ВЛ-35 Бобовка - Белицкое",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 92
+  },
+  {
+    "sapCode": "VL035-000087",
+    "name": "ВЛ-35 Жлобин110 - Бобовка",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 72
+  },
+  {
+    "sapCode": "VL035-000088",
+    "name": "ВЛ-35 Белицкое - Городец",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 42
+  },
+  {
+    "sapCode": "VL035-000089",
+    "name": "ВЛ-35 Жлобин110 - Солоное",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 35
+  },
+  {
+    "sapCode": "VL035-000090",
+    "name": "ВЛ-35 Солоное - Стрешин",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 86
+  },
+  {
+    "sapCode": "VL035-000091",
+    "name": "ВЛ-35 Малевичи - Кр.Берег",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 70
+  },
+  {
+    "sapCode": "VL035-000095",
+    "name": "ВЛ-35 Кр.Берег - Щедрин",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 70
+  },
+  {
+    "sapCode": "VL035-000096",
+    "name": "ВЛ-35 Щедрин - Плесовичи",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 71
+  },
+  {
+    "sapCode": "VL035-000097",
+    "name": "ВЛ-35 Задрутье - Дворец с отв.к ПС Н.Ост",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 151
+  },
+  {
+    "sapCode": "VL035-000100",
+    "name": "ВЛ-35 Жл.110 - Малевичи",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 34
+  },
+  {
+    "sapCode": "VL035-000101",
+    "name": "ВЛ-35 Задрутье - Рогачев",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 9
+  },
+  {
+    "sapCode": "VL035-000102",
+    "name": "ВЛ-35 Задрутье - Крушиновка",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 110
+  },
+  {
+    "sapCode": "VL035-000103",
+    "name": "ВЛ 35 кВ Задрутье-Довск",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 176
+  },
+  {
+    "sapCode": "VL035-000104",
+    "name": "ВЛ-35 Корма - Староград",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 65
+  },
+  {
+    "sapCode": "VL035-000107",
+    "name": "ВЛ-35 Корма - Журавичи",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 141
+  },
+  {
+    "sapCode": "VL035-000108",
+    "name": "ВЛ-35 Корма - Коселяцкое",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 53
+  },
+  {
+    "sapCode": "VL035-000109",
+    "name": "ВЛ-35 Корма - Чечерск",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 166
+  },
+  {
+    "sapCode": "VL035-000111",
+    "name": "ВЛ-35 Довск - Слобода",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 71
+  },
+  {
+    "sapCode": "VL035-000112",
+    "name": "ВЛ-35 Довск - Староград",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 60
+  },
+  {
+    "sapCode": "VL035-000113",
+    "name": "ВЛ-35 Станьково - Крушиновка",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 84
+  },
+  {
+    "sapCode": "VL035-000114",
+    "name": "ВЛ-35 Слобода - Журавичи",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 94
+  },
+  {
+    "sapCode": "VL035-000115",
+    "name": "ВЛ-35 Коселяцкое - Гайшин",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 69
+  },
+  {
+    "sapCode": "VL035-000116",
+    "name": "ВЛ-35 Чечерск - Нисимковичи",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 78
+  },
+  {
+    "sapCode": "VL035-000117",
+    "name": "ВЛ-35 Волынцы - Полесье",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 94
+  },
+  {
+    "sapCode": "VL035-000183",
+    "name": "ВЛ-35кВ Кр.Берег - Н.Остров",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 39
+  },
+  {
+    "sapCode": "VL035-000186",
+    "name": "ВЛ-35кВ Щедрин-Паричи",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 51
+  },
+  {
+    "sapCode": "VL035-000224",
+    "name": "ВЛ 35 кВ Журавичи - Пролетарий",
+    "filialId": 2,
+    "voltageId": 1,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL110-000085",
+    "name": "ВЛ-110 Жлобин110 - Б.Кошелево с отв.",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 106
+  },
+  {
+    "sapCode": "VL110-000089",
+    "name": "ВЛ-110 Лукское - Задрутье",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 49
+  },
+  {
+    "sapCode": "VL110-000090",
+    "name": "ВЛ-110 Жл.Западная - Сортовая",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 23
+  },
+  {
+    "sapCode": "VL110-000093",
+    "name": "ВЛ-110 №1 Жл.Западная - Тяговая",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 20
+  },
+  {
+    "sapCode": "VL110-000095",
+    "name": "ВЛ 110 кВ № 2 Жлобин 330 - Вирская",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 77
+  },
+  {
+    "sapCode": "VL110-000096",
+    "name": "ВЛ-110 Жл.Западная - Прокат",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 10
+  },
+  {
+    "sapCode": "VL110-000115",
+    "name": "Списание матер, прочие работы СЛЭП ЖЭС",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL110-000119",
+    "name": "ВЛ-110 Ст.Село - Тощица",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 105
+  },
+  {
+    "sapCode": "VL110-000120",
+    "name": "ВЛ 110 кВ Жлобин Западная - Сталь 110",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 1
+  },
+  {
+    "sapCode": "VL110-000133",
+    "name": "ВЛ-110 Жл.Западная - Жл.330",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 162
+  },
+  {
+    "sapCode": "VL110-000134",
+    "name": "ВЛ-110 №1 Жл.Западная - Северная",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 34
+  },
+  {
+    "sapCode": "VL110-000135",
+    "name": "ВЛ-110 Жл.Западная - Жл.110",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 48
+  },
+  {
+    "sapCode": "VL110-000136",
+    "name": "ВЛ-110 №2 Жл.Западная - Северная",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 11
+  },
+  {
+    "sapCode": "VL110-000137",
+    "name": "ВЛ-110  Жл.Западная - Лебедевка",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 72
+  },
+  {
+    "sapCode": "VL110-000140",
+    "name": "ВЛ 110 кВ № 1 Жлобин 330 - Вирская",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 76
+  },
+  {
+    "sapCode": "VL110-000141",
+    "name": "ВЛ-110 №1 Жл.330 - Металлургическая",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 162
+  },
+  {
+    "sapCode": "VL110-000142",
+    "name": "ВЛ-110 №2 Жл.330 - Металлургическая",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL110-000143",
+    "name": "ВЛ-110 Жл.330 - Б.Кошелево",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 81
+  },
+  {
+    "sapCode": "VL110-000144",
+    "name": "ВЛ 110 кВ Жлобин 330- Рогинь",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 13
+  },
+  {
+    "sapCode": "VL110-000145",
+    "name": "ВЛ 110 кВ Жлобин 330 - Меркуловичи",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 115
+  },
+  {
+    "sapCode": "VL110-000146",
+    "name": "КВЛ-110 Заводская - Жл.110",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 219
+  },
+  {
+    "sapCode": "VL110-000147",
+    "name": "ВЛ-110 Диапроектор - Задрутье",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 89
+  },
+  {
+    "sapCode": "VL110-000148",
+    "name": "ВЛ-110 Диапроектор - Ст.Село",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 40
+  },
+  {
+    "sapCode": "VL110-000149",
+    "name": "ВЛ 110 кВ Чечерск- Рогинь",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 141
+  },
+  {
+    "sapCode": "VL110-000150",
+    "name": "ВЛ-110 Чечерск - Светиловичи",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 119
+  },
+  {
+    "sapCode": "VL110-000151",
+    "name": "ВЛ-110 Корма - Меркуловичи",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 90
+  },
+  {
+    "sapCode": "VL110-000152",
+    "name": "ВЛ-110 Корма - Б.Осов",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 95
+  },
+  {
+    "sapCode": "VL110-000153",
+    "name": "ВЛ 110 Светлогорская ТЭЦ- Забродье",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 149
+  },
+  {
+    "sapCode": "VL110-000154",
+    "name": "ВЛ 110 кВ Металлургическая -Сталь 110",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 18
+  },
+  {
+    "sapCode": "VL110-000155",
+    "name": "ВЛ 110 кВ Металлургическая - Прокат  110",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 7
+  },
+  {
+    "sapCode": "VL110-000156",
+    "name": "ВЛ-110 Металлургическая - Сортовая",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 11
+  },
+  {
+    "sapCode": "VL110-000157",
+    "name": "ВЛ-110 Металлургическая - Корд",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 1
+  },
+  {
+    "sapCode": "VL110-000252",
+    "name": "ВЛ-110 №2 Жл.Западная - Корд",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 2
+  },
+  {
+    "sapCode": "VL110-000253",
+    "name": "ВЛ-110 №2 Жл.Западная - Тяговая",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 13
+  },
+  {
+    "sapCode": "VL110-000254",
+    "name": "ВЛ 110 кВ Жлобин Западная - Корд",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 19
+  },
+  {
+    "sapCode": "VL110-000258",
+    "name": "ВЛ-110 кВ Жл.Западная-Лукское",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 51
+  },
+  {
+    "sapCode": "VL110-000259",
+    "name": "ВЛ-110кВ Жлобин330-Жлобин110",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 33
+  },
+  {
+    "sapCode": "VL110-000260",
+    "name": "ВЛ-110 кВ Диапроектор-Жлобин330",
+    "filialId": 2,
+    "voltageId": 2,
+    "poleCount": 141
+  },
+  {
+    "sapCode": "VL330-000009",
+    "name": "ВЛ-330 кВ Могилев - Жлобин 330",
+    "filialId": 2,
+    "voltageId": 4,
+    "poleCount": 182
+  },
+  {
+    "sapCode": "VL330-000010",
+    "name": "ВЛ 330 кВ Мирадино-Жлобин Западная",
+    "filialId": 2,
+    "voltageId": 4,
+    "poleCount": 116
+  },
+  {
+    "sapCode": "VL330-000011",
+    "name": "ВЛ-330 кВ Жлобин Западная - Сталь  330",
+    "filialId": 2,
+    "voltageId": 4,
+    "poleCount": 23
+  },
+  {
+    "sapCode": "VL330-000012",
+    "name": "ВЛ 330 кв Жлобин Западная - Прокат 330",
+    "filialId": 2,
+    "voltageId": 4,
+    "poleCount": 10
+  },
+  {
+    "sapCode": "VL330-000013",
+    "name": "ВЛ 330 кВ Жлобин Западная -Металлургичес",
+    "filialId": 2,
+    "voltageId": 4,
+    "poleCount": 17
+  },
+  {
+    "sapCode": "VL330-000014",
+    "name": "ВЛ 330 кВ Жлобин 330-Металлургическая",
+    "filialId": 2,
+    "voltageId": 4,
+    "poleCount": 97
+  },
+  {
+    "sapCode": "VL035-000123",
+    "name": "ВЛ-35кВ Наровля-Вербовичи",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 83
+  },
+  {
+    "sapCode": "VL035-000125",
+    "name": "ВЛ-35кВ Антоновская-Мелькомбинат",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 200
+  },
+  {
+    "sapCode": "VL035-000132",
+    "name": "ВЛ-35кВ Петриков-Замошье",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 359
+  },
+  {
+    "sapCode": "VL035-000134",
+    "name": "ВЛ-35кВ Житковичи-Бронислав",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 288
+  },
+  {
+    "sapCode": "VL035-000135",
+    "name": "ВЛ-35кВ Бронислав-Микашевичи",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 72
+  },
+  {
+    "sapCode": "VL035-000136",
+    "name": "ВЛ-35кВ Петриков-Копаткевичи",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 302
+  },
+  {
+    "sapCode": "VL035-000137",
+    "name": "ВЛ-35кВ Копаткевичи-Дубняки",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 124
+  },
+  {
+    "sapCode": "VL035-000138",
+    "name": "ВЛ-35кВ Калинковичи-Мелькомбинат",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 92
+  },
+  {
+    "sapCode": "VL035-000142",
+    "name": "ВЛ-35кВ Ельск-Ястребли",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 108
+  },
+  {
+    "sapCode": "VL035-000143",
+    "name": "ВЛ-35кВ Ястребли-Волавск",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 54
+  },
+  {
+    "sapCode": "VL035-000144",
+    "name": "ВЛ-35кВ Волавск-Лельчицы",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 169
+  },
+  {
+    "sapCode": "VL035-000146",
+    "name": "ВЛ-35кВ Петриков-Муляровка",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 61
+  },
+  {
+    "sapCode": "VL035-000147",
+    "name": "ВЛ-35кВ Ельск-Рудня",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 68
+  },
+  {
+    "sapCode": "VL035-000148",
+    "name": "ВЛ-35кВ Митьки-Рудня",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 77
+  },
+  {
+    "sapCode": "VL035-000149",
+    "name": "ВЛ-35кВ Туров- Вересница",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 78
+  },
+  {
+    "sapCode": "VL035-000150",
+    "name": "ВЛ-35кВ Туров-Букча",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 329
+  },
+  {
+    "sapCode": "VL035-000151",
+    "name": "ВЛ-35кВ Букча-Милошевичи",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 163
+  },
+  {
+    "sapCode": "VL035-000152",
+    "name": "ВЛ-35кВ Волавск-Заширье",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 87
+  },
+  {
+    "sapCode": "VL035-000153",
+    "name": "ВЛ-35кВ Волавск-Ковали",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 98
+  },
+  {
+    "sapCode": "VL035-000154",
+    "name": "ВЛ-35кВ Осовец-Моисеевка",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 138
+  },
+  {
+    "sapCode": "VL035-000155",
+    "name": "ВЛ-35кВ Дубняки-Колки",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 55
+  },
+  {
+    "sapCode": "VL035-000156",
+    "name": "ВЛ-35кВ Милошевичи-Глушковичи",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 100
+  },
+  {
+    "sapCode": "VL035-000157",
+    "name": "ВЛ-35кВ Колки-Н.Головчицы",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 129
+  },
+  {
+    "sapCode": "VL035-000158",
+    "name": "ВЛ-35кВ Муляровка-Бабуничи",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 63
+  },
+  {
+    "sapCode": "VL035-000159",
+    "name": "ВЛ-35кВ Бабуничи-Заполье",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 196
+  },
+  {
+    "sapCode": "VL035-000184",
+    "name": "ВЛ-35кВ Замошье- Буйновичи",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 150
+  },
+  {
+    "sapCode": "VL035-000191",
+    "name": "ВЛ-35кВ ПС Житковичи - ПС Туров",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 141
+  },
+  {
+    "sapCode": "VL035-000201",
+    "name": "ВЛ-35кВ Озаричи - Колки",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 93
+  },
+  {
+    "sapCode": "VL035-000221",
+    "name": "ВЛ 35 кВ Пузичи - Мозырь-Ленино",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL035-000222",
+    "name": "ВЛ 35 кВ Нежин - Заполье",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL035-000223",
+    "name": "ВЛ 35 кВ Пузичи - Гоцк",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL035-000242",
+    "name": "ВЛ-35кВ Букча - Хильчицы",
+    "filialId": 3,
+    "voltageId": 10,
+    "poleCount": 100
+  },
+  {
+    "sapCode": "VL110-000171",
+    "name": "ВЛ-110 кВ Вишеньки-Махновичи",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 145
+  },
+  {
+    "sapCode": "VL110-000172",
+    "name": "ВЛ-110 кВ Калинковичи-Юровичи",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 125
+  },
+  {
+    "sapCode": "VL110-000173",
+    "name": "ВЛ-110 кВ Житковичи-Лясковичи",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 151
+  },
+  {
+    "sapCode": "VL110-000174",
+    "name": "ВЛ-110 кВ Ельск-Вишеньки",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 65
+  },
+  {
+    "sapCode": "VL110-000176",
+    "name": "ВЛ-110 кВ Калинковичи-Птичь",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 194
+  },
+  {
+    "sapCode": "VL110-000177",
+    "name": "ВЛ-110 кВ Житковичи-Дяковичи",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 187
+  },
+  {
+    "sapCode": "VL110-000180",
+    "name": "ВЛ-110 кВ Ельск-Наровля",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 148
+  },
+  {
+    "sapCode": "VL110-000181",
+    "name": "ВЛ-110 кВ Домановичи -Дяковичи",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 19
+  },
+  {
+    "sapCode": "VL110-000194",
+    "name": "ВЛ-110 кВ Домановичи-Березняки",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 74
+  },
+  {
+    "sapCode": "VL110-000196",
+    "name": "ТО Списание матер./Прочие раб. СЛЭП МЭС",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL110-000201",
+    "name": "ВЛ-110 кВ №1 Калинковичи-Мозырь",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 107
+  },
+  {
+    "sapCode": "VL110-000202",
+    "name": "ВЛ-110 кВ №1 Мозырь 330-ТЭЦ-24",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 82
+  },
+  {
+    "sapCode": "VL110-000205",
+    "name": "ВЛ-110 кВ Калинковичи-Козловичи",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 160
+  },
+  {
+    "sapCode": "VL110-000206",
+    "name": "ВЛ-110 кВ ТЭЦ-24-Водозабор",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 34
+  },
+  {
+    "sapCode": "VL110-000207",
+    "name": "ВЛ-110 кВ ТЭЦ-24-Аварийная",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 2
+  },
+  {
+    "sapCode": "VL110-000209",
+    "name": "ВЛ-110 кВ Калинковичи-Автюки",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 114
+  },
+  {
+    "sapCode": "VL110-000210",
+    "name": "ВЛ-110 кВ №2 Калинковичи-Мозырь",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 184
+  },
+  {
+    "sapCode": "VL110-000212",
+    "name": "ВЛ-110 кВ ПС 330 Мозырь-Водозабор",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 32
+  },
+  {
+    "sapCode": "VL110-000214",
+    "name": "ВЛ-110 кВ ПС 330 Мозырь-Аварийная",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 110
+  },
+  {
+    "sapCode": "VL110-000215",
+    "name": "ВЛ-110 кВ №1 ТЭЦ-24 - Очистные",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 1
+  },
+  {
+    "sapCode": "VL110-000216",
+    "name": "ВЛ110 кВ ТЭЦ-24 - Ельск",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 70
+  },
+  {
+    "sapCode": "VL110-000217",
+    "name": "ВЛ-110 кВ Виша-Колки",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 49
+  },
+  {
+    "sapCode": "VL110-000218",
+    "name": "ВЛ-110 кВ Лельчицы-Милошевичи",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 191
+  },
+  {
+    "sapCode": "VL110-000219",
+    "name": "ВЛ-110 кВ Микашевичи-Житковичи",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 164
+  },
+  {
+    "sapCode": "VL110-000220",
+    "name": "ВЛ-110 кВ ТЭЦ24-Наровля",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 88
+  },
+  {
+    "sapCode": "VL110-000223",
+    "name": "ВЛ-110 кВ Калинковичи-Дрозды",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 96
+  },
+  {
+    "sapCode": "VL110-000227",
+    "name": "ВЛ-110 кВ Мозырь- Дрозды",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 47
+  },
+  {
+    "sapCode": "VL110-000228",
+    "name": "ВЛ-110 кВ №2 Мозырь330- ТЭЦ-24",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 95
+  },
+  {
+    "sapCode": "VL110-000230",
+    "name": "ВЛ-110 кВ №2 ТЭЦ-24- Очистные",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 3
+  },
+  {
+    "sapCode": "VL110-000231",
+    "name": "ВЛ-110 кВ Махновичи-Буйновичи",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 97
+  },
+  {
+    "sapCode": "VL110-000232",
+    "name": "ВЛ-110 кВ №1 Мозырь330- Сользавод",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 49
+  },
+  {
+    "sapCode": "VL110-000233",
+    "name": "ВЛ-110 кВ №2 Мозырь330- Сользавод",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 46
+  },
+  {
+    "sapCode": "VL110-000234",
+    "name": "ВЛ-110 кВ Головчицы-Лубень",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 107
+  },
+  {
+    "sapCode": "VL110-000235",
+    "name": "ВЛ-110 кВ Вересница-Милошевичи",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 349
+  },
+  {
+    "sapCode": "VL110-000237",
+    "name": "ВЛ-110 кВ Юровичи-Храпков",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 40
+  },
+  {
+    "sapCode": "VL110-000251",
+    "name": "ВЛ-110 кВ Буйновичи-Лельчицы",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 103
+  },
+  {
+    "sapCode": "VL110-000257",
+    "name": "ВЛ-110 кВ Автюки - Защебье",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 157
+  },
+  {
+    "sapCode": "VL110-000261",
+    "name": "ВЛ-110 кВ Петриков330-Лясковичи",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 111
+  },
+  {
+    "sapCode": "VL110-000291",
+    "name": "341110 кВ Мозырь330 - Гидрокрекинг",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 109
+  },
+  {
+    "sapCode": "VL110-000292",
+    "name": "ВЛ-110 кВ ТЭЦ24 - Гидрокрекинг",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 20
+  },
+  {
+    "sapCode": "VL110-000293",
+    "name": "ВЛ-110 кВ Мозырь330 - ПС Михалки",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 10
+  },
+  {
+    "sapCode": "VL110-000295",
+    "name": "ВЛ-110кВ №1 Петриков330 - ПС110 Петр.ГОК",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 66
+  },
+  {
+    "sapCode": "VL110-000296",
+    "name": "ВЛ-110кВ №2Петриков330 - ПС110 Петр.ГОК",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 64
+  },
+  {
+    "sapCode": "VL110-000297",
+    "name": "ВЛ-110 кВ №2 Петриков330 - ПС Петр.110",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 60
+  },
+  {
+    "sapCode": "VL110-000298",
+    "name": "ВЛ-110 кВ №1 Петриков330 - ПС Петр.110",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 55
+  },
+  {
+    "sapCode": "VL110-000311",
+    "name": "ВЛ-110 кВ",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL110-000312",
+    "name": "ВЛ-110 кВ Петриков330 - ПС Птичь",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 129
+  },
+  {
+    "sapCode": "VL110-000313",
+    "name": "ВЛ-110 кВ ПС Житковичи - ПС Вересница",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 187
+  },
+  {
+    "sapCode": "VL110-000314",
+    "name": "ВЛ-110 кВ Мозырь330 - ПС Барбаров",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 18
+  },
+  {
+    "sapCode": "VL110-000315",
+    "name": "ВЛ-110 кВ ТЭЦ 24 - ПС Барбаров",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 35
+  },
+  {
+    "sapCode": "VL110-000341",
+    "name": "ВЛ 110 кВ Домановичи - Старобин",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL110-000342",
+    "name": "ВЛ 110 кВ Микашевичи-110 - Вересница",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL110-000343",
+    "name": "ВЛ 110 кВ Ольгомель - Вересница",
+    "filialId": 3,
+    "voltageId": 11,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL330-000024",
+    "name": "ВЛ-330кВ Мозырь - Гомсельмаш",
+    "filialId": 3,
+    "voltageId": 12,
+    "poleCount": 183
+  },
+  {
+    "sapCode": "VL330-000041",
+    "name": "ВЛ-330 кВ Калийная - Петриков",
+    "filialId": 3,
+    "voltageId": 12,
+    "poleCount": 301
+  },
+  {
+    "sapCode": "VL330-000052",
+    "name": "ВЛ-330 кВ ПС Мозырь330-ЧАЭС",
+    "filialId": 3,
+    "voltageId": 12,
+    "poleCount": 251
+  },
+  {
+    "sapCode": "VL330-000072",
+    "name": "ВЛ 330 кВ Мозырь330 - Петриков330",
+    "filialId": 3,
+    "voltageId": 12,
+    "poleCount": 201
+  },
+  {
+    "sapCode": "VL330-000081",
+    "name": "ВЛ-330 кВ Микашевичи330 - Петриков330",
+    "filialId": 3,
+    "voltageId": 12,
+    "poleCount": 285
+  },
+  {
+    "sapCode": "VL035-000013",
+    "name": "ВЛ-35кВ Савичи - Храковичи",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 56
+  },
+  {
+    "sapCode": "VL035-000015",
+    "name": "ВЛ-35кВ Брагин - Савичи",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 202
+  },
+  {
+    "sapCode": "VL035-000016",
+    "name": "ВЛ-35кВ  Савичи-Комарин",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 122
+  },
+  {
+    "sapCode": "VL035-000027",
+    "name": "ВЛ-35кВ Малодуша - Семеновка",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 112
+  },
+  {
+    "sapCode": "VL035-000028",
+    "name": "ВЛ-35кВ Подмостье - Малодуша",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 91
+  },
+  {
+    "sapCode": "VL035-000029",
+    "name": "ВЛ-35кВ Брагин - Кривча",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 76
+  },
+  {
+    "sapCode": "VL035-000030",
+    "name": "ВЛ-35кВ Кривча - Маложин",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 52
+  },
+  {
+    "sapCode": "VL035-000031",
+    "name": "ВЛ-35кВ Маложин - Храковичи",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 57
+  },
+  {
+    "sapCode": "VL035-000032",
+    "name": "ВЛ-35кВ Речица - Бронное",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 51
+  },
+  {
+    "sapCode": "VL035-000033",
+    "name": "ВЛ-35кВ Речица - Демехи",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 100
+  },
+  {
+    "sapCode": "VL035-000034",
+    "name": "ВЛ-35кВ Карповка - Михайловская (РЭС)",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 43
+  },
+  {
+    "sapCode": "VL035-000036",
+    "name": "ВЛ-35кВ Заспа - Холмечь",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 103
+  },
+  {
+    "sapCode": "VL035-000037",
+    "name": "ВЛ-35кВ Осташковичи - Демехи",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 161
+  },
+  {
+    "sapCode": "VL035-000039",
+    "name": "ВЛ-35кВ Славковичи - Заболотье (РЭС)",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 41
+  },
+  {
+    "sapCode": "VL035-000040",
+    "name": "ВЛ-35кВ Виша - Романище",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 89
+  },
+  {
+    "sapCode": "VL035-000041",
+    "name": "ВЛ-35кВ Паричи - Романище",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 169
+  },
+  {
+    "sapCode": "VL035-000043",
+    "name": "ВЛ-35кВ Липово - Василевичи (РЭС)",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 122
+  },
+  {
+    "sapCode": "VL035-000044",
+    "name": "ВЛ-35кВ Комарин - Гдень",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 79
+  },
+  {
+    "sapCode": "VL035-000046",
+    "name": "ВЛ-35кВ Речица - Телеши",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 160
+  },
+  {
+    "sapCode": "VL035-000047",
+    "name": "ВЛ-35кВ Дуброва - Мармовичи",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 48
+  },
+  {
+    "sapCode": "VL035-000048",
+    "name": "ВЛ-35кВ Мармовичи - Озаричи (РЭС)",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 98
+  },
+  {
+    "sapCode": "VL035-000049",
+    "name": "ВЛ-35кВ Виша - Дуброва",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 106
+  },
+  {
+    "sapCode": "VL035-000050",
+    "name": "ВЛ-35кВ Виша - Октябрь",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 120
+  },
+  {
+    "sapCode": "VL035-000051",
+    "name": "ВЛ-35кВ Сосновый Бор - Бобровичи",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 200
+  },
+  {
+    "sapCode": "VL035-000052",
+    "name": "ВЛ-35кВ Прудок - Паричи",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 52
+  },
+  {
+    "sapCode": "VL035-000053",
+    "name": "ВЛ-35кВ Паричи - Щедрин",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 13
+  },
+  {
+    "sapCode": "VL035-000054",
+    "name": "ВЛ-35кВ Подмостье - Короватичи",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 107
+  },
+  {
+    "sapCode": "VL035-000055",
+    "name": "ВЛ-35кВ Защебье - Василевичи",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 61
+  },
+  {
+    "sapCode": "VL035-000061",
+    "name": "ВЛ-35кВ Давыдовка - Липово (РЭС)",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 148
+  },
+  {
+    "sapCode": "VL035-000062",
+    "name": "ВЛ-35кВ Сосновый Бор - Давыдовка",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 12
+  },
+  {
+    "sapCode": "VL035-000065",
+    "name": "ВЛ-35кВ Страковичи - Сосновый Бор",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 80
+  },
+  {
+    "sapCode": "VL035-000066",
+    "name": "ВЛ-35кВ Защебье - Аврамовское",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 191
+  },
+  {
+    "sapCode": "VL035-000069",
+    "name": "ВЛ-35кВ Светочь - Страковичи",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 31
+  },
+  {
+    "sapCode": "VL035-000070",
+    "name": "ВЛ-35кВ Хойники-1 - Аврамовское",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 219
+  },
+  {
+    "sapCode": "VL035-000071",
+    "name": "ВЛ-35кВ Светочь - Прудок",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 120
+  },
+  {
+    "sapCode": "VL035-000073",
+    "name": "ВЛ-35кВ Холмечь - Семеновка",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 86
+  },
+  {
+    "sapCode": "VL035-000074",
+    "name": "ВЛ-35кВ Холмеч - Победитель",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 143
+  },
+  {
+    "sapCode": "VL035-000075",
+    "name": "ВЛ-35кВ Холмеч - Уборки",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 59
+  },
+  {
+    "sapCode": "VL035-000076",
+    "name": "ВЛ-35кВ Победитель - Лоев",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 75
+  },
+  {
+    "sapCode": "VL035-000077",
+    "name": "ВЛ-35кВ Лоев - Карповка",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 56
+  },
+  {
+    "sapCode": "VL035-000078",
+    "name": "ВЛ-35кВ Унорица - Восточно-Первомайская",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 7
+  },
+  {
+    "sapCode": "VL035-000079",
+    "name": "ВЛ-35кВ Бронное - Заспа",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 46
+  },
+  {
+    "sapCode": "VL035-000212",
+    "name": "ВЛ-35кВ Храковичи - Комарин",
+    "filialId": 4,
+    "voltageId": 13,
+    "poleCount": 202
+  },
+  {
+    "sapCode": "VL110-000011",
+    "name": "ВЛ-110 кВ Речица - Борщевка",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 113
+  },
+  {
+    "sapCode": "VL110-000012",
+    "name": "ВЛ-110кВ Гомельская ТЭЦ-2 - Речица (РЭС)",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 151
+  },
+  {
+    "sapCode": "VL110-000013",
+    "name": "ВЛ-110кВ Славутич - Комарин",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 35
+  },
+  {
+    "sapCode": "VL110-000015",
+    "name": "ВЛ-110кВ Юровичи - Храпков (РЭС)",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 55
+  },
+  {
+    "sapCode": "VL110-000016",
+    "name": "ВЛ-110 кВ Храпков - Хойники",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 66
+  },
+  {
+    "sapCode": "VL110-000020",
+    "name": "ВЛ-110 кВ Хойники 1 - Поселичи",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 86
+  },
+  {
+    "sapCode": "VL110-000021",
+    "name": "ВЛ-110 кВ Поселичи - Брагин",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 126
+  },
+  {
+    "sapCode": "VL110-000023",
+    "name": "ВЛ-110 кВ Лоев - Брагин",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 254
+  },
+  {
+    "sapCode": "VL110-000024",
+    "name": "ВЛ-110 кВ Виша - Колки (РЭС)",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 102
+  },
+  {
+    "sapCode": "VL110-000025",
+    "name": "ВЛ-110 кВ Октябрь - Глуск (РЭС)",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 112
+  },
+  {
+    "sapCode": "VL110-000026",
+    "name": "ВЛ-110 кВ Виша - Октябрь",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 210
+  },
+  {
+    "sapCode": "VL110-000027",
+    "name": "ВЛ-110 кВ Переделка - Лоев",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 70
+  },
+  {
+    "sapCode": "VL110-000028",
+    "name": "ВЛ-110 кВ Холмеч - Дятловичи (РЭС)",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 8
+  },
+  {
+    "sapCode": "VL110-000033",
+    "name": "ВЛ-110кВ Ритм - Володарск",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 217
+  },
+  {
+    "sapCode": "VL110-000034",
+    "name": "ВЛ-110 кВ Светлогорск 220 - Лавсан",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 8
+  },
+  {
+    "sapCode": "VL110-000039",
+    "name": "ВЛ-110 кВ ТЭЦ 7 - Лавсан",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 36
+  },
+  {
+    "sapCode": "VL110-000040",
+    "name": "ВЛ-110 кВ Светлогорск 220 - СЗИВ",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 9
+  },
+  {
+    "sapCode": "VL110-000053",
+    "name": "ВЛ-110 кВ ТЭЦ 7 - СЗИВ",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 32
+  },
+  {
+    "sapCode": "VL110-000054",
+    "name": "КВЛ-110 кВ №1 ТЭЦ 7 - Заводская",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 3
+  },
+  {
+    "sapCode": "VL110-000055",
+    "name": "КВЛ-110 кВ №2 ТЭЦ 7 - Заводская",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 2
+  },
+  {
+    "sapCode": "VL110-000056",
+    "name": "ВЛ-110 кВ Речица - Гелиос",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 18
+  },
+  {
+    "sapCode": "VL110-000057",
+    "name": "КВЛ-110 кВ №3 ТЭЦ 7 - Заводская",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 17
+  },
+  {
+    "sapCode": "VL110-000058",
+    "name": "КВЛ-110 кВ Жлобин 110 - Заводская (РЭС)",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 9
+  },
+  {
+    "sapCode": "VL110-000060",
+    "name": "ВЛ-110 кВ Давыдовка - Виша",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 119
+  },
+  {
+    "sapCode": "VL110-000062",
+    "name": "ВЛ-110 кВ Светлогорск 220 - БГПЗ",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 214
+  },
+  {
+    "sapCode": "VL110-000063",
+    "name": "ВЛ-110 кВ Светлогорск 220 - Защебье",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 217
+  },
+  {
+    "sapCode": "VL110-000064",
+    "name": "ВЛ-110 кВ БГПЗ - Ритм",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 101
+  },
+  {
+    "sapCode": "VL110-000066",
+    "name": "ВЛ-110 кВ Гелиос - Ритм",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 33
+  },
+  {
+    "sapCode": "VL110-000067",
+    "name": "ВЛ-110 кВ Речица - Ритм",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 39
+  },
+  {
+    "sapCode": "VL110-000068",
+    "name": "ВЛ-110 кВ Речица - Переделка",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 254
+  },
+  {
+    "sapCode": "VL110-000069",
+    "name": "ВЛ-110 кВ ТЭЦ 7 - Козловичи (РЭС)",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 185
+  },
+  {
+    "sapCode": "VL110-000071",
+    "name": "ВЛ-110 кВ ТЭЦ 7 - Володарск",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 266
+  },
+  {
+    "sapCode": "VL110-000072",
+    "name": "ВЛ-110 кВ ТЭЦ 7 - Забродье (РЭС)",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 7
+  },
+  {
+    "sapCode": "VL110-000073",
+    "name": "ВЛ-110 кВ ТЭЦ 7 - Паричи",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 159
+  },
+  {
+    "sapCode": "VL110-000074",
+    "name": "ВЛ-110 кВ Светлогорск 220 - Виша",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 223
+  },
+  {
+    "sapCode": "VL110-000075",
+    "name": "ВЛ-110 кВ ТЭЦ 7 - Светлогорск 220",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 30
+  },
+  {
+    "sapCode": "VL110-000081",
+    "name": "ВЛ-110 кВ ТЭЦ 7 - Светлогорск 110",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL110-000082",
+    "name": "Списание матер./Прочие работы СЛЭП РЭС",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL110-000321",
+    "name": "ВЛ-110 кВ №1 Светлогорск 220 - Жердь",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 80
+  },
+  {
+    "sapCode": "VL110-000322",
+    "name": "ВЛ-110 кВ №2 Светлогорск 220 - Жердь",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 82
+  },
+  {
+    "sapCode": "VL110-000344",
+    "name": "ВЛ 110 кВ Глуск - Бабирово",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL110-000361",
+    "name": "КВЛ-110кВ Светлогорск 220-Центролит(РЭС)",
+    "filialId": 4,
+    "voltageId": 14,
+    "poleCount": 177
+  },
+  {
+    "sapCode": "VL220-000008",
+    "name": "ВЛ-220 кВ ТЭЦ 7 - Светлогорск 220",
+    "filialId": 4,
+    "voltageId": 15,
+    "poleCount": 30
+  },
+  {
+    "sapCode": "VL220-000009",
+    "name": "ВЛ-220 кВ Светлогорск220 -Центролит(РЭС)",
+    "filialId": 4,
+    "voltageId": 15,
+    "poleCount": 0
+  },
+  {
+    "sapCode": "VL220-000011",
+    "name": "ВЛ-220 кВ ТЭЦ 7 - Мирадино (РЭС)",
+    "filialId": 4,
+    "voltageId": 15,
+    "poleCount": 163
+  },
+  {
+    "sapCode": "VL330-000003",
+    "name": "ВЛ-330кВ Мозырь - Гомсельмаш",
+    "filialId": 4,
+    "voltageId": 16,
+    "poleCount": 181
+  },
+  {
+    "sapCode": "VL330-000005",
+    "name": "ВЛ-330 кВ ЧАЭС - Славутич (РЭС)",
+    "filialId": 4,
+    "voltageId": 16,
+    "poleCount": 64
+  }
+]
