@@ -5,6 +5,8 @@
   flex-direction: column;
   height: calc(100vh - var(--navbar-height));
   overflow: hidden;
+  padding: var(--space-3) var(--space-6);
+  box-sizing: border-box;
 }
 
 .infoBar {

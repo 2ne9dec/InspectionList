@@ -11,7 +11,16 @@
 
 const path = require('path');
 const fs   = require('fs');
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+
+// Если запущен через pkg exe — __dirname смотрит внутрь exe, а не на файловую систему
+const isPackaged = typeof process.pkg !== 'undefined';
+// Базовая директория: рядом с exe в pkg, корень проекта в dev
+const baseDir = isPackaged ? path.dirname(process.execPath) : path.join(__dirname, '..');
+require('dotenv').config({
+  path: isPackaged
+    ? path.join(baseDir, '.env')          // рядом с exe
+    : path.join(__dirname, '.env'),        // server/.env в dev
+});
 
 const express = require('express');
 const { PORT } = require('./lib/config');
@@ -20,7 +29,7 @@ const { tenancyMiddleware, initTenancy } = require('./lib/tenancy');
 const { testConnection } = require('./lib/fbDb');
 
 const app      = express();
-const distPath = path.join(__dirname, '..', 'dist');
+const distPath = path.join(baseDir, 'dist');
 
 // ── Фильтр IP ─────────────────────────────────────────────────────────────────
 // Блокировка нежелательных IP (например, виртуальные адаптеры)
