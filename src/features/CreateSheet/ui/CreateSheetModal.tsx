@@ -80,10 +80,39 @@ export const CreateSheetModal = memo(() => {
     ],
     [filteredVoltages],
   );
-  const lineOptions = useMemo(
-    () => filteredLines.map((l) => ({ value: String(l.id), label: l.name })),
-    [filteredLines],
-  );
+  const lineOptions = useMemo(() => {
+    // Разделяем на главные линии и отпайки (имя содержит " / ")
+    const mains   = filteredLines.filter((l) => !l.name.includes(' / '));
+    const branches = filteredLines.filter((l) => l.name.includes(' / '));
+
+    const result: { value: string; label: string; triggerLabel?: string; indent?: boolean }[] = [];
+
+    for (const main of mains) {
+      result.push({ value: String(main.id), label: main.name });
+      // Отпайки этой линии: имя начинается с "Имя главной / ..."
+      const prefix = main.name + ' / ';
+      for (const br of branches) {
+        if (br.name.startsWith(prefix)) {
+          // В списке показываем только часть после " / ", в триггере — полное имя
+          result.push({
+            value: String(br.id),
+            label: br.name.slice(prefix.length),
+            triggerLabel: br.name,
+            indent: true,
+          });
+        }
+      }
+    }
+
+    // Отпайки без родителя (если главной нет в текущем наборе) — добавляем в конец
+    for (const br of branches) {
+      if (!result.some((o) => o.value === String(br.id))) {
+        result.push({ value: String(br.id), label: br.name, indent: true });
+      }
+    }
+
+    return result;
+  }, [filteredLines]);
 
   const userFilialName = filials.find((f) => f.id === userFilialId)?.name ?? '';
 

@@ -1,16 +1,17 @@
 """
-parse-sap-excel.py
+parse-sap-excel.py (v2)
 
-Разбирает SAP-экспорт (1.XLSX + 2.XLSX) и генерирует два JSON-файла
-для скрипта import-sap-direct.js.
+Reads SAP export (1.XLSX + 2.XLSX) and generates sap_lines.json
+for import-sap-direct.js.
 
-Использование:
-    python scripts/parse-sap-excel.py \
-        --lines=path/to/2.XLSX \
-        --poles=path/to/1.XLSX \
-        --out-dir=.
+Changes from v1:
+  - Extracts poleStart and poleEnd from pole names ("Opopa N N")
+  - Main sections (001-499) merged into one main line entry
+  - Branches (sections 500+) become separate LINES entries
+  - Does not generate sap_new_voltages.json -- all VOLTAGES already in DB
 
-По умолчанию ищет файлы в текущей папке.
+Usage:
+    python scripts/parse-sap-excel.py --lines 2.XLSX --poles 1.XLSX
 """
 
 import sys
@@ -18,174 +19,164 @@ import os
 import re
 import json
 import argparse
-import collections
+from collections import defaultdict, Counter
+
+sys.stdout.reconfigure(line_buffering=True)
 
 try:
     import openpyxl
 except ImportError:
-    print("Не установлен openpyxl. Выполните: pip install openpyxl")
+    print("pip install openpyxl")
     sys.exit(1)
 
-# ── Аргументы ─────────────────────────────────────────────────────────────────
-ap = argparse.ArgumentParser(description='Парсинг SAP Excel для импорта в Firebird')
-ap.add_argument('--lines', default='2.XLSX', help='Путь к файлу линий (2.XLSX)')
-ap.add_argument('--poles', default='1.XLSX', help='Путь к файлу опор (1.XLSX)')
-ap.add_argument('--out-dir', default=os.path.dirname(os.path.abspath(__file__)), help='Папка для выходных JSON-файлов')
+ap = argparse.ArgumentParser()
+ap.add_argument("--lines",   default="2.XLSX")
+ap.add_argument("--poles",   default="1.XLSX")
+ap.add_argument("--out-dir", default=os.path.dirname(os.path.abspath(__file__)))
 args = ap.parse_args()
 
-LINES_FILE   = args.lines
-POLES_FILE   = args.poles
-OUT_DIR      = args.out_dir
+LINES_FILE = args.lines
+POLES_FILE = args.poles
+OUT_DIR    = args.out_dir
 
-if not os.path.exists(LINES_FILE):
-    print(f'Файл не найден: {LINES_FILE}')
-    sys.exit(1)
-if not os.path.exists(POLES_FILE):
-    print(f'Файл не найден: {POLES_FILE}')
-    sys.exit(1)
+for f in (LINES_FILE, POLES_FILE):
+    if not os.path.exists(f):
+        print(f"File not found: {f}")
+        sys.exit(1)
 
-# ── Маппинги ──────────────────────────────────────────────────────────────────
-BE_TO_FILIAL = {'5000': 1, '5200': 2, '5300': 3, '5400': 4}
-VOLT_CLASS_MAP = {
-    'VL035': 'ВЛ-35 кВ',
-    'VL110': 'ВЛ-110 кВ',
-    'VL220': 'ВЛ-220 кВ',
-    'VL330': 'ВЛ-330 кВ',
-}
-VOLT_ORDER = ['VL035', 'VL110', 'VL220', 'VL330']
+BE_TO_FILIAL = {"5000": 1, "5200": 2, "5300": 3, "5400": 4}
 
-# Существующие voltageId для Жлобина (filialId=2) — уже в БД
-EXISTING_VOLT_IDS = {
-    (2, 'VL035'): 1,
-    (2, 'VL110'): 2,
-    (2, 'VL220'): 3,
-    (2, 'VL330'): 4,
+VOLT_ID_MAP = {
+    (1, "VL035"):  6, (1, "VL110"):  7, (1, "VL330"):  9,
+    (2, "VL035"):  1, (2, "VL110"):  2, (2, "VL220"):  3,
+    (2, "VL330"):  4, (2, "VL750"):  5,
+    (3, "VL035"): 10, (3, "VL110"): 11, (3, "VL330"): 12,
+    (4, "VL035"): 13, (4, "VL110"): 14, (4, "VL220"): 15, (4, "VL330"): 16,
 }
 
-def parse_volt_class(raw):
-    """Извлекает код класса напряжения (VL035, VL110, VL220, VL330) из ячейки."""
-    if not raw:
-        return None
-    m = re.match(r'(VL\d+)', str(raw))
-    return m.group(1) if m else None
+RE_POLE_NUM = re.compile(r"#\s*(\d+)")
 
-# ── Шаг 1: Читаем линии из 2.XLSX ────────────────────────────────────────────
-print(f'Читаем линии: {LINES_FILE}')
+# Step 1: read lines from 2.XLSX
+print(f"Reading lines: {LINES_FILE}")
 wb2 = openpyxl.load_workbook(LINES_FILE, data_only=True, read_only=True)
-ws2 = wb2.active
-lines_dict = {}
+lines_info = {}
+for row in wb2.active.iter_rows(min_row=2, values_only=True):
+    code   = str(row[1]).strip() if row[1] else ""
+    name   = str(row[2]).strip() if row[2] else ""
+    be_raw = str(row[7]).strip() if row[7] else ""
+    vc_raw = str(row[11]).strip() if row[11] else ""
+    if not code or be_raw not in BE_TO_FILIAL: continue
+    m = re.match(r"(VL\d+)", vc_raw)
+    if not m: continue
+    vc = m.group(1)
+    fid = BE_TO_FILIAL[be_raw]
+    vid = VOLT_ID_MAP.get((fid, vc))
+    if vid is None: continue
+    lines_info[code] = {"name": name or code, "filialId": fid, "voltClass": vc, "voltageId": vid}
+del wb2
+print(f"  Lines loaded: {len(lines_info)}")
 
-for i, row in enumerate(ws2.iter_rows(min_row=2, values_only=True)):
-    code     = row[1]   # Техническое место
-    name     = row[2]   # Название технического места
-    be_raw   = str(row[7]).strip() if row[7] else ''
-    volt_raw = row[11]  # Индикатор структуры
-
-    if not code or be_raw not in BE_TO_FILIAL:
-        continue
-    vc = parse_volt_class(volt_raw)
-    if not vc or vc not in VOLT_CLASS_MAP:
-        continue
-
-    lines_dict[str(code).strip()] = {
-        'name':      str(name).strip() if name else str(code),
-        'filialId':  BE_TO_FILIAL[be_raw],
-        'voltClass': vc,
-        'poleCount': 0,
-    }
-
-wb2.close()
-print(f'  Найдено линий: {len(lines_dict)}')
-
-# ── Шаг 2: Считаем опоры из 1.XLSX ───────────────────────────────────────────
-print(f'Читаем опоры: {POLES_FILE}')
+# Step 2: read poles from 1.XLSX, group by section
+print(f"Reading poles: {POLES_FILE}")
 wb1 = openpyxl.load_workbook(POLES_FILE, data_only=True, read_only=True)
-ws1 = wb1.active
-pole_counts = collections.Counter()
+sections = {}
+total_poles = 0
+for row in wb1.active.iter_rows(min_row=2, values_only=True):
+    pole_name  = str(row[2]).strip() if row[2] else ""
+    parent_sec = str(row[3]).strip() if row[3] else ""
+    sec_name   = str(row[4]).strip() if row[4] else ""
+    if not parent_sec: continue
+    parts = parent_sec.split("-")
+    if len(parts) < 3: continue
+    line_code = f"{parts[0]}-{parts[1]}"
+    if line_code not in lines_info: continue
+    try: sec_num = int(parts[2])
+    except ValueError: continue
+    if parent_sec not in sections:
+        sections[parent_sec] = {"line_code": line_code, "sec_num": sec_num, "sec_name": sec_name, "poles": []}
+    norm = pole_name.replace("№", "#")
+    m2 = RE_POLE_NUM.search(norm)
+    if m2:
+        sections[parent_sec]["poles"].append(int(m2.group(1)))
+        total_poles += 1
+del wb1
+print(f"  Sections: {len(sections)}, poles with numbers: {total_poles}")
 
-for row in ws1.iter_rows(min_row=2, values_only=True):
-    code = row[1]  # VL035-000002-001-1001
-    if not code:
-        continue
-    parts = str(code).strip().split('-')
-    if len(parts) >= 2:
-        pole_counts[f'{parts[0]}-{parts[1]}'] += 1
+# Step 3: group sections by line
+line_to_sections = defaultdict(list)
+for sec_code, sec_data in sections.items():
+    line_to_sections[sec_data["line_code"]].append((sec_code, sec_data))
+print(f"  Lines with sections: {len(line_to_sections)}")
 
-wb1.close()
+# Step 4: build output records
+output_lines = []
+stats = {"main": 0, "branch": 0, "no_poles": 0}
 
-# Записываем количество опор в линии
-matched = 0
-for code, cnt in pole_counts.items():
-    if code in lines_dict:
-        lines_dict[code]['poleCount'] = cnt
-        matched += 1
+for line_code in sorted(line_to_sections.keys()):
+    sec_list  = line_to_sections[line_code]
+    info      = lines_info[line_code]
+    main_name = info["name"]
+    filial_id = info["filialId"]
+    volt_id   = info["voltageId"]
 
-print(f'  Опор: {sum(pole_counts.values())}, линий с опорами: {matched} / {len(lines_dict)}')
+    main_secs = sorted(
+        [(c, d) for c, d in sec_list if d["sec_num"] < 500],
+        key=lambda x: x[1]["sec_num"]
+    )
+    branches = sorted(
+        [(c, d) for c, d in sec_list if d["sec_num"] >= 500],
+        key=lambda x: x[1]["sec_num"]
+    )
 
-# ── Шаг 3: Формируем новые VOLTAGES ──────────────────────────────────────────
-needed_volt = set()
-for d in lines_dict.values():
-    needed_volt.add((d['filialId'], d['voltClass']))
+    if main_secs:
+        all_poles = []
+        for _, d in main_secs:
+            all_poles.extend(d["poles"])
+        if all_poles:
+            ps, pe, pc = min(all_poles), max(all_poles), max(all_poles) - min(all_poles) + 1
+        else:
+            ps = pe = pc = None
+            stats["no_poles"] += 1
+        output_lines.append({"sapCode": line_code, "name": main_name, "filialId": filial_id,
+            "voltageId": volt_id, "poleStart": ps, "poleEnd": pe, "poleCount": pc})
+        stats["main"] += 1
 
-volt_id_map = dict(EXISTING_VOLT_IDS)
-new_voltages = []
-next_volt_id = 6  # ID 1-5 заняты (Жлобин)
+    for sec_code, d in branches:
+        sec_label   = d["sec_name"] if d["sec_name"] else ("Branch-" + str(d["sec_num"]))
+        branch_name = main_name + " / " + sec_label
+        poles = d["poles"]
+        if poles:
+            ps2, pe2, pc2 = min(poles), max(poles), max(poles) - min(poles) + 1
+        else:
+            ps2 = pe2 = pc2 = None
+            stats["no_poles"] += 1
+        output_lines.append({"sapCode": sec_code, "name": branch_name, "filialId": filial_id,
+            "voltageId": volt_id, "poleStart": ps2, "poleEnd": pe2, "poleCount": pc2})
+        stats["branch"] += 1
 
-for fid in sorted({fid for fid, _ in needed_volt}):
-    for vc in VOLT_ORDER:
-        if (fid, vc) not in needed_volt:
-            continue
-        if (fid, vc) in volt_id_map:
-            continue
-        volt_id_map[(fid, vc)] = next_volt_id
-        new_voltages.append({
-            'id':       next_volt_id,
-            'name':     VOLT_CLASS_MAP[vc],
-            'filialId': fid,
-        })
-        next_volt_id += 1
+lines_with_secs = set(line_to_sections.keys())
+for line_code in sorted(lines_info.keys()):
+    if line_code in lines_with_secs: continue
+    info = lines_info[line_code]
+    output_lines.append({"sapCode": line_code, "name": info["name"], "filialId": info["filialId"],
+        "voltageId": info["voltageId"], "poleStart": None, "poleEnd": None, "poleCount": None})
+    stats["no_poles"] += 1
 
-print(f'\nНовых VOLTAGES: {len(new_voltages)}')
-for v in new_voltages:
-    print(f'  ID={v["id"]} filialId={v["filialId"]} name={v["name"]}')
+# Stats
+FILIAL_NAMES = {1: "Gomel", 2: "Zhlobin", 3: "Mozyr", 4: "Rechitsa"}
+print("\nResult:")
+print(f"  Main lines: {stats['main']}")
+print(f"  Branches:   {stats['branch']}")
+print(f"  No poles:   {stats['no_poles']}")
+print(f"  Total:      {len(output_lines)}")
+by_f = Counter(l['filialId'] for l in output_lines)
+for fid in sorted(by_f):
+    print(f"  Filial {fid} ({FILIAL_NAMES[fid]}): {by_f[fid]}")
 
-# ── Шаг 4: Формируем список LINES ─────────────────────────────────────────────
-sap_lines = []
-for sap_code, d in sorted(
-    lines_dict.items(),
-    key=lambda x: (x[1]['filialId'], x[1]['voltClass'], x[0])
-):
-    vid = volt_id_map.get((d['filialId'], d['voltClass']))
-    if vid is None:
-        print(f'  WARN: нет voltageId для filial={d["filialId"]} volt={d["voltClass"]}, пропускаем {sap_code}')
-        continue
-    sap_lines.append({
-        'sapCode':   sap_code,
-        'name':      d['name'],
-        'filialId':  d['filialId'],
-        'voltageId': vid,
-        'poleCount': d['poleCount'],
-    })
-
-print(f'\nЛиний для импорта: {len(sap_lines)}')
-by_filial = collections.Counter(l['filialId'] for l in sap_lines)
-FILIAL_NAMES = {1: 'Гомельские ЭС', 2: 'Жлобинские ЭС', 3: 'Мозырские ЭС', 4: 'Речицкие ЭС'}
-for fid, cnt in sorted(by_filial.items()):
-    print(f'  Филиал {fid} ({FILIAL_NAMES[fid]}): {cnt} линий')
-
-# ── Шаг 5: Сохраняем JSON ─────────────────────────────────────────────────────
-volt_out  = os.path.join(OUT_DIR, 'sap_new_voltages.json')
-lines_out = os.path.join(OUT_DIR, 'sap_lines.json')
-
-with open(volt_out, 'w', encoding='utf-8') as f:
-    json.dump(new_voltages, f, ensure_ascii=False, indent=2)
-
-with open(lines_out, 'w', encoding='utf-8') as f:
-    json.dump(sap_lines, f, ensure_ascii=False, indent=2)
-
-print(f'\nСохранено:')
-print(f'  {volt_out}')
-print(f'  {lines_out}')
-print('\nТеперь запустите:')
-print('  node scripts/import-sap-direct.js --dry-run')
-print('  node scripts/import-sap-direct.js')
+lines_out = os.path.join(OUT_DIR, "sap_lines.json")
+with open(lines_out, "w", encoding="utf-8") as f:
+    json.dump(output_lines, f, ensure_ascii=False, indent=2)
+print(f"\nSaved: {lines_out}")
+print("\nNext:")
+print("  node scripts/import-sap-direct.js --dry-run")
+print("  node scripts/import-sap-direct.js")

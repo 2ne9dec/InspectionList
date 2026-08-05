@@ -75,4 +75,19 @@
     color: var(--color-accent);
     font-weight: 500;
   }
+
+  &.optionIndent {
+    padding-left: calc(var(--space-3) + 16px);
+    font-size: var(--font-size-s);
+    color: var(--color-text-secondary);
+
+    &::before {
+      content: '↳ ';
+      opacity: 0.5;
+    }
+
+    &.selected {
+      color: var(--color-accent);
+    }
+  }
 }
