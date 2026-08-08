@@ -32,7 +32,6 @@ const dynamicBaseQuery: BaseQueryFn<
       } else {
         if (user?.filialId != null) headers.set('X-Filial-Id', String(user.filialId));
         if (user?.id)               headers.set('X-User-Id',   String(user.id));
-        if (user?.role === 'admin')  headers.set('X-Is-Admin',  'true');
       }
 
       return headers;
@@ -41,16 +40,27 @@ const dynamicBaseQuery: BaseQueryFn<
   return raw(args, api, extraOptions);
 };
 
+/**
+ * Обёртка с перехватом 401.
+ * При истёкшем / недействительном токене очищаем sessionStorage и
+ * перезагружаем страницу — SPA покажет экран входа.
+ */
+const baseQueryWith401: BaseQueryFn<
+  string | FetchArgs,
+  unknown,
+  FetchBaseQueryError
+> = async (args, api, extraOptions) => {
+  const result = await dynamicBaseQuery(args, api, extraOptions);
+  if (result.error && (result.error as FetchBaseQueryError).status === 401) {
+    sessionStorage.clear();
+    window.location.href = '/login';
+  }
+  return result;
+};
+
 export const rtkApi = createApi({
   reducerPath: 'api',
-  baseQuery: dynamicBaseQuery,
-  tagTypes: [
-    'Sheet',
-    'Defect',
-    'DefectCount',
-    'References',
-    'User',
-  ],
-  keepUnusedDataFor: 60,
-  endpoints: () => ({}),
+  baseQuery:   baseQueryWith401,
+  tagTypes:    ['References', 'Sheet', 'Sheets', 'Defect', 'Defects', 'DefectCount', 'User'],
+  endpoints:   () => ({}),
 });

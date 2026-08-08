@@ -4,7 +4,7 @@
  * index.js -- точка входа сервера InspectionList (Firebird).
  *
  * Настройка:
- *   Создать файл server/.env (см. .env.example)
+ *   Создать файл server/.env
  *   Запустить: node server/index.js
  *   Или через PM2: pm2 start server/index.js --name inspectionlist
  */
@@ -44,8 +44,8 @@ if (ALLOWED_HOST && ALLOWED_HOST !== '0.0.0.0') {
   });
 }
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: false }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ limit: '1mb', extended: false }));
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
 // Внутреннее приложение — разрешаем все origin. JWT защищает API.
@@ -54,6 +54,15 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // CSP — внутреннее приложение, разрешаем только своё происхождение + inline стили/скрипты
+  res.setHeader('Content-Security-Policy',
+    "default-src 'self'; "
+    + "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+    + "style-src 'self' 'unsafe-inline'; "
+    + "img-src 'self' data: blob: https://*.tile.openstreetmap.org; "
+    + "connect-src 'self'; "
+    + "worker-src blob:;"
+  );
   res.setHeader('Access-Control-Allow-Origin', origin || '*');
   if (origin) res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Credentials', 'true');

@@ -1,34 +1,18 @@
 import { rtkApi } from '@/shared/api/rtkApi';
-import { localDb, enqueueSyncTask, generateSyncId } from '@/shared/lib/db/localDb';
-import { syncService } from '@/shared/lib/sync/syncService';
 import type { DefectRecord, DefectCount, CreateDefectParams, FixDefectParams } from '../model/types';
 
 const DEFECT_COUNT_TAG = { type: 'DefectCount' as const, id: 'LIST' };
 
-const NO_DEFECT_ID = 117;
-
 const defectsApi = rtkApi.injectEndpoints({
   endpoints: (build) => ({
+
     getDefectCounts: build.query<DefectCount[], void>({
-      queryFn: async () => {
-        const all = await localDb.defectRecords.toArray();
-        const map = new Map<number, DefectCount>();
-        for (const r of all) {
-          if (r.defectId === NO_DEFECT_ID) continue;
-          const cur = map.get(r.sheetId) ?? { sheetId: r.sheetId, active: 0, fixed: 0 };
-          if (r.isFixed) cur.fixed += 1; else cur.active += 1;
-          map.set(r.sheetId, cur);
-        }
-        return { data: Array.from(map.values()) };
-      },
+      query: () => '/defectCounts',
       providesTags: [DEFECT_COUNT_TAG],
     }),
 
     getAllDefects: build.query<DefectRecord[], void>({
-      queryFn: async () => {
-        const data = await localDb.defectRecords.toArray();
-        return { data };
-      },
+      query: () => '/defectRecords',
       providesTags: (result) =>
         result
           ? [...result.map(({ id }) => ({ type: 'Defect' as const, id })), { type: 'Defect', id: 'LIST' }]
@@ -36,13 +20,7 @@ const defectsApi = rtkApi.injectEndpoints({
     }),
 
     getDefectsBySheet: build.query<DefectRecord[], number>({
-      queryFn: async (sheetId) => {
-        const data = await localDb.defectRecords
-          .where('sheetId').equals(sheetId)
-          .toArray();
-        data.sort((a, b) => (a.poleNumber ?? Infinity) - (b.poleNumber ?? Infinity));
-        return { data };
-      },
+      query: (sheetId) => `/defectRecords?sheetId=${sheetId}`,
       providesTags: (result, _err, sheetId) =>
         result
           ? [
@@ -54,28 +32,11 @@ const defectsApi = rtkApi.injectEndpoints({
     }),
 
     createDefect: build.mutation<DefectRecord, CreateDefectParams>({
-      queryFn: async (body) => {
-        const existing = await localDb.defectRecords.where('sheetId').equals(Number(body.sheetId)).toArray();
-        const duplicate = existing.find(
-          (r) =>
-            (r.poleNumber ?? null) === (body.poleNumber != null ? Number(body.poleNumber) : null) &&
-            (r.spanRange ?? null) === (body.spanRange ?? null) &&
-            r.defectId === Number(body.defectId) &&
-            (r.phaseId ?? null) === (body.phaseId ?? null) &&
-            (r.insulatorCount ?? null) === (body.insulatorCount ?? null) &&
-            (r.garlandNumber ?? null) === (body.garlandNumber ?? null) &&
-            !r.isFixed &&
-            (r as any).status !== 'rejected',
-        );
-        if (duplicate) {
-          return { error: { status: 409, error: 'duplicate', data: duplicate } };
-        }
-        const id = await localDb.defectRecords.add({ id: generateSyncId(), ...body, createdAt: new Date().toISOString() } as DefectRecord);
-        const created = await localDb.defectRecords.get(id as number);
-        await enqueueSyncTask('create', 'defect_records', id as number);
-        syncService.scheduleSync();
-        return { data: created! };
-      },
+      query: (body) => ({
+        url: '/defectRecords',
+        method: 'POST',
+        body,
+      }),
       invalidatesTags: (_result, _err, { sheetId }) => [
         { type: 'Defect', id: `SHEET_${sheetId}` },
         { type: 'Defect', id: 'LIST' },
@@ -85,13 +46,11 @@ const defectsApi = rtkApi.injectEndpoints({
     }),
 
     fixDefect: build.mutation<DefectRecord, FixDefectParams>({
-      queryFn: async ({ id, ...patch }) => {
-        await localDb.defectRecords.update(id, patch);
-        const updated = await localDb.defectRecords.get(id);
-        await enqueueSyncTask('update', 'defect_records', id, updated?.serverId);
-        syncService.scheduleSync();
-        return { data: updated! };
-      },
+      query: ({ id, ...patch }) => ({
+        url: `/defectRecords/${id}`,
+        method: 'PATCH',
+        body: patch,
+      }),
       invalidatesTags: (_result, _err, { id }) => [
         { type: 'Defect', id },
         { type: 'Defect', id: 'LIST' },
@@ -100,13 +59,10 @@ const defectsApi = rtkApi.injectEndpoints({
     }),
 
     deleteDefect: build.mutation<void, number>({
-      queryFn: async (id) => {
-        const record = await localDb.defectRecords.get(id);
-        await enqueueSyncTask('delete', 'defect_records', id, record?.serverId);
-        await localDb.defectRecords.delete(id);
-        syncService.scheduleSync();
-        return { data: undefined };
-      },
+      query: (id) => ({
+        url: `/defectRecords/${id}`,
+        method: 'DELETE',
+      }),
       invalidatesTags: (_result, _err, id) => [
         { type: 'Defect', id },
         { type: 'Defect', id: 'LIST' },
@@ -115,13 +71,11 @@ const defectsApi = rtkApi.injectEndpoints({
     }),
 
     patchDefectNotes: build.mutation<DefectRecord, { id: number; notes: string }>({
-      queryFn: async ({ id, notes }) => {
-        await localDb.defectRecords.update(id, { notes });
-        const updated = await localDb.defectRecords.get(id);
-        await enqueueSyncTask('update', 'defect_records', id, updated?.serverId);
-        syncService.scheduleSync();
-        return { data: updated! };
-      },
+      query: ({ id, notes }) => ({
+        url: `/defectRecords/${id}`,
+        method: 'PATCH',
+        body: { notes },
+      }),
       invalidatesTags: (_result, _err, { id }) => [
         { type: 'Defect', id },
         { type: 'Defect', id: 'LIST' },
@@ -132,18 +86,17 @@ const defectsApi = rtkApi.injectEndpoints({
       { id: number; status: string; isFixed: boolean },
       { id: number; status: 'active' | 'approved' | 'in_progress' | 'rejected' | 'fixed'; inspector?: string }
     >({
-      queryFn: async ({ id, status, inspector }) => {
-        const patch: Partial<DefectRecord> = {
+      query: ({ id, status, inspector }) => ({
+        url: `/defectRecords/${id}`,
+        method: 'PATCH',
+        body: {
+          status,
           isFixed: status === 'fixed',
-          ...(status === 'fixed' ? { dateFixed: new Date().toISOString(), inspectorFix: inspector ?? '' } : {}),
-        } as any;
-        (patch as any).status = status;
-        await localDb.defectRecords.update(id, patch);
-        const updated = await localDb.defectRecords.get(id);
-        await enqueueSyncTask('update', 'defect_records', id, updated?.serverId);
-        syncService.scheduleSync();
-        return { data: updated as any };
-      },
+          ...(status === 'fixed'
+            ? { dateFixed: new Date().toISOString().slice(0, 10), inspectorFix: inspector ?? '' }
+            : {}),
+        },
+      }),
       invalidatesTags: (_result, _err, { id }) => [
         { type: 'Defect', id },
         { type: 'Defect', id: 'LIST' },
@@ -160,19 +113,14 @@ const defectsApi = rtkApi.injectEndpoints({
       fixWorkVolume?: string | null;
       inspectorFix?: string | null;
     }>({
-      queryFn: async ({ id, dateFixed, inspectorFix, ...rest }) => {
-        const patch: Partial<DefectRecord> = { ...rest } as any;
-        if (dateFixed) {
-          (patch as any).dateFixed    = dateFixed;
-          (patch as any).inspectorFix = inspectorFix ?? null;
-          (patch as any).isFixed      = true;
-        }
-        await localDb.defectRecords.update(id, patch);
-        const updated = await localDb.defectRecords.get(id);
-        await enqueueSyncTask('update', 'defect_records', id, updated?.serverId);
-        syncService.scheduleSync();
-        return { data: updated! };
-      },
+      query: ({ id, dateFixed, inspectorFix, ...rest }) => ({
+        url: `/defectRecords/${id}`,
+        method: 'PATCH',
+        body: {
+          ...rest,
+          ...(dateFixed ? { dateFixed, inspectorFix: inspectorFix ?? null, isFixed: true } : {}),
+        },
+      }),
       invalidatesTags: (_result, _err, { id }) => [
         { type: 'Defect' as const, id },
         { type: 'Defect' as const, id: 'LIST' },
@@ -181,13 +129,11 @@ const defectsApi = rtkApi.injectEndpoints({
     }),
 
     patchDefectBasic: build.mutation<DefectRecord, { id: number; inspectorFind: string }>({
-      queryFn: async ({ id, inspectorFind }) => {
-        await localDb.defectRecords.update(id, { inspectorFind });
-        const updated = await localDb.defectRecords.get(id);
-        await enqueueSyncTask('update', 'defect_records', id, updated?.serverId);
-        syncService.scheduleSync();
-        return { data: updated! };
-      },
+      query: ({ id, inspectorFind }) => ({
+        url: `/defectRecords/${id}`,
+        method: 'PATCH',
+        body: { inspectorFind },
+      }),
       invalidatesTags: (_result, _err, { id }) => [
         { type: 'Defect' as const, id },
         { type: 'Defect' as const, id: 'LIST' },
@@ -195,15 +141,10 @@ const defectsApi = rtkApi.injectEndpoints({
     }),
 
     deleteDefectsBySheet: build.mutation<void, number>({
-      queryFn: async (sheetId) => {
-        const records = await localDb.defectRecords.where('sheetId').equals(sheetId).toArray();
-        for (const r of records) {
-          await enqueueSyncTask('delete', 'defect_records', r.id, r.serverId);
-        }
-        await localDb.defectRecords.where('sheetId').equals(sheetId).delete();
-        syncService.scheduleSync();
-        return { data: undefined };
-      },
+      query: (sheetId) => ({
+        url: `/defectRecordsBySheet/${sheetId}`,
+        method: 'DELETE',
+      }),
       invalidatesTags: [{ type: 'Defect', id: 'LIST' }, DEFECT_COUNT_TAG],
     }),
   }),

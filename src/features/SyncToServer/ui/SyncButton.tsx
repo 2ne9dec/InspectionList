@@ -1,12 +1,14 @@
 import { memo, useState, useCallback } from 'react';
+import { useAppDispatch } from '@/shared/lib/hooks';
+import { rtkApi } from '@/shared/api/rtkApi';
 import { Button, Input, Modal, VStack, Text } from '@/shared/ui';
-import { syncService } from '@/shared/lib/sync/syncService';
 import { getApiUrl, setApiUrl } from '@/shared/lib/api/apiUrl';
 import cls from './SyncButton.module.scss';
 
 type SyncStatus = 'idle' | 'loading' | 'success' | 'error';
 
 export const SyncButton = memo(() => {
+  const dispatch = useAppDispatch();
   const [status, setStatus] = useState<SyncStatus>('idle');
   const [showSettings, setShowSettings] = useState(false);
   const [urlInput, setUrlInput] = useState('');
@@ -28,19 +30,25 @@ export const SyncButton = memo(() => {
   const handleSync = useCallback(async () => {
     setStatus('loading');
     try {
-      await syncService.sync();
+      await dispatch(
+        rtkApi.util.invalidateTags([
+          { type: 'Sheet',       id: 'LIST' },
+          { type: 'Defect',      id: 'LIST' },
+          { type: 'DefectCount', id: 'LIST' },
+        ]),
+      );
       setStatus('success');
       setTimeout(() => setStatus('idle'), 3000);
     } catch {
       setStatus('error');
       setTimeout(() => setStatus('idle'), 3000);
     }
-  }, []);
+  }, [dispatch]);
 
   const label =
-    status === 'loading' ? 'Синхронизация...' :
-    status === 'success' ? 'Синхронизировано ✓' :
-    status === 'error'   ? 'Ошибка ✗' : 'Синхронизировать';
+    status === 'loading' ? 'Обновление...' :
+    status === 'success' ? 'Обновлено ✓' :
+    status === 'error'   ? 'Ошибка ✗' : 'Обновить';
 
   return (
     <>

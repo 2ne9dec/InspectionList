@@ -31,11 +31,7 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
   const isMobile = useIsMobile();
 
   const sortedElements = useMemo(() => {
-    return [...elements].sort((a, b) => {
-      if (a.name === 'Дефекты отсутствуют') return -1;
-      if (b.name === 'Дефекты отсутствуют') return 1;
-      return 0;
-    });
+    return [...elements].sort((_a, _b) => 0);
   }, [elements]);
 
   const [activeId, setActiveId] = useState<number | null>(sortedElements[0]?.id ?? null);

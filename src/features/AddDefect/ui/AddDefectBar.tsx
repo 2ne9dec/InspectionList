@@ -60,16 +60,16 @@ function parsePoleList(raw: string, min: number, max: number): number[] {
  * Validates span range string e.g. "3-7" or "5".
  * maxSpan = poleEnd - 1 (number of spans = number of poles - 1).
  */
-function isSpanValid(raw: string, maxSpan: number): boolean {
+function isSpanValid(raw: string, minSpan: number, maxSpan: number): boolean {
   const t = raw.trim();
   if (!t) return false;
   const range = t.match(/^(\d+)\s*[-–]\s*(\d+)$/);
   if (range) {
     const a = Number(range[1]), b = Number(range[2]);
-    return a >= 1 && b <= maxSpan && a <= b;
+    return a >= minSpan && b <= maxSpan && a <= b;
   }
   const n = Number(t);
-  return Number.isInteger(n) && n >= 1 && n <= maxSpan;
+  return Number.isInteger(n) && n >= minSpan && n <= maxSpan;
 }
 
 interface AddDefectBarProps {
@@ -129,10 +129,10 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
   );
 
   // Валидация
-  const maxSpan = poleEnd;
+  const maxSpan = poleEnd; // пролёт между верхней опорой и предыдущей
   const isPoleValid  = mode === 'pole' && poleNumber.trim().length > 0
     && parsePoleList(poleNumber, poleStart, poleEnd).length > 0;
-  const isSpanOk = mode === 'span' && isSpanValid(spanRange, maxSpan);
+  const isSpanOk = mode === 'span' && isSpanValid(spanRange, poleStart, maxSpan);
   const hasLocation = isPoleValid || isSpanOk;
   const isValid = !!selectedDefectId && hasLocation && inspector.trim().length > 0 && !!dateFound;
 
@@ -324,7 +324,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
                 id='add-location'
                 name='location'
                 inputMode='tel'
-                placeholder={mode === 'pole' ? `${poleStart}–${poleEnd}` : `1–${maxSpan}`}
+                placeholder={mode === 'pole' ? `${poleStart}–${poleEnd}` : `${poleStart}–${maxSpan}`}
                 value={mode === 'pole' ? poleNumber : spanRange}
                 onChange={mode === 'pole' ? setPoleNumber : setSpanRange}
                 invalid={poleInvalid || spanInvalid}

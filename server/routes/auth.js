@@ -4,12 +4,12 @@
  * routes/auth.js -- авторизация и управление пользователями (Firebird).
  *
  * POST   /login
- * GET    /users          (только admin)
+ * GET    /users          (только director/engineer)
  * GET    /users/me
- * POST   /users          (только admin)
+ * POST   /users          (только director/engineer)
  * PATCH  /users/:id
- * DELETE /users/:id      (только admin)
- * POST   /users/:id/resetPassword  (только admin)
+ * DELETE /users/:id      (только director/engineer)
+ * POST   /users/:id/resetPassword  (только director/engineer)
  * POST   /changePassword
  */
 
@@ -25,7 +25,7 @@ const { query, execute, queryOne } = require('../lib/fbDb');
 const { signToken } = require('../lib/auth');
 
 const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS ?? 12);
-const VALID_ROLES   = new Set(['admin', 'director', 'engineer', 'master', 'viewer']);
+const VALID_ROLES   = new Set(['director', 'engineer', 'master', 'viewer']);
 
 const router = Router();
 
@@ -39,11 +39,6 @@ const loginLimiter = rateLimit ? rateLimit({
   legacyHeaders:   false,
   validate:    { xForwardedForHeader: false },
 }) : (req, res, next) => next();
-
-function requireAdmin(req, res, next) {
-  if (!req.isAdmin) return res.status(403).json({ error: 'Доступ запрещён' });
-  next();
-}
 
 // ── Хелперы работы с пользователями ──────────────────────────────────────────
 
@@ -114,7 +109,7 @@ async function saveUserVoltages(userId, voltageIds) {
 }
 
 // ── GET /users ────────────────────────────────────────────────────────────────
-router.get('/users', requireAdmin, async (req, res) => {
+router.get('/users', async (req, res) => {
   try {
     const rows = await query('SELECT * FROM USERS ORDER BY ID');
     const users = await Promise.all(rows.map(enrichUser));
@@ -163,7 +158,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 });
 
 // ── POST /users ───────────────────────────────────────────────────────────────
-router.post('/users', requireAdmin, async (req, res) => {
+router.post('/users', async (req, res) => {
   try {
     const { username, password, displayName, role, filialId, allowedLineIds, allowedVoltageIds } = req.body ?? {};
     if (!username || !password)
@@ -204,14 +199,15 @@ router.patch('/users/:id', async (req, res) => {
     if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
 
     const isSelf = String(req.userId) === String(id);
-    if (!isSelf && !req.isAdmin)
+    const canManage = !!req.userId; // все авторизованные пользователи
+    if (!isSelf && !canManage)
       return res.status(403).json({ error: 'Доступ запрещён' });
 
     const body = req.body ?? {};
     const sets = [];
     const params = [];
 
-    if (req.isAdmin) {
+    if (canManage) {
       if (body.displayName !== undefined) { sets.push('DISPLAY_NAME = ?'); params.push(String(body.displayName).trim()); }
       if (body.role !== undefined) {
         if (!VALID_ROLES.has(body.role)) return res.status(400).json({ error: `Недопустимая роль: ${body.role}` });
@@ -242,7 +238,7 @@ router.patch('/users/:id', async (req, res) => {
 });
 
 // ── DELETE /users/:id ─────────────────────────────────────────────────────────
-router.delete('/users/:id', requireAdmin, async (req, res) => {
+router.delete('/users/:id', async (req, res) => {
   try {
     const id = req.params.id;
     if (String(id) === String(req.userId))
@@ -257,7 +253,7 @@ router.delete('/users/:id', requireAdmin, async (req, res) => {
 });
 
 // ── POST /users/:id/resetPassword ─────────────────────────────────────────────
-router.post('/users/:id/resetPassword', requireAdmin, async (req, res) => {
+router.post('/users/:id/resetPassword', async (req, res) => {
   try {
     const id          = req.params.id;
     const { newPass } = req.body ?? {};

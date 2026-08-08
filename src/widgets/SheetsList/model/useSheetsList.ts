@@ -8,7 +8,7 @@ import {
   useGetVoltagesQuery,
 } from '@/entities/InspectionLine';
 import { useGetDefectCountsQuery } from '@/entities/DefectRecord';
-import { getUserFilialId, getUserIsAdmin } from '@/entities/User';
+import { getUserFilialId } from '@/entities/User';
 import { selectCreateSheetSearch } from '@/features/CreateSheet';
 
 export type SheetSortKey = 'voltage' | 'date' | 'inspector';
@@ -24,7 +24,6 @@ interface UseSheetsListOptions {
 export function useSheetsList({ dateFrom, dateTo, statusFilter }: UseSheetsListOptions) {
   const search = useSelector(selectCreateSheetSearch);
   const userFilialId = useSelector(getUserFilialId);
-  const isAdmin = useSelector(getUserIsAdmin);
 
   const [sortKey, setSortKey] = useState<SheetSortKey>('voltage');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
@@ -40,7 +39,8 @@ export function useSheetsList({ dateFrom, dateTo, statusFilter }: UseSheetsListO
     });
   }, []);
 
-  const { data: sheets = [], isLoading } = useGetSheetsQuery();
+  // Даты фильтруются на сервере — передаём в запрос, чтобы не грузить всю историю
+  const { data: sheets = [], isLoading } = useGetSheetsQuery({ dateFrom, dateTo });
   const { data: filials = [] } = useGetFilialsQuery();
   const { data: voltages = [] } = useGetVoltagesQuery();
   const { data: lines = [] } = useGetLinesQuery();
@@ -86,7 +86,7 @@ export function useSheetsList({ dateFrom, dateTo, statusFilter }: UseSheetsListO
   // Подсчёт листков по статусам (до применения фильтра статуса, но после остальных)
   const statusCounts = useMemo(() => {
     const base = enriched.filter((s) => {
-      if (!isAdmin && userFilialId !== null && s.filialId !== userFilialId) return false;
+      if (userFilialId !== null && s.filialId !== userFilialId) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         return (
@@ -103,12 +103,12 @@ export function useSheetsList({ dateFrom, dateTo, statusFilter }: UseSheetsListO
       active:   base.filter((s) => s.status === 'active').length,
       archived: base.filter((s) => s.status === 'archived').length,
     };
-  }, [enriched, isAdmin, userFilialId, search]);
+  }, [enriched, userFilialId, search]);
 
   const filtered = useMemo(() => {
     let result = enriched;
 
-    if (!isAdmin && userFilialId !== null) {
+    if (userFilialId !== null) {
       result = result.filter((s) => s.filialId === userFilialId);
     }
 
@@ -127,11 +127,10 @@ export function useSheetsList({ dateFrom, dateTo, statusFilter }: UseSheetsListO
       result = result.filter((s) => s.status === statusFilter);
     }
 
-    if (dateFrom) result = result.filter((s) => s.createdDate >= dateFrom);
-    if (dateTo)   result = result.filter((s) => s.createdDate <= dateTo);
+    // dateFrom / dateTo фильтруются сервером
 
     return result;
-  }, [enriched, search, statusFilter, dateFrom, dateTo, userFilialId, isAdmin]);
+  }, [enriched, search, statusFilter, userFilialId]);
 
   const sorted = useMemo(() => {
     /** Извлекаем кВ из строки вида "ВЛ-110 кВ" -> 110 для числовой сортировки. */
@@ -154,7 +153,6 @@ export function useSheetsList({ dateFrom, dateTo, statusFilter }: UseSheetsListO
   return {
     sheets: sorted,
     isLoading,
-    isAdmin,
     deleteSheet,
     hasSearch: !!search.trim(),
     sortKey,

@@ -21,7 +21,7 @@ const { canAccessLine, lineWhereClause } = require('../lib/tenancy');
 const NO_DEFECT_ID = 117; // маркер «дефекты отсутствуют» — не считается дефектом
 
 const PATCH_ALLOWED = new Set([
-  'isFixed', 'dateFixed', 'inspectorFix', 'notes', 'status',
+  'isFixed', 'dateFixed', 'inspectorFix', 'inspectorFind', 'notes', 'status',
   'masterConclusion', 'resolutionDeadline', 'masterName', 'fixWorkVolume',
 ]);
 
@@ -30,6 +30,7 @@ const PATCH_COLS = {
   isFixed:            'IS_FIXED',
   dateFixed:          'DATE_FIXED',
   inspectorFix:       'INSPECTOR_FIX',
+  inspectorFind:      'INSPECTOR_FIND',
   notes:              'NOTES',
   status:             'STATUS',
   masterConclusion:   'MASTER_CONCLUSION',
@@ -232,7 +233,7 @@ router.patch('/defectRecords/:id', async (req, res) => {
 });
 
 // ── DELETE /defectRecords/:id — удалить дефект ─────────────────────────────────────────────────
-router.delete('/defectRecords/:id', requireRole('admin', 'director', 'engineer'), async (req, res) => {
+router.delete('/defectRecords/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
     const row = await queryOne('SELECT ID, LINE_ID FROM DEFECT_RECORDS WHERE ID = ?', [id]);
@@ -247,7 +248,7 @@ router.delete('/defectRecords/:id', requireRole('admin', 'director', 'engineer')
 });
 
 // ── DELETE /defectRecordsBySheet/:sheetId — удалить дефекты листа ─────────────────────────────────────
-router.delete('/defectRecordsBySheet/:sheetId', requireRole('admin', 'director', 'engineer'), async (req, res) => {
+router.delete('/defectRecordsBySheet/:sheetId', async (req, res) => {
   try {
     const sheetId = Number(req.params.sheetId);
     const sheet   = await queryOne(

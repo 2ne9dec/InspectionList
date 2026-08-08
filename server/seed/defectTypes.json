@@ -660,12 +660,6 @@
     "elementId": 25
   },
   {
-    "id": 117,
-    "name": "Дефекты отсутствуют",
-    "severity": "low",
-    "elementId": 26
-  },
-  {
     "id": 118,
     "name": "Посторонние предметы под опорой",
     "severity": "medium",

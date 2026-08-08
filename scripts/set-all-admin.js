@@ -1,38 +1,18 @@
 'use strict';
-// Resolve deps from server/node_modules
-process.env.NODE_PATH = require('path').resolve(__dirname, '../server/node_modules');
+const path = require('path');
+process.env.NODE_PATH = path.resolve(__dirname, '../server/node_modules');
 require('module').Module._initPaths();
-
-/**
- * set-all-admin.js
- * Устанавливает роль 'admin' всем пользователям в таблице USERS.
- * Запуск: node scripts/set-all-admin.js
- * После использования удалите этот файл.
- */
-try { require('dotenv').config({ path: require('path').join(__dirname, '../server/.env') }); } catch {}
-
+require('dotenv').config({ path: path.join(__dirname, '../server/.env') });
 const { query, execute } = require('../server/lib/fbDb');
 
 async function main() {
-  const users = await query('SELECT ID, USERNAME, ROLE FROM USERS ORDER BY ID');
-  console.log(`\nПользователей в базе: ${users.length}`);
-  console.log('─'.repeat(50));
-
+  await execute("UPDATE USERS SET ROLE = 'admin'", []);
+  const users = await query('SELECT ID, USERNAME, DISPLAY_NAME, ROLE, FILIAL_ID FROM USERS ORDER BY ID');
+  console.log('Готово:');
   for (const u of users) {
-    console.log(`  [${u.id}] ${u.username}  роль: ${u.role ?? '(null)'}  → admin`);
+    console.log(`  [${u.id}] ${u.username} / ${u.display_name} / role=${u.role} / filialId=${u.filial_id ?? 'NULL'}`);
   }
-
-  console.log('\nОбновляю...');
-  await execute("UPDATE USERS SET ROLE = 'admin'");
-
-  const after = await query('SELECT ID, USERNAME, ROLE FROM USERS ORDER BY ID');
-  console.log('\nРезультат:');
-  for (const u of after) {
-    console.log(`  [${u.id}] ${u.username}  роль: ${u.role}`);
-  }
-
-  console.log('\nГотово. Пользователи должны заново войти в систему (новый JWT с ролью admin).');
   process.exit(0);
 }
 
-main().catch(e => { console.error('Ошибка:', e.message); process.exit(1); });
+main().catch(err => { console.error('[FATAL]', err.message); process.exit(1); });

@@ -1,7 +1,6 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import type { StateSchema } from '@/app/providers/StoreProvider';
 import { useCreateSheetMutation } from '@/entities/InspectionSheet';
 import {
   useGetFilialsQuery,
@@ -9,7 +8,7 @@ import {
   useGetLinesQuery,
   useGetVoltagesQuery,
 } from '@/entities/InspectionLine';
-import { getUserFilialId, getUserIsAdmin } from '@/entities/User';
+import { getUserFilialId } from '@/entities/User';
 import { getRouteSheetDetail } from '@/shared/const/router';
 import { Button, FormField, Input, Modal, SelectMenu } from '@/shared/ui';
 import { toast } from '@/shared/lib/toast';
@@ -24,8 +23,6 @@ import {
 } from '../model/selectors';
 import cls from './CreateSheetModal.module.scss';
 
-const selectAdminFilialId = (s: StateSchema) => s.createSheet?.filialId ?? null;
-
 export const CreateSheetModal = memo(() => {
   const navigate = useNavigate();
 
@@ -34,25 +31,22 @@ export const CreateSheetModal = memo(() => {
   const lineId = useSelector(selectCreateSheetLineId);
   const createdBy = useSelector(selectCreateSheetCreatedBy);
   const createdDate = useSelector(selectCreateSheetCreatedDate);
-  const adminFilialId = useSelector(selectAdminFilialId);
-
   const userFilialId = useSelector(getUserFilialId);
-  const isAdmin = useSelector(getUserIsAdmin);
 
-  const { closeModal, setVoltageId, setLineId, setCreatedBy, setCreatedDate, setFilialId } =
+  const { closeModal, setVoltageId, setLineId, setCreatedBy, setCreatedDate } =
     createSheetActions.useActions();
 
   const { data: filials = [] } = useGetFilialsQuery();
   const { data: voltages = [], isFetching: voltagesFetching } = useGetVoltagesQuery();
   const { data: lines = [] } = useGetLinesQuery();
   const { data: voltageFilter = {} } = useGetFilialVoltageFilterQuery();
-  const [createSheet, { isLoading }] = useCreateSheetMutation();
+  const [createSheet] = useCreateSheetMutation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Если admin выбрал филиал вручную — используем его, иначе берём филиал из его JWT профиля.
-  const effectiveFilialId = isAdmin ? (adminFilialId ?? userFilialId) : userFilialId;
+  const effectiveFilialId = userFilialId;
 
   const filteredVoltages = useMemo(() => {
-    if (!effectiveFilialId) return [];
+    if (!effectiveFilialId) return voltages;
     const allowed = voltageFilter[String(effectiveFilialId)];
     return voltages.filter((v) => v.filialId === effectiveFilialId && (!allowed || allowed.includes(v.id)));
   }, [voltages, effectiveFilialId, voltageFilter]);
@@ -67,12 +61,8 @@ export const CreateSheetModal = memo(() => {
     [lines, lineId],
   );
 
-  const isValid = !!effectiveFilialId && !!voltageId && !!lineId && createdBy.trim().length > 0 && !!createdDate;
+  const isValid = !!voltageId && !!lineId && createdBy.trim().length > 0 && !!createdDate;
 
-  const filialOptions = useMemo(
-    () => filials.map((f) => ({ value: String(f.id), label: f.name })),
-    [filials],
-  );
   const voltageOptions = useMemo(
     () => [
       { value: '', label: '— выберите напряжение —' },
@@ -117,23 +107,30 @@ export const CreateSheetModal = memo(() => {
   const userFilialName = filials.find((f) => f.id === userFilialId)?.name ?? '';
 
   const handleSubmit = useCallback(async () => {
-    if (!isValid || !effectiveFilialId || !voltageId || !lineId) return;
+    const sheetFilialId = effectiveFilialId ?? selectedLine?.filialId ?? null;
+    if (!isValid || !voltageId || !lineId || !sheetFilialId) return;
+    setIsSubmitting(true);
     try {
       const trimmed = createdBy.trim();
-      const newSheet = await createSheet({
-        filialId: effectiveFilialId,
-        voltageId,
-        lineId,
-        createdBy: trimmed,
-        createdDate,
-      }).unwrap();
+      // Таймаут 15 сек: если сервер не отвечает, показываем ошибку вместо бесконечнй крутилки
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Сервер не отвечает (проверьте F12 → Network)')), 15_000)
+      );
+      const newSheet = await Promise.race([
+        createSheet({ filialId: sheetFilialId, voltageId, lineId, createdBy: trimmed, createdDate }).unwrap(),
+        timeout,
+      ]);
       closeModal();
       setTimeout(() => navigate(getRouteSheetDetail(String(newSheet.id))), 50);
     } catch (err: unknown) {
       logger.error('CreateSheet failed', err);
-      toast.error('Ошибка при создании листка осмотра');
+      const errData = (err as { data?: { error?: string } })?.data?.error;
+      const errMsg  = errData ?? (err instanceof Error ? err.message : 'Неизвестная ошибка');
+      toast.error(`Ошибка: ${errMsg}`);
+    } finally {
+      setIsSubmitting(false);
     }
-  }, [closeModal, createSheet, createdBy, createdDate, effectiveFilialId, isValid, lineId, navigate, voltageId]);
+  }, [closeModal, createSheet, createdBy, createdDate, effectiveFilialId, isValid, lineId, navigate, selectedLine, voltageId]);
 
   return (
     <Modal
@@ -146,27 +143,14 @@ export const CreateSheetModal = memo(() => {
           <Button variant='secondary' onClick={() => closeModal()}>
             Отмена
           </Button>
-          <Button variant='primary' onClick={handleSubmit} disabled={!isValid} loading={isLoading}>
+          <Button variant='primary' onClick={handleSubmit} disabled={!isValid} loading={isSubmitting}>
             Создать
           </Button>
         </>
       }
     >
       <div className={cls.fields}>
-        {userFilialId === null ? (
-          // Глобальный admin без филиала — показываем дропдаун
-          <FormField label='Филиал' htmlFor='cs-filial' required>
-            <SelectMenu
-              options={filialOptions}
-              value={String(effectiveFilialId ?? '')}
-              onChange={(v) => v !== '' && setFilialId(Number(v))}
-              placeholder='— выберите филиал —'
-            />
-          </FormField>
-        ) : (
-          // Пользователь ваприван к филиалу — показываем неизменяемый бейдж
-          <div className={cls.filialBadge}>{userFilialName}</div>
-        )}
+        <div className={cls.filialBadge}>{userFilialName}</div>
 
         <FormField label='Напряжение' htmlFor='cs-voltage' required>
           <SelectMenu

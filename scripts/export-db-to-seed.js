@@ -59,7 +59,7 @@ async function main() {
     SELECT ID, NAME, VOLTAGE_ID, FILIAL_ID,
            POLE_RANGE, POLE_START, POLE_END, POLE_COUNT,
            YEAR_BUILT, YEAR_LAST_OVERHAUL, LENGTH_KM,
-           POLE_TYPE, WIRE_TYPE, NOTES
+           POLE_TYPE, WIRE_TYPE, NOTES, SAP_CODE
     FROM LINES
     ORDER BY FILIAL_ID, VOLTAGE_ID, ID
   `);
@@ -78,6 +78,7 @@ async function main() {
     poleType:         r.pole_type  ?? null,
     wireType:         r.wire_type  ?? null,
     notes:            r.notes      ?? null,
+    sapCode:          r.sap_code   ?? null,
   })));
 
   // ── filialVoltageFilter.json ──────────────────────────────────────────────

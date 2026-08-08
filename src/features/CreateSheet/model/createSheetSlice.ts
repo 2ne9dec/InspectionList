@@ -1,7 +1,6 @@
 import { buildSlice } from '@/shared/lib/store/buildSlice';
 
 export interface CreateSheetSchema {
-  filialId: number | null;
   voltageId: number | null;
   lineId: number | null;
   createdBy: string;
@@ -14,7 +13,6 @@ export interface CreateSheetSchema {
 const getToday = () => new Date().toISOString().split('T')[0];
 
 const initialState: CreateSheetSchema = {
-  filialId: null,
   voltageId: null,
   lineId: null,
   createdBy: '',
@@ -34,16 +32,10 @@ export const createSheetSlice = buildSlice({
     },
     closeModal: (state) => {
       state.isOpen = false;
-      state.filialId = null;
       state.voltageId = null;
       state.lineId = null;
       state.createdBy = '';
       state.createdDate = getToday();
-    },
-    setFilialId: (state, action: { payload: number }) => {
-      state.filialId = action.payload;
-      state.voltageId = null;
-      state.lineId = null;
     },
     setVoltageId: (state, action: { payload: number }) => {
       state.voltageId = action.payload;
@@ -68,7 +60,4 @@ export const createSheetSlice = buildSlice({
 });
 
 export const createSheetReducer = createSheetSlice.reducer;
-export const createSheetActions = {
-  ...createSheetSlice.actions,
-  useActions: createSheetSlice.useActions,
-};
+export const createSheetActions = createSheetSlice;

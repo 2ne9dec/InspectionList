@@ -20,7 +20,7 @@ interface GlobalDefectSearchProps {
 export const GlobalDefectSearch = memo(({ defectTypeIds }: GlobalDefectSearchProps) => {
   const navigate = useNavigate();
 
-  const { data: sheets   = [] } = useGetSheetsQuery();
+  const { data: sheets   = [] } = useGetSheetsQuery({})  // no date filter: load all sheets;
   const { data: filials  = [] } = useGetFilialsQuery();
   const { data: voltages = [] } = useGetVoltagesQuery();
   const { data: lines    = [] } = useGetLinesQuery();

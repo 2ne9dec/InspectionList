@@ -59,7 +59,7 @@ router.get('/lines', async (req, res) => {
       SELECT ID, NAME, VOLTAGE_ID, FILIAL_ID, POLE_RANGE,
             POLE_START, POLE_END, POLE_COUNT,
             YEAR_BUILT, YEAR_LAST_OVERHAUL, LENGTH_KM,
-            POLE_TYPE, WIRE_TYPE, NOTES
+            POLE_TYPE, WIRE_TYPE, NOTES, SAP_CODE
       FROM LINES ORDER BY ID
     `);
     const data = rows.map(toLine);
@@ -105,7 +105,7 @@ router.patch('/lines/:id', async (req, res) => {
       SELECT ID, NAME, VOLTAGE_ID, FILIAL_ID, POLE_RANGE,
             POLE_START, POLE_END, POLE_COUNT,
             YEAR_BUILT, YEAR_LAST_OVERHAUL, LENGTH_KM,
-            POLE_TYPE, WIRE_TYPE, NOTES
+            POLE_TYPE, WIRE_TYPE, NOTES, SAP_CODE
       FROM LINES WHERE ID = ?`, [id]);
     res.json(row ? toLine(row) : { id });
   } catch (err) {
@@ -200,6 +200,7 @@ function toLine(r) {
     poleType:         r.pole_type     ?? null,
     wireType:         r.wire_type     ?? null,
     notes:            r.notes         ?? null,
+    sapCode:          r.sap_code      ?? null,
   };
 }
 

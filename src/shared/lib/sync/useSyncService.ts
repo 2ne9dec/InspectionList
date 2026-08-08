@@ -1,10 +1,9 @@
 import { useEffect } from 'react';
 import { useAppDispatch } from '@/shared/lib/hooks';
 import { rtkApi } from '@/shared/api/rtkApi';
-import { syncService } from './syncService';
 
-// Интервал фоновой синхронизации
-const SYNC_INTERVAL_MS = 30_000;
+// Интервал фонового опроса — перезапрашиваем данные с сервера
+const POLL_INTERVAL_MS = 30_000;
 
 export function useSyncService() {
   const dispatch = useAppDispatch();
@@ -16,30 +15,26 @@ export function useSyncService() {
           { type: 'Sheet',       id: 'LIST' },
           { type: 'Defect',      id: 'LIST' },
           { type: 'DefectCount', id: 'LIST' },
-          'References',
         ]),
       );
     };
 
-    window.addEventListener('sync:complete', invalidate);
+    // Фоновый опрос
+    const interval = setInterval(invalidate, POLL_INTERVAL_MS);
 
-    // Первый запуск
-    syncService.sync().catch(console.error);
+    // Sync при возврате на вкладку
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') invalidate();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
 
     // Восстановление сети
-    const handleOnline = () => syncService.sync().catch(console.error);
-    window.addEventListener('online', handleOnline);
-
-    // Фоновый опрос
-    const interval = setInterval(
-      () => syncService.sync().catch(console.error),
-      SYNC_INTERVAL_MS,
-    );
+    window.addEventListener('online', invalidate);
 
     return () => {
-      window.removeEventListener('sync:complete', invalidate);
-      window.removeEventListener('online', handleOnline);
       clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('online', invalidate);
     };
   }, [dispatch]);
 }

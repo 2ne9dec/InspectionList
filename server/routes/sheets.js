@@ -1,5 +1,4 @@
 'use strict';
-const { requireRole } = require('../lib/auth');
 
 /**
  * routes/sheets.js -- листки осмотра (Firebird).
@@ -33,36 +32,57 @@ function toSheet(row) {
   };
 }
 
-const SELECT_SHEET = `
-  SELECT ID, FILIAL_ID, VOLTAGE_ID, LINE_ID, CREATED_BY,
-         CAST(CREATED_DATE AS VARCHAR(10)) AS CREATED_DATE,
-         STATUS, NOTES
-  FROM INSPECTION_SHEETS`;
+const SELECT_FIELDS = `
+  ID, FILIAL_ID, VOLTAGE_ID, LINE_ID, CREATED_BY,
+  CAST(CREATED_DATE AS VARCHAR(10)) AS CREATED_DATE,
+  STATUS, NOTES`;
 
-// ── GET /inspectionSheets — список листков осмотра ─────────────────────────────────────────────────────
+const SELECT_SHEET = `SELECT${SELECT_FIELDS}\n  FROM INSPECTION_SHEETS`;
+
+// ── GET /inspectionSheets — список листков осмотра ────────────────────────────
 router.get('/inspectionSheets', async (req, res) => {
   try {
-    const { filialId, voltageId, lineId, createdBy, _page, _limit } = req.query;
+    const { filialId, voltageId, lineId, createdBy, dateFrom, dateTo, _page, _limit } = req.query;
     const lf = lineWhereClause(req);
 
-    let sql    = SELECT_SHEET + ' WHERE 1=1' + lf.sql;
+    // Условия WHERE (без FIRST/SKIP — добавляются ниже если нужна пагинация)
+    let where  = ' WHERE 1=1' + lf.sql;
     const params = [...lf.params];
 
-    if (filialId)  { sql += ' AND FILIAL_ID = ?';  params.push(Number(filialId)); }
-    if (voltageId) { sql += ' AND VOLTAGE_ID = ?'; params.push(Number(voltageId)); }
-    if (lineId)    { sql += ' AND LINE_ID = ?';    params.push(Number(lineId)); }
-    if (createdBy) { sql += ' AND CREATED_BY = ?'; params.push(createdBy); }
+    if (filialId)  { where += ' AND FILIAL_ID = ?';  params.push(Number(filialId)); }
+    if (voltageId) { where += ' AND VOLTAGE_ID = ?'; params.push(Number(voltageId)); }
+    if (lineId)    { where += ' AND LINE_ID = ?';    params.push(Number(lineId)); }
+    if (createdBy) { where += ' AND CREATED_BY = ?'; params.push(createdBy); }
 
-    sql += ' ORDER BY CREATED_DATE DESC';
+    // Серверная фильтрация по дате (фронт посылает dateFrom / dateTo)
+    if (dateFrom) { where += ' AND CAST(CREATED_DATE AS VARCHAR(10)) >= ?'; params.push(dateFrom); }
+    if (dateTo)   { where += ' AND CAST(CREATED_DATE AS VARCHAR(10)) <= ?'; params.push(dateTo); }
 
-    const rows  = await query(sql, params);
-    const total = rows.length;
+    const order = ' ORDER BY CREATED_DATE DESC';
 
-    // Пагинация
-    const page  = Math.max(1, Number(_page)  || 1);
-    const limit = Math.min(500, Math.max(1, Number(_limit) || total));
-    const start = (page - 1) * limit;
-    const items = rows.slice(start, start + limit).map(toSheet);
+    const page  = Math.max(1, Number(_page)  || 0);
+    const limit = Math.min(500, Math.max(1, Number(_limit) || 0));
+
+    let items;
+    let total;
+
+    if (page && limit) {
+      // Два запроса: COUNT(*) + Firebird FIRST/SKIP ─────────────────────────────
+      const countSql = 'SELECT COUNT(*) AS cnt FROM INSPECTION_SHEETS' + where;
+      const [{ cnt }] = await query(countSql, params);
+      total = Number(cnt);
+
+      const skip    = (page - 1) * limit;
+      // FIRST и SKIP идут первыми в списке параметров
+      const pageSql = `SELECT FIRST ? SKIP ?${SELECT_FIELDS}\n  FROM INSPECTION_SHEETS${where}${order}`;
+      const rows    = await query(pageSql, [limit, skip, ...params]);
+      items = rows.map(toSheet);
+    } else {
+      // Без пагинации — вернуть всё (с применёнными WHERE-фильтрами)
+      const rows = await query(SELECT_SHEET + where + order, params);
+      total = rows.length;
+      items = rows.map(toSheet);
+    }
 
     res.setHeader('X-Total-Count', total);
     res.setHeader('Access-Control-Expose-Headers', 'X-Total-Count');
@@ -72,7 +92,7 @@ router.get('/inspectionSheets', async (req, res) => {
   }
 });
 
-// ── GET /inspectionSheets/:id — один лист ─────────────────────────────────────────────────
+// ── GET /inspectionSheets/:id — один лист ────────────────────────────────────
 router.get('/inspectionSheets/:id', async (req, res) => {
   try {
     const id  = Number(req.params.id);
@@ -86,7 +106,7 @@ router.get('/inspectionSheets/:id', async (req, res) => {
   }
 });
 
-// ── POST /inspectionSheets — создать лист ────────────────────────────────────────────────────
+// ── POST /inspectionSheets — создать лист ────────────────────────────────────
 router.post('/inspectionSheets', async (req, res) => {
   try {
     const { filialId, voltageId, lineId, createdDate, createdBy, status, notes } = req.body;
@@ -122,11 +142,11 @@ router.post('/inspectionSheets', async (req, res) => {
   }
 });
 
-// ── POST /inspectionSheets/:id/clone — клонировать лист ─────────────────────────────────────────
+// ── POST /inspectionSheets/:id/clone — клонировать лист ──────────────────────
 router.post('/inspectionSheets/:id/clone', async (req, res) => {
   try {
-    const id      = Number(req.params.id);
-    const { newDate } = req.body;
+    const id                    = Number(req.params.id);
+    const { newDate, createdBy } = req.body;
     if (!newDate) return res.status(400).json({ error: 'newDate обязателен (YYYY-MM-DD)' });
 
     const orig = await queryOne(SELECT_SHEET + ' WHERE ID = ?', [id]);
@@ -139,9 +159,12 @@ router.post('/inspectionSheets/:id/clone', async (req, res) => {
       [orig.line_id, newDate],
     );
     if (dup)
-      return res.status(409).json({ error: `Листок на ${newDate} уже существует`, existing: toSheet(await queryOne(SELECT_SHEET + ' WHERE ID = ?', [dup.id])) });
+      return res.status(409).json({
+        error:    `Листок на ${newDate} уже существует`,
+        existing: toSheet(await queryOne(SELECT_SHEET + ' WHERE ID = ?', [dup.id])),
+      });
 
-    const newId = await nextId('sheets');
+    const newId    = await nextId('sheets');
     const newNotes = orig.notes
       ? `Копия от ${orig.created_date}. ${orig.notes}`
       : `Копия от ${orig.created_date}`;
@@ -150,8 +173,9 @@ router.post('/inspectionSheets/:id/clone', async (req, res) => {
       `INSERT INTO INSPECTION_SHEETS
          (ID, FILIAL_ID, VOLTAGE_ID, LINE_ID, CREATED_BY, CREATED_DATE, STATUS, NOTES)
        VALUES (?, ?, ?, ?, ?, CAST(? AS DATE), 'active', ?)`,
+      // createdBy из запроса (кто делает клон), fallback на оригинал
       [newId, orig.filial_id, orig.voltage_id, orig.line_id,
-       orig.created_by, newDate, newNotes],
+       createdBy ?? orig.created_by, newDate, newNotes],
     );
 
     const row = await queryOne(SELECT_SHEET + ' WHERE ID = ?', [newId]);
@@ -161,7 +185,7 @@ router.post('/inspectionSheets/:id/clone', async (req, res) => {
   }
 });
 
-// ── PATCH /inspectionSheets/:id — обновить лист ───────────────────────────────────────────────
+// ── PATCH /inspectionSheets/:id — обновить лист ──────────────────────────────
 router.patch('/inspectionSheets/:id', async (req, res) => {
   try {
     const id  = Number(req.params.id);
@@ -172,6 +196,8 @@ router.patch('/inspectionSheets/:id', async (req, res) => {
 
     const sets   = [];
     const params = [];
+    if (req.body.createdDate !== undefined) { sets.push('CREATED_DATE = CAST(? AS DATE)'); params.push(req.body.createdDate); }
+    if (req.body.createdBy  !== undefined) { sets.push('CREATED_BY = ?');                 params.push(req.body.createdBy); }
     if (req.body.status !== undefined) { sets.push('STATUS = ?'); params.push(req.body.status); }
     if (req.body.notes  !== undefined) { sets.push('NOTES = ?');  params.push(req.body.notes); }
     if (sets.length === 0) return res.status(400).json({ error: 'Нет полей для обновления' });
@@ -186,8 +212,8 @@ router.patch('/inspectionSheets/:id', async (req, res) => {
   }
 });
 
-// ── DELETE /inspectionSheets/:id — удалить лист ──────────────────────────────────────────────
-router.delete('/inspectionSheets/:id', requireRole('admin', 'director', 'engineer'), async (req, res) => {
+// ── DELETE /inspectionSheets/:id — удалить лист ──────────────────────────────
+router.delete('/inspectionSheets/:id', async (req, res) => {
   try {
     const id  = Number(req.params.id);
     const row = await queryOne('SELECT ID, LINE_ID FROM INSPECTION_SHEETS WHERE ID = ?', [id]);
@@ -196,7 +222,6 @@ router.delete('/inspectionSheets/:id', requireRole('admin', 'director', 'enginee
       return res.status(403).json({ error: 'Доступ запрещён' });
 
     // FK constraint: сначала дефекты, потом лист
-    // (Firebird не даёт удалить лист, если есть дефекты — ON DELETE CASCADE нет)
     await execute('DELETE FROM DEFECT_RECORDS WHERE SHEET_ID = ?', [id]);
     await execute('DELETE FROM INSPECTION_SHEETS WHERE ID = ?', [id]);
     res.json({ ok: true });
@@ -205,8 +230,8 @@ router.delete('/inspectionSheets/:id', requireRole('admin', 'director', 'enginee
   }
 });
 
-// ── POST /inspectionSheets/merge — объединить листы ──────────────────────────────────────────────
-router.post('/inspectionSheets/merge', requireRole('admin', 'director', 'engineer'), async (req, res) => {
+// ── POST /inspectionSheets/merge — объединить листы ──────────────────────────
+router.post('/inspectionSheets/merge', async (req, res) => {
   try {
     const { ids, createdDate, createdBy } = req.body;
     if (!Array.isArray(ids) || ids.length < 2 || !createdDate)
@@ -281,8 +306,9 @@ router.post('/inspectionSheets/merge', requireRole('admin', 'director', 'enginee
         }
       }
 
-      // Удаляем исходные листки (дефекты удалятся каскадно)
+      // Удаляем исходные листки (дефекты уже скопированы)
       for (const src of sources) {
+        await tx.execute('DELETE FROM DEFECT_RECORDS WHERE SHEET_ID = ?', [src.sheet.id]);
         await tx.execute('DELETE FROM INSPECTION_SHEETS WHERE ID = ?', [src.sheet.id]);
       }
 

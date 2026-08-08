@@ -3,9 +3,11 @@
  *
  * Приоритет:
  *   1. localStorage 'api_server_url' — ручная настройка адреса
- *   2. VITE_API_URL из .env         — dev-сервер (yarn start из c:\webProjects\2026\InspectionList)
- *   3. window.location.origin        — продакшн с сервера (c:\InspectionList)
- *   4. http://localhost:8443         — последний fallback
+ *   2. import.meta.env.DEV         — dev-режим Vite: возвращаем '' (relative URL)
+ *                                    Vite proxy форвардит запросы на VITE_API_URL
+ *   3. VITE_API_URL из .env     — production-сборка: явно заданный адрес сервера
+ *   4. window.location.origin       — продакшн: origin страницы = адрес бэкенда
+ *   5. http://localhost:8443         — последний fallback
  */
 
 const STORAGE_KEY = 'api_server_url';
@@ -17,14 +19,18 @@ export function getApiUrl(): string {
     if (saved) return saved;
   }
 
-  // 2. VITE_API_URL — явно заданный адрес (нужен для dev: yarn start из каталога разработки).
-  // В продакшне сборке (yarn build) VITE_API_URL не передаётся, поэтому продакшн берёт origin.
+  // 2. Dev-режим (Vite dev server) — возвращаем пустой baseUrl.
+  // RTK Query делает relative запросы (/inspectionSheets, /sync и т.д.),
+  // которые Vite proxy перехватывает и форвардит на VITE_API_URL (vite.config.ts).
+  // Это избегает CORS-блокировки при разработке на ноуте.
+  if (import.meta.env.DEV) return '';
+
+  // 3. VITE_API_URL — в production-сборке (yarn build) задаётся явно.
   const fromEnv = import.meta.env?.VITE_API_URL ?? '';
   if (fromEnv) return fromEnv;
 
   if (typeof window !== 'undefined') {
-    // 3. Адрес страницы — работает когда приложение открыто прямо с сервера (c:\InspectionList).
-    // В этом случае origin = 'http://192.168.100.12:8443' — точный адрес бэкенда.
+    // 4. Адрес страницы — работает когда приложение открыто прямо с сервера.
     const origin = window.location.origin;
     const isLocal =
       origin.startsWith('capacitor://') ||
@@ -34,7 +40,7 @@ export function getApiUrl(): string {
     if (!isLocal) return origin;
   }
 
-  // 4. fallback
+  // 5. fallback
   return 'http://localhost:8443';
 }
 

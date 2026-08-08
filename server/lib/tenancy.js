@@ -52,10 +52,10 @@ async function initTenancy() {
 
 /**
  * Middleware: добавляет req.allowedLineIds (Set или null).
- * null = нет ограничений (admin или нет filialId).
+ * null = нет ограничений (нет filialId).
  */
 function tenancyMiddleware(req, res, next) {
-  if (req.filialId == null || req.isAdmin) {
+  if (req.filialId == null) {
     req.allowedLineIds = null;
   } else {
     req.allowedLineIds = FILIAL_LINE_MAP.get(req.filialId) ?? new Set();

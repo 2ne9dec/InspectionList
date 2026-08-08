@@ -32,6 +32,8 @@ export interface Line {
   wireType?: string | null;
   /** Дополнительные примечания */
   notes?: string | null;
+  /** Номер технического места SAP (VL110-XXXXXX) */
+  sapCode?: string | null;
 }
 
 export interface Element {

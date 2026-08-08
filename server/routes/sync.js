@@ -14,9 +14,7 @@ const router = Router();
 router.post('/sync/batch', async (req, res) => {
   if (!req.userId) return res.status(401).json({ error: 'Не авторизован' });
 
-  // admin может работать без привязки к филиалу (filialId=null в базе).
-  // Для других ролей filialId обязателен.
-  if (!req.filialId && !req.isAdmin) return res.status(403).json({ error: 'Нет филиала' });
+  if (!req.filialId) return res.status(403).json({ error: 'Нет филиала' });
 
   const { sheets = [], defectRecords = [] } = req.body;
   let sheetsUpserted  = 0;
@@ -140,17 +138,7 @@ router.post('/sync/batch', async (req, res) => {
   // Удаления: сначала дефекты (из-за FK DEFECT_RECORDS.SHEET_ID)
   const { deletedDefectIds = [], deletedSheetIds = [] } = req.body;
   const hasDeletes = deletedSheetIds.length > 0 || deletedDefectIds.length > 0;
-  const canDelete  = ['admin', 'director', 'engineer'].includes(req.role);
-
-  if (hasDeletes && !canDelete) {
-    // Недостаточно прав: возвращаем HTTP 403, чтобы response.ok на клиенте был фальшивым
-    // и syncQueue не очистился (иначе pull() восстановит удалённые записи)
-    return res.status(403).json({
-      ok: false,
-      error: 'Удаление недоступно для роли: ' + req.role,
-      errors: [{ type: 'permission', reason: 'Удаление недоступно для роли: ' + req.role }],
-    });
-  }
+  // Все авторизованные пользователи могут удалять
 
   if (hasDeletes) {
     for (const id of deletedDefectIds) {
@@ -172,8 +160,8 @@ router.post('/sync/batch', async (req, res) => {
 
 // Pull: возвращаем все данные филиала на клиент
 router.get('/sync/pull', async (req, res) => {
-  const filialId = req.filialId; // null для admin (видит все филиалы)
-  if (!filialId && !req.isAdmin) return res.status(403).json({ error: 'No filial' });
+  const filialId = req.filialId;
+  if (!filialId) return res.status(403).json({ error: 'No filial' });
 
   function fmt(d) {
     if (!d) return null;
@@ -188,7 +176,6 @@ router.get('/sync/pull', async (req, res) => {
   }
 
   try {
-  // admin с filialId=null видит все филиалы, остальные — только свой
   const sheetsWhere = filialId ? 'WHERE FILIAL_ID = ?' : '';
   const sheetsParams = filialId ? [filialId] : [];
 
