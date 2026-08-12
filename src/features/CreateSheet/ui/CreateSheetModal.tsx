@@ -1,7 +1,6 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useCreateSheetMutation } from '@/entities/InspectionSheet';
 import {
   useGetFilialsQuery,
   useGetFilialVoltageFilterQuery,
@@ -11,8 +10,8 @@ import {
 import { getUserFilialId } from '@/entities/User';
 import { getRouteSheetDetail } from '@/shared/const/router';
 import { Button, FormField, Input, Modal, SelectMenu } from '@/shared/ui';
-import { toast } from '@/shared/lib/toast';
-import { logger } from '@/shared/lib/logger';
+import { addPendingSheet } from '@/shared/lib/offline/pendingSheets';
+import { SYNC_EVENT } from '@/shared/lib/sync/useSyncService';
 import { createSheetActions } from '../model/createSheetSlice';
 import {
   selectCreateSheetCreatedBy,
@@ -26,23 +25,20 @@ import cls from './CreateSheetModal.module.scss';
 export const CreateSheetModal = memo(() => {
   const navigate = useNavigate();
 
-  const isOpen = useSelector(selectCreateSheetIsOpen);
-  const voltageId = useSelector(selectCreateSheetVoltageId);
-  const lineId = useSelector(selectCreateSheetLineId);
-  const createdBy = useSelector(selectCreateSheetCreatedBy);
+  const isOpen      = useSelector(selectCreateSheetIsOpen);
+  const voltageId   = useSelector(selectCreateSheetVoltageId);
+  const lineId      = useSelector(selectCreateSheetLineId);
+  const createdBy   = useSelector(selectCreateSheetCreatedBy);
   const createdDate = useSelector(selectCreateSheetCreatedDate);
   const userFilialId = useSelector(getUserFilialId);
 
   const { closeModal, setVoltageId, setLineId, setCreatedBy, setCreatedDate } =
     createSheetActions.useActions();
 
-  const { data: filials = [] } = useGetFilialsQuery();
+  const { data: filials  = [] } = useGetFilialsQuery();
   const { data: voltages = [], isFetching: voltagesFetching } = useGetVoltagesQuery();
-  const { data: lines = [] } = useGetLinesQuery();
+  const { data: lines    = [] } = useGetLinesQuery();
   const { data: voltageFilter = {} } = useGetFilialVoltageFilterQuery();
-  const [createSheet] = useCreateSheetMutation();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const effectiveFilialId = userFilialId;
 
   const filteredVoltages = useMemo(() => {
@@ -72,18 +68,16 @@ export const CreateSheetModal = memo(() => {
   );
   const lineOptions = useMemo(() => {
     // Разделяем на главные линии и отпайки (имя содержит " / ")
-    const mains   = filteredLines.filter((l) => !l.name.includes(' / '));
-    const branches = filteredLines.filter((l) => l.name.includes(' / '));
+    const mains    = filteredLines.filter((l) => !l.name.includes(' / '));
+    const branches = filteredLines.filter((l) =>  l.name.includes(' / '));
 
     const result: { value: string; label: string; triggerLabel?: string; indent?: boolean }[] = [];
 
     for (const main of mains) {
       result.push({ value: String(main.id), label: main.name });
-      // Отпайки этой линии: имя начинается с "Имя главной / ..."
       const prefix = main.name + ' / ';
       for (const br of branches) {
         if (br.name.startsWith(prefix)) {
-          // В списке показываем только часть после " / ", в триггере — полное имя
           result.push({
             value: String(br.id),
             label: br.name.slice(prefix.length),
@@ -94,7 +88,7 @@ export const CreateSheetModal = memo(() => {
       }
     }
 
-    // Отпайки без родителя (если главной нет в текущем наборе) — добавляем в конец
+    // Отпайки без родителя — добавляем в конец
     for (const br of branches) {
       if (!result.some((o) => o.value === String(br.id))) {
         result.push({ value: String(br.id), label: br.name, indent: true });
@@ -106,31 +100,25 @@ export const CreateSheetModal = memo(() => {
 
   const userFilialName = filials.find((f) => f.id === userFilialId)?.name ?? '';
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = useCallback(() => {
     const sheetFilialId = effectiveFilialId ?? selectedLine?.filialId ?? null;
     if (!isValid || !voltageId || !lineId || !sheetFilialId) return;
-    setIsSubmitting(true);
-    try {
-      const trimmed = createdBy.trim();
-      // Таймаут 15 сек: если сервер не отвечает, показываем ошибку вместо бесконечнй крутилки
-      const timeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Сервер не отвечает (проверьте F12 → Network)')), 15_000)
-      );
-      const newSheet = await Promise.race([
-        createSheet({ filialId: sheetFilialId, voltageId, lineId, createdBy: trimmed, createdDate }).unwrap(),
-        timeout,
-      ]);
-      closeModal();
-      setTimeout(() => navigate(getRouteSheetDetail(String(newSheet.id))), 50);
-    } catch (err: unknown) {
-      logger.error('CreateSheet failed', err);
-      const errData = (err as { data?: { error?: string } })?.data?.error;
-      const errMsg  = errData ?? (err instanceof Error ? err.message : 'Неизвестная ошибка');
-      toast.error(`Ошибка: ${errMsg}`);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [closeModal, createSheet, createdBy, createdDate, effectiveFilialId, isValid, lineId, navigate, selectedLine, voltageId]);
+
+    // Мгновенно сохраняем локально — не ждём сервер
+    const pending = addPendingSheet({
+      filialId:    sheetFilialId,
+      voltageId:   voltageId!,
+      lineId:      lineId!,
+      createdBy:   createdBy.trim(),
+      createdDate,
+    });
+    closeModal();
+
+    // Фоновая синхронизация — если есть сеть, листок сразу перейдёт на сервер
+    window.dispatchEvent(new Event(SYNC_EVENT));
+
+    setTimeout(() => navigate(getRouteSheetDetail(String(pending.localId))), 50);
+  }, [closeModal, createdBy, createdDate, effectiveFilialId, isValid, lineId, navigate, selectedLine, voltageId]);
 
   return (
     <Modal
@@ -143,7 +131,7 @@ export const CreateSheetModal = memo(() => {
           <Button variant='secondary' onClick={() => closeModal()}>
             Отмена
           </Button>
-          <Button variant='primary' onClick={handleSubmit} disabled={!isValid} loading={isSubmitting}>
+          <Button variant='primary' onClick={handleSubmit} disabled={!isValid}>
             Создать
           </Button>
         </>

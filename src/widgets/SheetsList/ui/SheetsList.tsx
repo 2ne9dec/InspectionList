@@ -4,6 +4,7 @@ import { ConfirmModal, EmptyState, Loader, Button, Modal, Input, FormField, VSta
 import { getRouteSheetDetail } from '@/shared/const/router';
 import { toast } from '@/shared/lib/toast';
 import { logger } from '@/shared/lib/logger';
+import { removePendingSheet } from '@/shared/lib/offline/pendingSheets';
 import { useSheetsList } from '../model/useSheetsList';
 import { useSheetMerge } from '../model/useSheetMerge';
 import { useSheetEdit } from '../model/useSheetEdit';
@@ -75,6 +76,17 @@ export const SheetsList = memo(() => {
   );
 
   const handleDelete = useCallback(async (id: number) => {
+    // Офлайн-листок — удаляем только из localStorage
+    if (id < 0) {
+      const ok = await merge.confirm({
+        title: 'Удалить офлайн-листок?',
+        description: 'Листок не был синхронизирован с сервером.',
+        variant: 'danger',
+      });
+      if (ok) removePendingSheet(id);
+      return;
+    }
+    // Серверный листок
     const ok = await merge.confirm({
       title: 'Удалить листок осмотра?',
       description: 'Все дефекты будут удалены. Это действие необратимо.',
@@ -90,6 +102,17 @@ export const SheetsList = memo(() => {
       toast.error('Ошибка при удалении листка осмотра');
     }
   }, [merge, deleteSheet]);
+
+  // Клонирование / редактирование недоступно для офлайн-листков
+  const handleClone = useCallback((id: number) => {
+    if (id < 0) return;
+    clone.handleOpenClone(id);
+  }, [clone]);
+
+  const handleEdit = useCallback((id: number) => {
+    if (id < 0) return;
+    edit.handleOpenEdit(id);
+  }, [edit]);
 
   const handleDateRangeChange = useCallback(
     ({ from, to }: { from: string; to: string }) => { setDateFrom(from); setDateTo(to); },
@@ -132,8 +155,8 @@ export const SheetsList = memo(() => {
               onSort={toggleSort}
               onOpen={handleOpen}
               onDelete={handleDelete}
-              onClone={clone.handleOpenClone}
-              onEdit={edit.handleOpenEdit}
+              onClone={handleClone}
+              onEdit={handleEdit}
               selectedIds={merge.selectedIds}
               onSelect={merge.handleSelect}
               mergeLineId={merge.mergeLineId}

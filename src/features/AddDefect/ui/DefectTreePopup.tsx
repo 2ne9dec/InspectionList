@@ -4,7 +4,6 @@ import { SEVERITY_LABELS } from '@/entities/InspectionLine';
 import { Portal } from '@/shared/ui';
 import { useOutsideClick } from '@/shared/lib/hooks';
 import { capitalizeFirst as cap } from '@/shared/lib/helpers';
-import { useIsMobile } from '@/shared/lib/hooks';
 import cls from './DefectTreePopup.module.scss';
 
 interface DefectTreePopupProps {
@@ -28,7 +27,16 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
     multiSelect = false, selectedIds, onSelectionChange,
   } = props;
 
-  const isMobile = useIsMobile();
+  // Планшет и тачскрин — мобильный UI (hover не работает на таче)
+  const isTouchOrNarrow = useMemo(
+    () => typeof window !== 'undefined' && (
+      window.matchMedia('(max-width: 767px)').matches ||
+      window.matchMedia('(pointer: coarse)').matches ||
+      'ontouchstart' in window ||
+      navigator.maxTouchPoints > 0
+    ),
+    [],
+  );
 
   const sortedElements = useMemo(() => {
     return [...elements].sort((_a, _b) => 0);
@@ -43,9 +51,8 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
   const mobileRef = useRef<HTMLDivElement>(null);
 
   const desktopRefs = useMemo(() => [leftRef, rightRef], []);
-  const mobileRefs  = useMemo(() => [mobileRef], []);
-
-  useOutsideClick(isMobile ? mobileRefs : desktopRefs, onClose, { enabled: true });
+  // На тачскрине — закрытие через backdrop.onTouchStart (избегаем ghost click)
+  useOutsideClick(desktopRefs, onClose, { enabled: !isTouchOrNarrow });
 
   const filteredDefects = useMemo(
     () => (activeId !== null ? defectTypes.filter((d) => d.elementId === activeId) : []),
@@ -97,10 +104,16 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
     [sortedElements, activeId],
   );
 
-  if (isMobile) {
+  if (isTouchOrNarrow) {
     return (
       <Portal>
-        <div className={cls.backdrop} onClick={onClose} />
+        <div
+          className={cls.backdrop}
+          onTouchStart={(e) => {
+            e.preventDefault(); // блокируем реакцию на реальный тач (не срабатывает на синтетических mouse событиях)
+            onClose();
+          }}
+        />
         <div ref={mobileRef} className={cls.mobileSheet}>
           {mobileStep === 'elem' ? (
             <>

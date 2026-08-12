@@ -16,6 +16,16 @@ import { PageLoader } from '@/widgets/PageLoader';
 import { ProgressRing, Button, ConfirmModal } from '@/shared/ui';
 import { DefectSidebar } from '@/features/DefectSidebar';
 import { DefectTimeline } from '@/features/DefectTimeline';
+import {
+  useGetDefectTypesQuery,
+  useGetFilialsQuery,
+  useGetLinesQuery,
+  useGetPhasesQuery,
+  useGetVoltagesQuery,
+} from '@/entities/InspectionLine';
+import { usePendingSheets } from '@/shared/lib/offline/pendingSheets';
+import { usePendingDefects } from '@/shared/lib/offline/pendingDefects';
+import type { PendingDefect } from '@/shared/lib/offline/pendingDefects';
 import { useSheetDetail } from '../model/useSheetDetail';
 import { useSheetKeyboard } from '../model/useSheetKeyboard';
 import cls from './SheetDetailPage.module.scss';
@@ -26,22 +36,174 @@ const reducers: ReducersList = {
   copyDefect: copyDefectReducer,
 };
 
+const offlineReducers: ReducersList = { addDefect: addDefectReducer };
+
 function getRingColor(pct: number): string {
   if (pct >= 80) return 'var(--color-success)';
   if (pct >= 40) return 'var(--color-warning)';
   return 'var(--color-error)';
 }
 
-const SheetDetailPage = () => {
-  const { id } = useParams<{ id: string }>();
-  const sheetId = Number(id);
+/** Иконка: WiFi с перечёркиванием — признак офлайн-режима. */
+const OfflineIcon = () => (
+  <svg
+    width="17"
+    height="17"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="var(--color-warning)"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-label="Офлайн"
+    style={{ flexShrink: 0 }}
+  >
+    <path d="M5 12.55a11 11 0 0 1 14.08 0" opacity="0.5" />
+    <path d="M1.42 9a16 16 0 0 1 21.16 0" opacity="0.3" />
+    <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+    <circle
+      cx="12" cy="20" r="1.5"
+      fill="var(--color-warning)"
+      stroke="none"
+    />
+    <line
+      x1="2" y1="2" x2="22" y2="22"
+      stroke="var(--color-error)"
+      strokeWidth="2"
+    />
+  </svg>
+);
 
+/** Строка таблицы офлайн-дефекта. */
+const OfflineDefectRow = memo(({
+  defect,
+  defectTypes,
+  phases,
+  index,
+}: {
+  defect: PendingDefect;
+  defectTypes: ReturnType<typeof useGetDefectTypesQuery>['data'];
+  phases: ReturnType<typeof useGetPhasesQuery>['data'];
+  index: number;
+}) => {
+  const dt    = (defectTypes ?? []).find((d: { id: number }) => d.id === defect.defectId) as { name: string } | undefined;
+  const phase = defect.phaseId ? (phases ?? []).find((p: { id: number; name: string }) => p.id === defect.phaseId) : null;
+  const loc   = defect.poleNumber > 0
+    ? `Оп. ${defect.poleNumber}`
+    : `Пр. ${defect.spanRange ?? ''}`;
+  return (
+    <tr style={{ borderBottom: '1px solid var(--color-border)', fontSize: 'var(--font-size-s)' }}>
+      <td style={{ padding: '6px 8px', color: 'var(--color-text-muted)' }}>{index}</td>
+      <td style={{ padding: '6px 8px' }}>{loc}</td>
+      <td style={{ padding: '6px 8px' }}>{dt?.name ?? '—'}</td>
+      <td style={{ padding: '6px 8px', color: 'var(--color-text-secondary)' }}>
+        {phase?.name ?? '—'}
+      </td>
+      <td style={{ padding: '6px 8px', color: 'var(--color-text-secondary)' }}>
+        {defect.inspectorFind}
+      </td>
+    </tr>
+  );
+});
+OfflineDefectRow.displayName = 'OfflineDefectRow';
+
+// ── Внутренняя часть офлайн-листка (внутри DynamicModuleLoader) ───────────────────
+const OfflinePendingInner = memo(({ localId }: { localId: number }) => {
+  const pendingSheets = usePendingSheets();
+  const pending = pendingSheets.find((s) => s.localId === localId);
+
+  const pendingDefects          = usePendingDefects(localId);
+  const { data: filials  = [] } = useGetFilialsQuery();
+  const { data: voltages = [] } = useGetVoltagesQuery();
+  const { data: lines    = [] } = useGetLinesQuery();
+  const { data: defectTypes }   = useGetDefectTypesQuery();
+  const { data: phases }        = useGetPhasesQuery();
+
+  if (!pending) return <div className={cls.notFound}>Листок не найден</div>;
+
+  const filial  = filials.find((f) => f.id === pending.filialId);
+  const voltage = voltages.find((v) => v.id === pending.voltageId);
+  const line    = lines.find((l) => l.id === pending.lineId);
+
+  return (
+    <div className={cls.page}>
+      <div className={cls.infoBar}>
+        <div className={cls.infoText}>
+          <OfflineIcon />
+          <span className={cls.lineName}>{line?.name ?? '—'}</span>
+          <span className={cls.metaSep}>|</span>
+          <span className={cls.metaItem}>{filial?.name ?? '—'}</span>
+          <span className={cls.metaSep}>|</span>
+          <span className={cls.metaItem}>{voltage?.name ?? '—'}</span>
+          <span className={cls.metaSep}>|</span>
+          <span className={cls.metaItem}>
+            {line ? `Опоры ${line.poleStart}–${line.poleEnd} (${line.poleCount} шт.)` : ''}
+          </span>
+          <span className={cls.metaSep}>|</span>
+          <span className={cls.metaItem}>
+            {formatDate(pending.createdDate)} · {pending.createdBy}
+          </span>
+        </div>
+      </div>
+
+      <AddDefectBar
+        key={`offline-${localId}`}
+        sheetId={localId}
+        poleStart={line?.poleStart ?? 1}
+        poleEnd={line?.poleEnd ?? 1}
+        sheetDate={pending.createdDate}
+        sheetInspector={pending.createdBy}
+      />
+
+      <div className={cls.body} style={{ overflowY: 'auto' }}>
+        {pendingDefects.length === 0 ? (
+          <p style={{ padding: '1rem', color: 'var(--color-text-muted)', fontSize: 'var(--font-size-s)' }}>
+            Дефектов пока нет
+          </p>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: 'var(--color-bg-surface-2)', fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', textAlign: 'left' }}>
+                <th style={{ padding: '6px 8px', width: 32 }}>#</th>
+                <th style={{ padding: '6px 8px' }}>Место</th>
+                <th style={{ padding: '6px 8px' }}>Дефект</th>
+                <th style={{ padding: '6px 8px' }}>Фаза</th>
+                <th style={{ padding: '6px 8px' }}>Обнаружил</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pendingDefects.map((d, i) => (
+                <OfflineDefectRow
+                  key={d.localId}
+                  defect={d}
+                  defectTypes={defectTypes}
+                  phases={phases}
+                  index={i + 1}
+                />
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+});
+OfflinePendingInner.displayName = 'OfflinePendingInner';
+
+// ── Офлайн-листок ─────────────────────────────────────────────────────────────────
+const OfflinePendingDetail = memo(({ localId }: { localId: number }) => (
+  <DynamicModuleLoader reducers={offlineReducers}>
+    <OfflinePendingInner localId={localId} />
+  </DynamicModuleLoader>
+));
+OfflinePendingDetail.displayName = 'OfflinePendingDetail';
+
+// ── Онлайн-листок ─────────────────────────────────────────────────────────────────
+const OnlineSheetDetail = memo(({ sheetId }: { sheetId: number }) => {
   const { sheet, sheetFull, defectsFull, fixedPct, totalCount, isLoading } = useSheetDetail(sheetId);
 
   const [sidebarDefect, setSidebarDefect] = useState<DefectRecordFull | null>(null);
   const [showTimeline,  setShowTimeline]  = useState(false);
-
-  // Порядковый номер дефекта в текущем листке (позиция в списке defectsFull)
 
   const { openModal: openFixModal }  = fixDefectActions.useActions();
   const { openModal: openCopyModal } = copyDefectActions.useActions();
@@ -75,13 +237,14 @@ const SheetDetailPage = () => {
   const handleCloseTimeline = useCallback(() => setShowTimeline(false), []);
 
   if (isLoading) return <PageLoader />;
-  if (!sheet || !sheetFull) return <div className={cls.notFound}>Листок осмотра не найден</div>;
+  if (!sheet || !sheetFull) return (
+    <div className={cls.notFound}>Листок осмотра не найден</div>
+  );
 
   return (
     <DynamicModuleLoader reducers={reducers}>
       <div className={cls.page}>
 
-        {/* Информационная шапка */}
         <div className={cls.infoBar}>
           <div className={cls.infoText}>
             <span className={cls.lineName}>{sheetFull.lineName}</span>
@@ -117,7 +280,6 @@ const SheetDetailPage = () => {
           <ExportButton sheet={sheetFull} />
         </div>
 
-        {/* Добавление дефекта — key форсирует пересоздание когда данные листка готовы */}
         <AddDefectBar
           key={`${sheetId}-${sheetFull.createdDate}-${sheetFull.createdBy}`}
           sheetId={sheetId}
@@ -127,7 +289,6 @@ const SheetDetailPage = () => {
           sheetInspector={sheetFull.createdBy}
         />
 
-        {/* Таблица дефектов */}
         <div className={cls.body}>
           <DefectTable
             sheetId={sheetId}
@@ -157,6 +318,16 @@ const SheetDetailPage = () => {
       </div>
     </DynamicModuleLoader>
   );
+});
+OnlineSheetDetail.displayName = 'OnlineSheetDetail';
+
+// ── Роутер страницы ───────────────────────────────────────────────────────────────
+const SheetDetailPage = () => {
+  const { id } = useParams<{ id: string }>();
+  const sheetId = Number(id);
+
+  if (sheetId < 0) return <OfflinePendingDetail localId={sheetId} />;
+  return <OnlineSheetDetail sheetId={sheetId} />;
 };
 
 export default memo(SheetDetailPage);

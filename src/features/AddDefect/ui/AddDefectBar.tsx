@@ -12,6 +12,7 @@ import type { SelectOption } from '@/shared/ui';
 import { toast } from '@/shared/lib/toast';
 import { logger } from '@/shared/lib/logger';
 import { capitalizeFirst } from '@/shared/lib/helpers';
+import { addPendingDefect } from '@/shared/lib/offline/pendingDefects';
 import { addDefectSlice } from '../model/addDefectSlice';
 import {
   selectAddDefectDate,
@@ -176,6 +177,48 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
     const phaseIdsToCreate = sortedPhaseIds.length > 0 ? sortedPhaseIds : [null];
     const insCount   = insulatorCount ? Number(insulatorCount) : null;
     const garlandNum = garlandNumber  ? Number(garlandNumber)  : null;
+
+    // Офлайн-режим: sheetId < 0 — листок не синхронизован
+    if (sheetId < 0) {
+      if (mode === 'pole') {
+        const polesOff = parsePoleList(poleNumber, poleStart, poleEnd);
+        for (const pole of polesOff) {
+          for (const phaseId of phaseIdsToCreate) {
+            addPendingDefect({
+              localSheetId:   sheetId,
+              poleNumber:     pole,
+              defectId:       selectedDefectId,
+              phaseId:        phaseId ?? null,
+              dateFound,
+              inspectorFind:  inspector.trim(),
+              insulatorCount: insCount,
+              spanRange:      null,
+              garlandNumber:  garlandNum,
+              notes:          null,
+            });
+          }
+        }
+      } else {
+        for (const phaseId of phaseIdsToCreate) {
+          addPendingDefect({
+            localSheetId:   sheetId,
+            poleNumber:     0,
+            defectId:       selectedDefectId,
+            phaseId:        phaseId ?? null,
+            dateFound,
+            inspectorFind:  inspector.trim(),
+            insulatorCount: insCount,
+            spanRange:      spanRange.trim(),
+            garlandNumber:  garlandNum,
+            notes:          null,
+          });
+        }
+      }
+      handleClearDraft();
+      toast.success('Дефект сохранён офлайн');
+      return;
+    }
+
     try {
       if (mode === 'pole') {
         const poles = parsePoleList(poleNumber, poleStart, poleEnd);

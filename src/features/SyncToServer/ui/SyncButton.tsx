@@ -3,6 +3,7 @@ import { useAppDispatch } from '@/shared/lib/hooks';
 import { rtkApi } from '@/shared/api/rtkApi';
 import { Button, Input, Modal, VStack, Text } from '@/shared/ui';
 import { getApiUrl, setApiUrl } from '@/shared/lib/api/apiUrl';
+import { SYNC_EVENT } from '@/shared/lib/sync/useSyncService';
 import cls from './SyncButton.module.scss';
 
 type SyncStatus = 'idle' | 'loading' | 'success' | 'error';
@@ -29,6 +30,7 @@ export const SyncButton = memo(() => {
 
   const handleSync = useCallback(async () => {
     setStatus('loading');
+    window.dispatchEvent(new Event(SYNC_EVENT));
     try {
       await dispatch(
         rtkApi.util.invalidateTags([
