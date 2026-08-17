@@ -65,3 +65,38 @@ export function usePendingSheets(): PendingSheet[] {
 
   return sheets;
 }
+
+const SYNCED_MAP_KEY = 'synced_sheets_map_v1';
+
+/** Сохраняет маппинг localId → serverId после успешной синхронизации. */
+export function markSyncedSheet(localId: number, serverId: number): void {
+  try {
+    const raw = localStorage.getItem(SYNCED_MAP_KEY);
+    const map: Record<string, number> = raw ? JSON.parse(raw) : {};
+    map[String(localId)] = serverId;
+    localStorage.setItem(SYNCED_MAP_KEY, JSON.stringify(map));
+  } catch { /* ignore */ }
+}
+
+/** Возвращает реальный serverId для синхронизованного офлайн-листка (или null если не найден). */
+export function getSyncedServerId(localId: number): number | null {
+  try {
+    const raw = localStorage.getItem(SYNCED_MAP_KEY);
+    if (!raw) return null;
+    const map: Record<string, number> = JSON.parse(raw);
+    return map[String(localId)] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Очищает запись после успешного redirect. */
+export function clearSyncedSheet(localId: number): void {
+  try {
+    const raw = localStorage.getItem(SYNCED_MAP_KEY);
+    if (!raw) return;
+    const map: Record<string, number> = JSON.parse(raw);
+    delete map[String(localId)];
+    localStorage.setItem(SYNCED_MAP_KEY, JSON.stringify(map));
+  } catch { /* ignore */ }
+}

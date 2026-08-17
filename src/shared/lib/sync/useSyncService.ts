@@ -4,7 +4,7 @@ import { useAppDispatch } from '@/shared/lib/hooks';
 import { rtkApi } from '@/shared/api/rtkApi';
 import { useCreateSheetMutation } from '@/entities/InspectionSheet';
 import { useCreateDefectMutation } from '@/entities/DefectRecord';
-import { getPendingSheets, removePendingSheet } from '@/shared/lib/offline/pendingSheets';
+import { getPendingSheets, removePendingSheet, markSyncedSheet } from '@/shared/lib/offline/pendingSheets';
 import { getPendingDefects, removePendingDefectsForSheet } from '@/shared/lib/offline/pendingDefects';
 import { getRouteSheetDetail } from '@/shared/const/router';
 
@@ -36,6 +36,7 @@ export function useSyncService() {
           createdDate: sheet.createdDate,
         }).unwrap();
         serverId = created.id;
+        markSyncedSheet(sheet.localId, created.id); // сохраняем маппинг до удаления
         removePendingSheet(sheet.localId);
         synced = true;
 

@@ -58,7 +58,9 @@ function tenancyMiddleware(req, res, next) {
   if (req.filialId == null) {
     req.allowedLineIds = null;
   } else {
-    req.allowedLineIds = FILIAL_LINE_MAP.get(req.filialId) ?? new Set();
+    const lineSet = FILIAL_LINE_MAP.get(req.filialId);
+    // Если линии не настроены — не ограничиваем по линиям (фильтр по filialId на уровне запросов)
+    req.allowedLineIds = (lineSet && lineSet.size > 0) ? lineSet : null;
   }
   next();
 }

@@ -1,6 +1,6 @@
-import { memo, useState, useCallback } from 'react';
+import { memo, useState, useCallback, useEffect } from 'react';
 import { formatDate } from '@/shared/lib/helpers/formatDate';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { DynamicModuleLoader } from '@/shared/lib/components/DynamicModuleLoader/DynamicModuleLoader';
 import type { ReducersList } from '@/shared/lib/components/DynamicModuleLoader/DynamicModuleLoader';
 import { useDeleteDefect, getLocationKey } from '@/entities/DefectRecord';
@@ -23,11 +23,12 @@ import {
   useGetPhasesQuery,
   useGetVoltagesQuery,
 } from '@/entities/InspectionLine';
-import { usePendingSheets } from '@/shared/lib/offline/pendingSheets';
+import { usePendingSheets, getSyncedServerId, clearSyncedSheet } from '@/shared/lib/offline/pendingSheets';
 import { usePendingDefects } from '@/shared/lib/offline/pendingDefects';
 import type { PendingDefect } from '@/shared/lib/offline/pendingDefects';
 import { useSheetDetail } from '../model/useSheetDetail';
 import { useSheetKeyboard } from '../model/useSheetKeyboard';
+import { getRouteSheetDetail } from '@/shared/const/router';
 import cls from './SheetDetailPage.module.scss';
 
 const reducers: ReducersList = {
@@ -109,8 +110,19 @@ OfflineDefectRow.displayName = 'OfflineDefectRow';
 
 // ── Внутренняя часть офлайн-листка (внутри DynamicModuleLoader) ───────────────────
 const OfflinePendingInner = memo(({ localId }: { localId: number }) => {
+  const navigate = useNavigate();
   const pendingSheets = usePendingSheets();
   const pending = pendingSheets.find((s) => s.localId === localId);
+
+  // Когда листок синхронизовался быстрее 50ms, redirect не успел сработать — читаем маппинг
+  useEffect(() => {
+    if (pending) return;
+    const serverId = getSyncedServerId(localId);
+    if (serverId !== null) {
+      clearSyncedSheet(localId);
+      navigate(getRouteSheetDetail(String(serverId)), { replace: true });
+    }
+  }, [pending, localId, navigate]);
 
   const pendingDefects          = usePendingDefects(localId);
   const { data: filials  = [] } = useGetFilialsQuery();

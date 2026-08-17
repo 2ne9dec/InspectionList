@@ -50,6 +50,10 @@ router.get('/inspectionSheets', async (req, res) => {
     const params = [...lf.params];
 
     if (filialId)  { where += ' AND FILIAL_ID = ?';  params.push(Number(filialId)); }
+    // Автофильтр: если нет ограничения по линиям — фильтруем по filialId пользователя
+    if (!filialId && req.filialId && !req.allowedLineIds) {
+      where += ' AND FILIAL_ID = ?'; params.push(req.filialId);
+    }
     if (voltageId) { where += ' AND VOLTAGE_ID = ?'; params.push(Number(voltageId)); }
     if (lineId)    { where += ' AND LINE_ID = ?';    params.push(Number(lineId)); }
     if (createdBy) { where += ' AND CREATED_BY = ?'; params.push(createdBy); }
