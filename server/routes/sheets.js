@@ -258,10 +258,11 @@ router.post('/inspectionSheets/merge', async (req, res) => {
 
     // Выполняем всё в транзакции
     const merged = await withTransaction(async (tx) => {
-      // Проверка дубликата итогового листка
+      // Проверка дубликата (исключая сами объединяемые листки)
+      const mergeIdPlaceholders = ids.map(() => '?').join(',');
       const dup = await tx.queryOne(
-        'SELECT ID FROM INSPECTION_SHEETS WHERE LINE_ID = ? AND CAST(CREATED_DATE AS VARCHAR(10)) = ?',
-        [base.line_id, createdDate],
+        `SELECT ID FROM INSPECTION_SHEETS WHERE LINE_ID = ? AND CAST(CREATED_DATE AS VARCHAR(10)) = ? AND ID NOT IN (${mergeIdPlaceholders})`,
+        [base.line_id, createdDate, ...ids.map(Number)],
       );
       if (dup) throw Object.assign(new Error(`Листок на ${createdDate} уже существует`), { status: 409 });
 
@@ -318,6 +319,7 @@ router.post('/inspectionSheets/merge', async (req, res) => {
     res.status(201).json(toSheet(row));
   } catch (err) {
     if (err.status === 409) return res.status(409).json({ error: err.message });
+    console.error('[merge]', err.message, err.stack);
     res.status(500).json({ error: err.message });
   }
 });

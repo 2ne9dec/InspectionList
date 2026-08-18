@@ -19,7 +19,10 @@ export function useSheetClone(sheets: InspectionSheetFull[]) {
   const handleOpenClone = useCallback((id: number) => {
     const src = sheets.find((s) => s.id === id);
     setCloneTargetId(id);
-    setCloneDate(new Date().toISOString().slice(0, 10));
+    // По умолчанию — следующий день после оригинала (чтобы избежать конфликта дат)
+    const baseDate = src?.createdDate ? new Date(src.createdDate) : new Date();
+    baseDate.setDate(baseDate.getDate() + 1);
+    setCloneDate(baseDate.toISOString().slice(0, 10));
     setCloneBy(src?.createdBy ?? '');
   }, [sheets]);
 
@@ -39,9 +42,10 @@ export function useSheetClone(sheets: InspectionSheetFull[]) {
       }).unwrap();
       handleCloseClone();
       navigate(getRouteSheetDetail(String(result.id)));
-    } catch (err) {
+    } catch (err: unknown) {
       logger.error('Clone sheet failed', err);
-      toast.error('Ошибка клонирования');
+      const msg = (err as { data?: { error?: string } })?.data?.error;
+      toast.error(msg ?? 'Ошибка клонирования');
     }
   }, [cloneTargetId, cloneDate, cloneBy, cloneSheet, handleCloseClone, navigate]);
 

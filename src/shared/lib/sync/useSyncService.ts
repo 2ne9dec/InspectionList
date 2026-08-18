@@ -14,7 +14,8 @@ const POLL_INTERVAL_MS = 30_000;
 // Событие для ручного запуска синхронизации (кнопка "Обновить")
 export const SYNC_EVENT = 'triggerPendingSync';
 
-export function useSyncService() {
+// Принимает inited: ждёт инициализации авторизации перед синхронизацией
+export function useSyncService(inited: boolean) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [createSheet] = useCreateSheetMutation();
@@ -22,6 +23,7 @@ export function useSyncService() {
 
   // Синхронизирует офлайн-листки и их дефекты с сервером
   const syncPending = useCallback(async () => {
+    if (!inited) return; // не синхронизировать до инициализации авторизации
     const pending = getPendingSheets();
     if (!pending.length) return;
     let synced = false;
@@ -83,7 +85,7 @@ export function useSyncService() {
         { type: 'DefectCount', id: 'LIST' },
       ]));
     }
-  }, [createSheet, createDefect, dispatch, navigate]);
+  }, [inited, createSheet, createDefect, dispatch, navigate]);
 
   useEffect(() => {
     const invalidate = () => {

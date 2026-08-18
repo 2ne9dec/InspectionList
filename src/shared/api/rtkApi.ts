@@ -45,6 +45,10 @@ const dynamicBaseQuery: BaseQueryFn<
  * При истёкшем / недействительном токене очищаем sessionStorage и
  * перезагружаем страницу — SPA покажет экран входа.
  */
+// Защита от множественных редиректов: если несколько запросов вернут 401 одновременно,
+// location.href = '/login' вызовется по единственному разу.
+let redirecting401 = false;
+
 const baseQueryWith401: BaseQueryFn<
   string | FetchArgs,
   unknown,
@@ -52,8 +56,11 @@ const baseQueryWith401: BaseQueryFn<
 > = async (args, api, extraOptions) => {
   const result = await dynamicBaseQuery(args, api, extraOptions);
   if (result.error && (result.error as FetchBaseQueryError).status === 401) {
-    sessionStorage.clear();
-    window.location.href = '/login';
+    if (!redirecting401) {
+      redirecting401 = true;
+      sessionStorage.clear();
+      window.location.href = '/login';
+    }
   }
   return result;
 };
