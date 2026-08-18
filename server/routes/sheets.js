@@ -266,6 +266,12 @@ router.post('/inspectionSheets/merge', async (req, res) => {
       );
       if (dup) throw Object.assign(new Error(`Листок на ${createdDate} уже существует`), { status: 409 });
 
+      // Сначала удаляем исходные листки (чтобы освободить дату для INSERT под unique constraint)
+      for (const src of sources) {
+        await tx.execute('DELETE FROM DEFECT_RECORDS WHERE SHEET_ID = ?', [src.sheet.id]);
+        await tx.execute('DELETE FROM INSPECTION_SHEETS WHERE ID = ?', [src.sheet.id]);
+      }
+
       const newId    = await nextId('sheets');
       const newNotes = `Объединение листков от ${sources.map(s => s.sheet.created_date).join(', ')}`;
 
@@ -277,7 +283,7 @@ router.post('/inspectionSheets/merge', async (req, res) => {
          createdBy ?? base.created_by, createdDate, newNotes],
       );
 
-      // Копируем дефекты всех источников
+      // Вставляем дефекты всех источников в новый листок
       for (const src of sources) {
         for (const d of src.defects) {
           const defId = await nextId('defects');
@@ -304,12 +310,6 @@ router.post('/inspectionSheets/merge', async (req, res) => {
              d.master_name ?? null, d.fix_work_volume ?? null],
           );
         }
-      }
-
-      // Удаляем исходные листки (дефекты уже скопированы)
-      for (const src of sources) {
-        await tx.execute('DELETE FROM DEFECT_RECORDS WHERE SHEET_ID = ?', [src.sheet.id]);
-        await tx.execute('DELETE FROM INSPECTION_SHEETS WHERE ID = ?', [src.sheet.id]);
       }
 
       return newId;
