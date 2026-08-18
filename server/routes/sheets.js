@@ -43,17 +43,12 @@ const SELECT_SHEET = `SELECT${SELECT_FIELDS}\n  FROM INSPECTION_SHEETS`;
 router.get('/inspectionSheets', async (req, res) => {
   try {
     const { filialId, voltageId, lineId, createdBy, dateFrom, dateTo, _page, _limit } = req.query;
-    const lf = lineWhereClause(req);
+    // Фильтр по филиалу: без lineWhereClause (ненадёжна при неполной FILIAL_LINE_MAP)
+    let where  = ' WHERE 1=1';
+    const params = [];
 
-    // Условия WHERE (без FIRST/SKIP — добавляются ниже если нужна пагинация)
-    let where  = ' WHERE 1=1' + lf.sql;
-    const params = [...lf.params];
-
-    if (filialId)  { where += ' AND FILIAL_ID = ?';  params.push(Number(filialId)); }
-    // Автофильтр: если нет ограничения по линиям — фильтруем по filialId пользователя
-    if (!filialId && req.filialId && !req.allowedLineIds) {
-      where += ' AND FILIAL_ID = ?'; params.push(req.filialId);
-    }
+    if (filialId)          { where += ' AND FILIAL_ID = ?'; params.push(Number(filialId)); }
+    else if (req.filialId) { where += ' AND FILIAL_ID = ?'; params.push(req.filialId); }
     if (voltageId) { where += ' AND VOLTAGE_ID = ?'; params.push(Number(voltageId)); }
     if (lineId)    { where += ' AND LINE_ID = ?';    params.push(Number(lineId)); }
     if (createdBy) { where += ' AND CREATED_BY = ?'; params.push(createdBy); }
@@ -64,8 +59,8 @@ router.get('/inspectionSheets', async (req, res) => {
 
     const order = ' ORDER BY CREATED_DATE DESC';
 
-    const page  = Math.max(1, Number(_page)  || 0);
-    const limit = Math.min(500, Math.max(1, Number(_limit) || 0));
+    const page  = _page  ? Math.max(1, Number(_page))  : 0;
+    const limit = _limit ? Math.min(500, Math.max(1, Number(_limit))) : 0;
 
     let items;
     let total;
