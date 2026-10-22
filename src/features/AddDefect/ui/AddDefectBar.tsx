@@ -12,6 +12,7 @@ import type { SelectOption } from '@/shared/ui';
 import { toast } from '@/shared/lib/toast';
 import { logger } from '@/shared/lib/logger';
 import { capitalizeFirst } from '@/shared/lib/helpers';
+import { addPendingDefect } from '@/shared/lib/offline/pendingDefects';
 import { addDefectSlice } from '../model/addDefectSlice';
 import {
   selectAddDefectDate,
@@ -60,16 +61,16 @@ function parsePoleList(raw: string, min: number, max: number): number[] {
  * Validates span range string e.g. "3-7" or "5".
  * maxSpan = poleEnd - 1 (number of spans = number of poles - 1).
  */
-function isSpanValid(raw: string, maxSpan: number): boolean {
+function isSpanValid(raw: string, minSpan: number, maxSpan: number): boolean {
   const t = raw.trim();
   if (!t) return false;
   const range = t.match(/^(\d+)\s*[-–]\s*(\d+)$/);
   if (range) {
     const a = Number(range[1]), b = Number(range[2]);
-    return a >= 1 && b <= maxSpan && a <= b;
+    return a >= minSpan && b <= maxSpan && a <= b;
   }
   const n = Number(t);
-  return Number.isInteger(n) && n >= 1 && n <= maxSpan;
+  return Number.isInteger(n) && n >= minSpan && n <= maxSpan;
 }
 
 interface AddDefectBarProps {
@@ -129,10 +130,10 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
   );
 
   // Валидация
-  const maxSpan = poleEnd;
+  const maxSpan = poleEnd; // пролёт между верхней опорой и предыдущей
   const isPoleValid  = mode === 'pole' && poleNumber.trim().length > 0
     && parsePoleList(poleNumber, poleStart, poleEnd).length > 0;
-  const isSpanOk = mode === 'span' && isSpanValid(spanRange, maxSpan);
+  const isSpanOk = mode === 'span' && isSpanValid(spanRange, poleStart, maxSpan);
   const hasLocation = isPoleValid || isSpanOk;
   const isValid = !!selectedDefectId && hasLocation && inspector.trim().length > 0 && !!dateFound;
 
@@ -176,6 +177,48 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
     const phaseIdsToCreate = sortedPhaseIds.length > 0 ? sortedPhaseIds : [null];
     const insCount   = insulatorCount ? Number(insulatorCount) : null;
     const garlandNum = garlandNumber  ? Number(garlandNumber)  : null;
+
+    // Офлайн-режим: sheetId < 0 — листок не синхронизован
+    if (sheetId < 0) {
+      if (mode === 'pole') {
+        const polesOff = parsePoleList(poleNumber, poleStart, poleEnd);
+        for (const pole of polesOff) {
+          for (const phaseId of phaseIdsToCreate) {
+            addPendingDefect({
+              localSheetId:   sheetId,
+              poleNumber:     pole,
+              defectId:       selectedDefectId,
+              phaseId:        phaseId ?? null,
+              dateFound,
+              inspectorFind:  inspector.trim(),
+              insulatorCount: insCount,
+              spanRange:      null,
+              garlandNumber:  garlandNum,
+              notes:          null,
+            });
+          }
+        }
+      } else {
+        for (const phaseId of phaseIdsToCreate) {
+          addPendingDefect({
+            localSheetId:   sheetId,
+            poleNumber:     0,
+            defectId:       selectedDefectId,
+            phaseId:        phaseId ?? null,
+            dateFound,
+            inspectorFind:  inspector.trim(),
+            insulatorCount: insCount,
+            spanRange:      spanRange.trim(),
+            garlandNumber:  garlandNum,
+            notes:          null,
+          });
+        }
+      }
+      handleClearDraft();
+      toast.success('Дефект сохранён офлайн');
+      return;
+    }
+
     try {
       if (mode === 'pole') {
         const poles = parsePoleList(poleNumber, poleStart, poleEnd);
@@ -324,7 +367,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
                 id='add-location'
                 name='location'
                 inputMode='tel'
-                placeholder={mode === 'pole' ? `${poleStart}–${poleEnd}` : `1–${maxSpan}`}
+                placeholder={mode === 'pole' ? `${poleStart}–${poleEnd}` : `${poleStart}–${maxSpan}`}
                 value={mode === 'pole' ? poleNumber : spanRange}
                 onChange={mode === 'pole' ? setPoleNumber : setSpanRange}
                 invalid={poleInvalid || spanInvalid}

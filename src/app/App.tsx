@@ -28,7 +28,7 @@ const App = () => {
   const auth     = useSelector(getUserAuthData);
 
   useTheme();
-  useSyncService();
+  useSyncService(inited);
 
   useEffect(() => {
     dispatch(userActions.initAuthData());

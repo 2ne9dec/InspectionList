@@ -82,7 +82,7 @@
 /* Tablet (< 768px) */
 @include m.down(tablet) {
   .dateField      { width: 130px; }
-  .inspectorField { width: 100%; flex-basis: 100%; }
+  .inspectorField { width: 160px; }
   .phaseField     { width: 90px; }
   .smallField     { width: 90px; }
 }

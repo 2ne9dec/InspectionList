@@ -55,6 +55,19 @@ export async function nextLocalId(table: Table<any>): Promise<number> {
   return last ? (last.id as number) + 1 : 1;
 }
 
+/**
+ * Generates a unique ID across devices using seconds since 2024-01-01.
+ * Fits in Firebird INTEGER (max 2.1B) until ~2092.
+ * Monotonically increasing even if called multiple times per second.
+ */
+let _lastSyncId = 0;
+export function generateSyncId(): number {
+  const SEC_2024 = 1704067200; // 2024-01-01 00:00:00 UTC
+  const ts = Math.floor(Date.now() / 1000) - SEC_2024;
+  _lastSyncId = Math.max(_lastSyncId + 1, ts);
+  return _lastSyncId;
+}
+
 // ─── Типы sync-очереди ───────────────────────────────────────────────────────
 
 export type SyncAction     = 'create' | 'update' | 'delete';

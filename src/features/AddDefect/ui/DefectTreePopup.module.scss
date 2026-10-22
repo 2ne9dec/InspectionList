@@ -224,7 +224,7 @@
   color: var(--color-accent);
 }
 
-@media (max-width: 479px) {
+@media (max-width: 767px), (pointer: coarse) {
   // Скрываем десктопные панели
   .elemPanel,
   .defectPanel {

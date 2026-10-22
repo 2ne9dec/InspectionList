@@ -19,6 +19,36 @@ export interface SheetCardProps {
   disabledForMerge?: boolean;
 }
 
+/** Иконка офлайн-статуса: WiFi с перечёркиванием. */
+const OfflineIcon = () => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="var(--color-warning)"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4, flexShrink: 0 }}
+    aria-label="Офлайн, ждёт синхронизации"
+  >
+    <path d="M5 12.55a11 11 0 0 1 14.08 0" opacity="0.5" />
+    <path d="M1.42 9a16 16 0 0 1 21.16 0" opacity="0.3" />
+    <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+    <circle
+      cx="12" cy="20" r="1.5"
+      fill="var(--color-warning)"
+      stroke="none"
+    />
+    <line
+      x1="2" y1="2" x2="22" y2="22"
+      stroke="var(--color-error)"
+      strokeWidth="2"
+    />
+  </svg>
+);
+
 export const SheetCard = memo((props: SheetCardProps) => {
   const { sheet, index, onOpen, onDelete, onClone, onEdit, showFilial = true, selected, onSelect, disabledForMerge } = props;
 
@@ -47,7 +77,10 @@ export const SheetCard = memo((props: SheetCardProps) => {
           />
         </td>
       )}
-      <td className={cls.cell}>{index}</td>
+      <td className={cls.cell}>
+        {sheet.status === 'pending' && <OfflineIcon />}
+        {sheet.status !== 'pending' && index}
+      </td>
       {showFilial && <td className={cls.cell}>{sheet.filialName}</td>}
       <td className={cls.cell}>{sheet.voltageName}</td>
       <td className={`${cls.cell} ${cls.lineCell}`}>{sheet.lineName}</td>

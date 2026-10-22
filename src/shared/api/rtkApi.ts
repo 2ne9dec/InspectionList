@@ -1,47 +1,73 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { appConfig } from '@/shared/config';
+import {
+  createApi,
+  fetchBaseQuery,
+  type BaseQueryFn,
+  type FetchArgs,
+  type FetchBaseQueryError,
+} from '@reduxjs/toolkit/query/react';
 import type { StateSchema } from '@/app/providers/StoreProvider';
 import { STORAGE_KEYS } from '@/shared/const/storageKeys';
+import { getApiUrl } from '@/shared/lib/api/apiUrl';
 
 /**
  * Корневой RTK Query API.
- * Все entities делают `rtkApi.injectEndpoints(...)`, что позволяет:
- *   1. иметь один кеш и один список тегов;
- *   2. писать endpoints по FSD-feature/entity (а не одним мега-файлом);
- *   3. не тащить лишние редьюсеры в bundle, если фича не используется.
- *
- * prepareHeaders добавляет Authorization: Bearer <token> если токен есть.
- * Для offline-режима (Dexie queryFn) заголовки не используются.
+ * baseQuery — динамический: читает URL из sessionStorage при каждом запросе.
+ * Это позволяет менять адрес сервера без пересборки (нужно для Capacitor/Android).
  */
-export const rtkApi = createApi({
-  reducerPath: 'api',
-  baseQuery: fetchBaseQuery({
-    baseUrl: appConfig.apiUrl,
+const dynamicBaseQuery: BaseQueryFn<
+  string | FetchArgs,
+  unknown,
+  FetchBaseQueryError
+> = async (args, api, extraOptions) => {
+  const baseUrl = getApiUrl();
+  const raw = fetchBaseQuery({
+    baseUrl,
     prepareHeaders: (headers, { getState }) => {
       const state = getState() as StateSchema;
       const user  = state.user?.authData;
 
-      // Токен читается из sessionStorage (сохраняется loginThunk при JWT-логине)
       const token = user?.token ?? sessionStorage.getItem(STORAGE_KEYS.TOKEN);
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       } else {
-        // Fallback: header-based auth для dev-режима без JWT
         if (user?.filialId != null) headers.set('X-Filial-Id', String(user.filialId));
         if (user?.id)               headers.set('X-User-Id',   String(user.id));
-        if (user?.role === 'admin')  headers.set('X-Is-Admin',  'true');
       }
 
       return headers;
     },
-  }),
-  tagTypes: [
-    'Sheet',
-    'Defect',
-    'DefectCount',
-    'References',
-    'User',
-  ],
-  keepUnusedDataFor: 60,
-  endpoints: () => ({}),
+  });
+  return raw(args, api, extraOptions);
+};
+
+/**
+ * Обёртка с перехватом 401.
+ * При истёкшем / недействительном токене очищаем sessionStorage и
+ * перезагружаем страницу — SPA покажет экран входа.
+ */
+// Защита от множественных редиректов: если несколько запросов вернут 401 одновременно,
+// location.href = '/login' вызовется по единственному разу.
+let redirecting401 = false;
+
+const baseQueryWith401: BaseQueryFn<
+  string | FetchArgs,
+  unknown,
+  FetchBaseQueryError
+> = async (args, api, extraOptions) => {
+  const result = await dynamicBaseQuery(args, api, extraOptions);
+  if (result.error && (result.error as FetchBaseQueryError).status === 401) {
+    if (!redirecting401) {
+      redirecting401 = true;
+      sessionStorage.clear();
+      window.location.href = '/login';
+    }
+  }
+  return result;
+};
+
+export const rtkApi = createApi({
+  reducerPath: 'api',
+  baseQuery:   baseQueryWith401,
+  tagTypes:    ['References', 'Sheet', 'Sheets', 'Defect', 'Defects', 'DefectCount', 'User'],
+  endpoints:   () => ({}),
 });

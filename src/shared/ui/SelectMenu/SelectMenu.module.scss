@@ -24,6 +24,13 @@
     border-color: var(--color-accent);
     outline: 2px solid var(--color-accent-muted);
   }
+
+  &.disabled,
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
 }
 
 .label {
@@ -67,5 +74,20 @@
     background: var(--color-accent-muted);
     color: var(--color-accent);
     font-weight: 500;
+  }
+
+  &.optionIndent {
+    padding-left: calc(var(--space-3) + 16px);
+    font-size: var(--font-size-s);
+    color: var(--color-text-secondary);
+
+    &::before {
+      content: '↳ ';
+      opacity: 0.5;
+    }
+
+    &.selected {
+      color: var(--color-accent);
+    }
   }
 }

@@ -4,29 +4,38 @@ import { ConfirmModal, EmptyState, Loader, Button, Modal, Input, FormField, VSta
 import { getRouteSheetDetail } from '@/shared/const/router';
 import { toast } from '@/shared/lib/toast';
 import { logger } from '@/shared/lib/logger';
+import { removePendingSheet } from '@/shared/lib/offline/pendingSheets';
 import { useSheetsList } from '../model/useSheetsList';
 import { useSheetMerge } from '../model/useSheetMerge';
 import { useSheetEdit } from '../model/useSheetEdit';
 import { useSheetClone } from '../model/useSheetClone';
-import { formatDate } from '@/shared/lib/helpers';
 import { DateRangeFilter } from './DateRangeFilter';
 import { SheetsTable } from './SheetsTable';
 import { CloneSheetModal } from './CloneSheetModal';
 import { MergeSheetModal } from './MergeSheetModal';
 import cls from './SheetsList.module.scss';
 
-const INITIAL_SHEETS  = 30;
+const INITIAL_SHEETS   = 30;
 const LOAD_MORE_SHEETS = 30;
+
+/** Первый день текущего месяца в формате YYYY-MM-DD */
+function getDefaultDateFrom(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+}
 
 export const SheetsList = memo(() => {
   const navigate = useNavigate();
 
-  const [dateFrom, setDateFrom] = useState('');
+  // По умолчанию показываем листки с начала текущего месяца
+  const [dateFrom, setDateFrom] = useState(getDefaultDateFrom);
   const [dateTo,   setDateTo]   = useState('');
-  const { sheets, isLoading, isAdmin, deleteSheet, hasSearch, sortKey, sortDir, toggleSort } =
+  const hasDateFilter = !!(dateFrom || dateTo);
+
+  const { sheets, isLoading, deleteSheet, hasSearch, sortKey, sortDir, toggleSort } =
     useSheetsList({ dateFrom, dateTo, statusFilter: 'all' });
 
-  // ── Infinite scroll ───────────────────────────────────────────────────────
+  // ── Infinite scroll ─────────────────────────────────────────────────────────────────────────────
   const [displayCount, setDisplayCount] = useState(INITIAL_SHEETS);
   const tableWrapperRef = useRef<HTMLDivElement>(null);
   const sentinelRef     = useRef<HTMLDivElement>(null);
@@ -56,7 +65,7 @@ export const SheetsList = memo(() => {
     return () => obs.disconnect();
   }, [hasMore]);
 
-  // ── Операции с листками ───────────────────────────────────────────────────
+  // ── Операции с листками ───────────────────────────────────────────────────────────────────────────
   const merge = useSheetMerge(sheets);
   const edit  = useSheetEdit(sheets);
   const clone = useSheetClone(sheets);
@@ -67,6 +76,17 @@ export const SheetsList = memo(() => {
   );
 
   const handleDelete = useCallback(async (id: number) => {
+    // Офлайн-листок — удаляем только из localStorage
+    if (id < 0) {
+      const ok = await merge.confirm({
+        title: 'Удалить офлайн-листок?',
+        description: 'Листок не был синхронизирован с сервером.',
+        variant: 'danger',
+      });
+      if (ok) removePendingSheet(id);
+      return;
+    }
+    // Серверный листок
     const ok = await merge.confirm({
       title: 'Удалить листок осмотра?',
       description: 'Все дефекты будут удалены. Это действие необратимо.',
@@ -83,6 +103,17 @@ export const SheetsList = memo(() => {
     }
   }, [merge, deleteSheet]);
 
+  // Клонирование / редактирование недоступно для офлайн-листков
+  const handleClone = useCallback((id: number) => {
+    if (id < 0) return;
+    clone.handleOpenClone(id);
+  }, [clone]);
+
+  const handleEdit = useCallback((id: number) => {
+    if (id < 0) return;
+    edit.handleOpenEdit(id);
+  }, [edit]);
+
   const handleDateRangeChange = useCallback(
     ({ from, to }: { from: string; to: string }) => { setDateFrom(from); setDateTo(to); },
     [],
@@ -92,11 +123,6 @@ export const SheetsList = memo(() => {
     <div className={cls.wrapper}>
       <div className={cls.filterBar}>
         <DateRangeFilter dateFrom={dateFrom} dateTo={dateTo} onChange={handleDateRangeChange} />
-        {!!(dateFrom || dateTo) && (
-          <span className={cls.filterHint}>
-            Период: {formatDate(dateFrom, '') || 'начало'} — {formatDate(dateTo, '') || 'конец'}
-          </span>
-        )}
         {merge.selectedIds.size >= 2 && (
           <Button variant='primary' size='s' onClick={merge.handleOpenMerge} className={cls.mergeBtn}>
             Объединить {merge.selectedIds.size} листка
@@ -114,8 +140,8 @@ export const SheetsList = memo(() => {
           <div className={cls.center}><Loader /></div>
         ) : sheets.length === 0 ? (
           <EmptyState
-            title={hasSearch || !!(dateFrom || dateTo) ? 'Ничего не найдено' : 'Нет листков осмотра'}
-            description={hasSearch || !!(dateFrom || dateTo)
+            title={hasSearch || hasDateFilter ? 'Ничего не найдено' : 'Нет листков осмотра'}
+            description={hasSearch || hasDateFilter
               ? 'Попробуйте изменить параметры фильтрации.'
               : 'Создайте первый листок осмотра, чтобы начать работу.'}
           />
@@ -123,14 +149,14 @@ export const SheetsList = memo(() => {
           <>
             <SheetsTable
               sheets={visibleSheets}
-              showFilial={isAdmin}
+              showFilial={false}
               sortKey={sortKey}
               sortDir={sortDir}
               onSort={toggleSort}
               onOpen={handleOpen}
               onDelete={handleDelete}
-              onClone={clone.handleOpenClone}
-              onEdit={edit.handleOpenEdit}
+              onClone={handleClone}
+              onEdit={handleEdit}
               selectedIds={merge.selectedIds}
               onSelect={merge.handleSelect}
               mergeLineId={merge.mergeLineId}

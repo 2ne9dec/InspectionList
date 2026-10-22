@@ -3,7 +3,7 @@ import { STORAGE_KEYS } from '@/shared/const/storageKeys';
 import type { User, UserSchema } from './types';
 
 const USER_KEY = STORAGE_KEYS.USER;
-// sessionStorage очищается при закрытии браузера — автоматический разлогин
+// sessionStorage — сессия сохраняется при перезапуске Capacitor/браузера
 
 const initialState: UserSchema = {
   _inited: false,

@@ -10,9 +10,52 @@ export interface DateRangeFilterProps {
   onChange: (range: { from: string; to: string }) => void;
 }
 
+// Хелперы для пресетов
+function toDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Первый день месяца с offset (0 = текущий, -1 = прошлый) */
+function firstOfMonth(offset = 0): string {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + offset);
+  return toDateStr(d);
+}
+
+/** Последний день месяца с offset */
+function lastOfMonth(offset = 0): string {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + offset + 1);
+  d.setDate(0);
+  return toDateStr(d);
+}
+
+// Быстрые пресеты выбора периода
+const PRESETS: Array<{ label: string; from: () => string; to: () => string }> = [
+  { label: 'Этот месяц',    from: () => firstOfMonth(0),   to: () => '' },
+  { label: 'Прошлый месяц', from: () => firstOfMonth(-1),  to: () => lastOfMonth(-1) },
+  { label: '3 месяца',      from: () => firstOfMonth(-2),  to: () => '' },
+  { label: '6 месяцев',     from: () => firstOfMonth(-5),  to: () => '' },
+  { label: 'Год',           from: () => firstOfMonth(-11), to: () => '' },
+  { label: 'Все',           from: () => '',                to: () => '' },
+];
+
+/** Название кнопки фильтра: пресет, произвольный диапазон или «Все периоды» */
+function getButtonLabel(dateFrom: string, dateTo: string): string {
+  if (!dateFrom && !dateTo) return 'Все периоды';
+  for (const p of PRESETS) {
+    if (p.label === 'Все') continue;
+    if (p.from() === dateFrom && p.to() === dateTo) return p.label;
+  }
+  return `${formatDate(dateFrom, '') || '...'} — ${formatDate(dateTo, '') || '...'}`;
+}
+
 /**
- * Кнопка-фильтр диапазона дат с выпадающим календарём.
- * Самодостаточен — управляет своим состоянием open/close.
+ * Кнопка-фильтр диапазона дат с быстрыми пресетами и ручным вводом.
+ * Кнопка × встроена внутрь основной кнопки — клик по ней сбрасывает
+ * фильтр без открытия дропдауна.
  */
 export const DateRangeFilter = memo(({ dateFrom, dateTo, onChange }: DateRangeFilterProps) => {
   const [open, setOpen] = useState(false);
@@ -22,9 +65,7 @@ export const DateRangeFilter = memo(({ dateFrom, dateTo, onChange }: DateRangeFi
   useEscape(() => setOpen(false), { enabled: open, blurOnClose: true });
 
   const hasFilter = !!(dateFrom || dateTo);
-  const label = hasFilter
-    ? `${formatDate(dateFrom, '') || '...'} — ${formatDate(dateTo, '') || '...'}`
-    : 'Фильтр по дате';
+  const label = getButtonLabel(dateFrom, dateTo);
 
   return (
     <div ref={ref} className={cls.wrap}>
@@ -36,20 +77,43 @@ export const DateRangeFilter = memo(({ dateFrom, dateTo, onChange }: DateRangeFi
         aria-haspopup="dialog"
       >
         {label}
+        {hasFilter && (
+          <span
+            className={cls.clearInner}
+            role="button"
+            tabIndex={-1}
+            aria-label="Показать все периоды"
+            onClick={(e) => { e.stopPropagation(); onChange({ from: '', to: '' }); }}
+          >
+            ×
+          </span>
+        )}
       </button>
-      {hasFilter && (
-        <button
-          type="button"
-          className={cls.clear}
-          onClick={() => onChange({ from: '', to: '' })}
-          aria-label="Сбросить диапазон дат"
-        >
-          ×
-        </button>
-      )}
 
       {open && (
-        <div className={cls.dropdown} role="dialog" aria-label="Выбор диапазона дат">
+        <div className={cls.dropdown} role="dialog" aria-label="Выбор периода">
+          {/* Быстрые пресеты */}
+          <div className={cls.presets}>
+            {PRESETS.map((p) => {
+              const pFrom    = p.from();
+              const pTo      = p.to();
+              const isActive = pFrom === dateFrom && pTo === dateTo;
+              return (
+                <button
+                  key={p.label}
+                  type="button"
+                  className={`${cls.preset} ${isActive ? cls.presetActive : ''}`}
+                  onClick={() => { onChange({ from: pFrom, to: pTo }); setOpen(false); }}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className={cls.divider} />
+
+          {/* Ручной ввод дат */}
           <FormField label="От" htmlFor="date-from">
             <Input
               id="date-from"

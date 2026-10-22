@@ -1,4 +1,4 @@
-export type SheetStatus = 'active' | 'archived' | 'draft';
+export type SheetStatus = 'active' | 'archived' | 'draft' | 'pending';
 
 export interface InspectionSheet {
   id: number;

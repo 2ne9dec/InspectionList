@@ -12,7 +12,7 @@ import {
   useGetVoltagesQuery,
   useGetFilialVoltageFilterQuery,
 } from '@/entities/InspectionLine';
-import { getUserFilialId, getUserIsAdmin } from '@/entities/User';
+import { getUserFilialId } from '@/entities/User';
 
 export type StatusFilter = 'all' | 'active' | 'fixed';
 
@@ -53,10 +53,9 @@ function matchesSpanRange(spanRange: string | null | undefined, min: number, max
 }
 export function useJournalFilters() {
   const userFilialId = useSelector(getUserFilialId);
-  const isAdmin      = useSelector(getUserIsAdmin);
 
   const { data: defects     = [] } = useGetAllDefectsQuery();
-  const { data: sheets      = [] } = useGetSheetsQuery();
+  const { data: sheets      = [] } = useGetSheetsQuery({})  // no date filter: load all sheets;
   const { data: defectTypes = [] } = useGetDefectTypesQuery();
   const { data: elements    = [] } = useGetElementsQuery();
   const { data: phases      = [] } = useGetPhasesQuery();
@@ -82,17 +81,17 @@ export function useJournalFilters() {
 
   // ── Листки текущего филиала ───────────────────────────────────────────────────────────────────────
   const filialSheets = useMemo(
-    () => isAdmin || userFilialId === null
+    () => userFilialId === null
       ? sheets
       : sheets.filter((s) => s.filialId === userFilialId),
-    [sheets, userFilialId, isAdmin],
+    [sheets, userFilialId],
   );
 
   const filialVoltageIds = useMemo(() => {
-    if (isAdmin || userFilialId === null) return null;
+    if (userFilialId === null) return null;
     const ids = filialVoltageMap[String(userFilialId)];
     return ids ? new Set(ids) : new Set<number>();
-  }, [filialVoltageMap, userFilialId, isAdmin]);
+  }, [filialVoltageMap, userFilialId]);
 
   const filialVoltages = useMemo(
     () => filialVoltageIds === null

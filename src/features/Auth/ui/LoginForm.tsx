@@ -42,7 +42,7 @@ export const LoginForm = memo(() => {
     <VStack gap='4' className={cls.form}>
       <div className={cls.brand}>
         <span className={cls.brandLine}>Листки</span><span className={cls.brandVision}>осмотра</span>
-        <svg className={cls.brandIcon} viewBox="0 0 60 82" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+        <svg className={cls.brandIcon} viewBox="0 0 60 82" overflow="visible">
           {/* Центральная мачта */}
           <line className={`${cls.draw} ${cls.d1}`}
             x1="30" y1="78" x2="30" y2="6"

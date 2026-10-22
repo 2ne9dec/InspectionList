@@ -40,10 +40,11 @@ export const Dropdown = memo((props: DropdownProps) => {
     if (!panelRef.current || !triggerRef.current) return;
     const panel = panelRef.current;
     const tr = triggerRef.current.getBoundingClientRect();
+    // Ширина панели ≥ ширине триггера (на всю ширину поля)
     const width = panelWidth
       ? (typeof panelWidth === 'number' ? `${panelWidth}px` : panelWidth)
-      : undefined;
-    if (width) panel.style.width = width;
+      : `${tr.width}px`;
+    panel.style.width = width;
 
     if (placement === 'bottom-end') {
       panel.style.right = `${window.innerWidth - tr.right}px`;

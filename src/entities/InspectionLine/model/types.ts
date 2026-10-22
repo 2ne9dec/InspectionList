@@ -14,15 +14,17 @@ export interface Line {
   id: number;
   name: string;
   voltageId: number;
-  poleRange: string;
-  poleStart: number;
-  poleEnd: number;
-  poleCount: number;
+  filialId?: number | null;
+  /** Диапазон опор, например "1-186". Null для SAP-линий без ручного ввода */
+  poleRange?: string | null;
+  poleStart?: number | null;
+  poleEnd?: number | null;
+  poleCount?: number | null;
   /** Год ввода в эксплуатацию */
   yearBuilt?: number | null;
   /** Год последнего капитального ремонта */
   yearLastOverhaul?: number | null;
-  /** Протяжённость линии, км (опционально, вручную) */
+  /** Протяжённость линии, км */
   lengthKm?: number | null;
   /** Тип опор: деревянные, железобетонные, металлические */
   poleType?: string | null;
@@ -30,6 +32,8 @@ export interface Line {
   wireType?: string | null;
   /** Дополнительные примечания */
   notes?: string | null;
+  /** Номер технического места SAP (VL110-XXXXXX) */
+  sapCode?: string | null;
 }
 
 export interface Element {
@@ -44,16 +48,12 @@ export interface DefectType {
   severity: Severity;
 }
 
-// Фаза провода или грозотрос — выбирается при добавлении дефекта
-// для элементов из списка phaseElementIds
 export interface Phase {
   id: number;
-  name: string; // "Провод 1", "Провод 2", "Провод 3", "Грозотрос"
+  name: string;
 }
 
 export interface DefectTreeNode {
   element: Element;
   defects: DefectType[];
 }
-
-

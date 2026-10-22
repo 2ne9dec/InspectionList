@@ -8,8 +8,9 @@ import {
   useGetVoltagesQuery,
 } from '@/entities/InspectionLine';
 import { useGetDefectCountsQuery } from '@/entities/DefectRecord';
-import { getUserFilialId, getUserIsAdmin } from '@/entities/User';
+import { getUserFilialId } from '@/entities/User';
 import { selectCreateSheetSearch } from '@/features/CreateSheet';
+import { usePendingSheets } from '@/shared/lib/offline/pendingSheets';
 
 export type SheetSortKey = 'voltage' | 'date' | 'inspector';
 export type SortDir = 'asc' | 'desc';
@@ -24,7 +25,6 @@ interface UseSheetsListOptions {
 export function useSheetsList({ dateFrom, dateTo, statusFilter }: UseSheetsListOptions) {
   const search = useSelector(selectCreateSheetSearch);
   const userFilialId = useSelector(getUserFilialId);
-  const isAdmin = useSelector(getUserIsAdmin);
 
   const [sortKey, setSortKey] = useState<SheetSortKey>('voltage');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
@@ -40,7 +40,14 @@ export function useSheetsList({ dateFrom, dateTo, statusFilter }: UseSheetsListO
     });
   }, []);
 
-  const { data: sheets = [], isLoading } = useGetSheetsQuery();
+  // Офлайн: если браузер сообщает об отсутствии сети — пропускаем запрос к серверу
+  const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+
+  // Даты фильтруются на сервере — передаём в запрос, чтобы не грузить всю историю
+  const { data: sheets = [], isLoading } = useGetSheetsQuery(
+    { dateFrom, dateTo },
+    { skip: !isOnline },
+  );
   const { data: filials = [] } = useGetFilialsQuery();
   const { data: voltages = [] } = useGetVoltagesQuery();
   const { data: lines = [] } = useGetLinesQuery();
@@ -48,6 +55,12 @@ export function useSheetsList({ dateFrom, dateTo, statusFilter }: UseSheetsListO
   // а не все дефекты целиком — критично при 200 листках × 1000 дефектов.
   const { data: defectCounts = [] } = useGetDefectCountsQuery();
   const [deleteSheet] = useDeleteSheetMutation();
+
+  // Офлайн-листки из localStorage
+  const pendingSheets = usePendingSheets();
+
+  // Не показываем спиннер если уже есть pending-листки для отображения
+  const effectiveLoading = isLoading && pendingSheets.length === 0;
 
   const defectsBySheet = useMemo(() => {
     const map = new Map<number, { active: number; fixed: number }>();
@@ -83,10 +96,38 @@ export function useSheetsList({ dateFrom, dateTo, statusFilter }: UseSheetsListO
     [sheets, filialById, voltageById, lineById, defectsBySheet],
   );
 
+  // Офлайн-листки, обогащённые именами из справочников
+  const pendingEnriched = useMemo<InspectionSheetFull[]>(
+    () =>
+      pendingSheets.map((p) => {
+        const filial  = filialById.get(p.filialId);
+        const voltage = voltageById.get(p.voltageId);
+        const line    = lineById.get(p.lineId);
+        return {
+          id:          p.localId,
+          filialId:    p.filialId,
+          voltageId:   p.voltageId,
+          lineId:      p.lineId,
+          createdDate: p.createdDate,
+          createdBy:   p.createdBy,
+          status:      'pending' as const,
+          filialName:  filial?.name  ?? '—',
+          voltageName: voltage?.name ?? '—',
+          lineName:    line?.name    ?? '—',
+          poleStart:   line?.poleStart ?? 1,
+          poleEnd:     line?.poleEnd   ?? 1,
+          poleCount:   line?.poleCount ?? 0,
+          activeCount: 0,
+          fixedCount:  0,
+        };
+      }),
+    [pendingSheets, filialById, voltageById, lineById],
+  );
+
   // Подсчёт листков по статусам (до применения фильтра статуса, но после остальных)
   const statusCounts = useMemo(() => {
     const base = enriched.filter((s) => {
-      if (!isAdmin && userFilialId !== null && s.filialId !== userFilialId) return false;
+      if (userFilialId !== null && s.filialId !== userFilialId) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         return (
@@ -99,16 +140,16 @@ export function useSheetsList({ dateFrom, dateTo, statusFilter }: UseSheetsListO
       return true;
     });
     return {
-      all:      base.length,
+      all:      base.length + pendingEnriched.length,
       active:   base.filter((s) => s.status === 'active').length,
       archived: base.filter((s) => s.status === 'archived').length,
     };
-  }, [enriched, isAdmin, userFilialId, search]);
+  }, [enriched, userFilialId, search, pendingEnriched]);
 
   const filtered = useMemo(() => {
     let result = enriched;
 
-    if (!isAdmin && userFilialId !== null) {
+    if (userFilialId !== null) {
       result = result.filter((s) => s.filialId === userFilialId);
     }
 
@@ -127,11 +168,10 @@ export function useSheetsList({ dateFrom, dateTo, statusFilter }: UseSheetsListO
       result = result.filter((s) => s.status === statusFilter);
     }
 
-    if (dateFrom) result = result.filter((s) => s.createdDate >= dateFrom);
-    if (dateTo)   result = result.filter((s) => s.createdDate <= dateTo);
+    // dateFrom / dateTo фильтруются сервером
 
     return result;
-  }, [enriched, search, statusFilter, dateFrom, dateTo, userFilialId, isAdmin]);
+  }, [enriched, search, statusFilter, userFilialId]);
 
   const sorted = useMemo(() => {
     /** Извлекаем кВ из строки вида "ВЛ-110 кВ" -> 110 для числовой сортировки. */
@@ -151,10 +191,29 @@ export function useSheetsList({ dateFrom, dateTo, statusFilter }: UseSheetsListO
     return [...filtered].sort(cmp);
   }, [filtered, sortKey, sortDir]);
 
+  // Офлайн-листки всегда сверху (при фильтре 'all'), отфильтрованные по поиску
+  const allSheets = useMemo(() => {
+    if (statusFilter !== 'all') return sorted;
+    let pending = pendingEnriched;
+    if (userFilialId !== null) {
+      pending = pending.filter((p) => p.filialId === userFilialId);
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      pending = pending.filter(
+        (p) =>
+          p.lineName.toLowerCase().includes(q) ||
+          p.filialName.toLowerCase().includes(q) ||
+          p.voltageName.toLowerCase().includes(q) ||
+          p.createdBy.toLowerCase().includes(q),
+      );
+    }
+    return [...pending, ...sorted];
+  }, [statusFilter, sorted, pendingEnriched, search, userFilialId]);
+
   return {
-    sheets: sorted,
-    isLoading,
-    isAdmin,
+    sheets: allSheets,
+    isLoading: effectiveLoading,
     deleteSheet,
     hasSearch: !!search.trim(),
     sortKey,

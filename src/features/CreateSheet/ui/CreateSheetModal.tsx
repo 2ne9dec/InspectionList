@@ -1,19 +1,17 @@
 import { memo, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import type { StateSchema } from '@/app/providers/StoreProvider';
-import { useCreateSheetMutation } from '@/entities/InspectionSheet';
 import {
   useGetFilialsQuery,
   useGetFilialVoltageFilterQuery,
   useGetLinesQuery,
   useGetVoltagesQuery,
 } from '@/entities/InspectionLine';
-import { getUserFilialId, getUserIsAdmin } from '@/entities/User';
+import { getUserFilialId } from '@/entities/User';
 import { getRouteSheetDetail } from '@/shared/const/router';
 import { Button, FormField, Input, Modal, SelectMenu } from '@/shared/ui';
-import { toast } from '@/shared/lib/toast';
-import { logger } from '@/shared/lib/logger';
+import { addPendingSheet } from '@/shared/lib/offline/pendingSheets';
+import { SYNC_EVENT } from '@/shared/lib/sync/useSyncService';
 import { createSheetActions } from '../model/createSheetSlice';
 import {
   selectCreateSheetCreatedBy,
@@ -24,34 +22,27 @@ import {
 } from '../model/selectors';
 import cls from './CreateSheetModal.module.scss';
 
-const selectAdminFilialId = (s: StateSchema) => s.createSheet?.filialId ?? null;
-
 export const CreateSheetModal = memo(() => {
   const navigate = useNavigate();
 
-  const isOpen = useSelector(selectCreateSheetIsOpen);
-  const voltageId = useSelector(selectCreateSheetVoltageId);
-  const lineId = useSelector(selectCreateSheetLineId);
-  const createdBy = useSelector(selectCreateSheetCreatedBy);
+  const isOpen      = useSelector(selectCreateSheetIsOpen);
+  const voltageId   = useSelector(selectCreateSheetVoltageId);
+  const lineId      = useSelector(selectCreateSheetLineId);
+  const createdBy   = useSelector(selectCreateSheetCreatedBy);
   const createdDate = useSelector(selectCreateSheetCreatedDate);
-  const adminFilialId = useSelector(selectAdminFilialId);
-
   const userFilialId = useSelector(getUserFilialId);
-  const isAdmin = useSelector(getUserIsAdmin);
 
-  const { closeModal, setVoltageId, setLineId, setCreatedBy, setCreatedDate, setFilialId } =
+  const { closeModal, setVoltageId, setLineId, setCreatedBy, setCreatedDate } =
     createSheetActions.useActions();
 
-  const { data: filials = [] } = useGetFilialsQuery();
-  const { data: voltages = [] } = useGetVoltagesQuery();
-  const { data: lines = [] } = useGetLinesQuery();
+  const { data: filials  = [] } = useGetFilialsQuery();
+  const { data: voltages = [], isFetching: voltagesFetching } = useGetVoltagesQuery();
+  const { data: lines    = [] } = useGetLinesQuery();
   const { data: voltageFilter = {} } = useGetFilialVoltageFilterQuery();
-  const [createSheet, { isLoading }] = useCreateSheetMutation();
-
-  const effectiveFilialId = isAdmin ? adminFilialId : userFilialId;
+  const effectiveFilialId = userFilialId;
 
   const filteredVoltages = useMemo(() => {
-    if (!effectiveFilialId) return [];
+    if (!effectiveFilialId) return voltages;
     const allowed = voltageFilter[String(effectiveFilialId)];
     return voltages.filter((v) => v.filialId === effectiveFilialId && (!allowed || allowed.includes(v.id)));
   }, [voltages, effectiveFilialId, voltageFilter]);
@@ -66,12 +57,8 @@ export const CreateSheetModal = memo(() => {
     [lines, lineId],
   );
 
-  const isValid = !!effectiveFilialId && !!voltageId && !!lineId && createdBy.trim().length > 0 && !!createdDate;
+  const isValid = !!voltageId && !!lineId && createdBy.trim().length > 0 && !!createdDate;
 
-  const filialOptions = useMemo(
-    () => filials.map((f) => ({ value: String(f.id), label: f.name })),
-    [filials],
-  );
   const voltageOptions = useMemo(
     () => [
       { value: '', label: '— выберите напряжение —' },
@@ -79,31 +66,59 @@ export const CreateSheetModal = memo(() => {
     ],
     [filteredVoltages],
   );
-  const lineOptions = useMemo(
-    () => filteredLines.map((l) => ({ value: String(l.id), label: l.name })),
-    [filteredLines],
-  );
+  const lineOptions = useMemo(() => {
+    // Разделяем на главные линии и отпайки (имя содержит " / ")
+    const mains    = filteredLines.filter((l) => !l.name.includes(' / '));
+    const branches = filteredLines.filter((l) =>  l.name.includes(' / '));
+
+    const result: { value: string; label: string; triggerLabel?: string; indent?: boolean }[] = [];
+
+    for (const main of mains) {
+      result.push({ value: String(main.id), label: main.name });
+      const prefix = main.name + ' / ';
+      for (const br of branches) {
+        if (br.name.startsWith(prefix)) {
+          result.push({
+            value: String(br.id),
+            label: br.name.slice(prefix.length),
+            triggerLabel: br.name,
+            indent: true,
+          });
+        }
+      }
+    }
+
+    // Отпайки без родителя — добавляем в конец
+    for (const br of branches) {
+      if (!result.some((o) => o.value === String(br.id))) {
+        result.push({ value: String(br.id), label: br.name, indent: true });
+      }
+    }
+
+    return result;
+  }, [filteredLines]);
 
   const userFilialName = filials.find((f) => f.id === userFilialId)?.name ?? '';
 
-  const handleSubmit = useCallback(async () => {
-    if (!isValid || !effectiveFilialId || !voltageId || !lineId) return;
-    try {
-      const trimmed = createdBy.trim();
-      const newSheet = await createSheet({
-        filialId: effectiveFilialId,
-        voltageId,
-        lineId,
-        createdBy: trimmed,
-        createdDate,
-      }).unwrap();
-      closeModal();
-      setTimeout(() => navigate(getRouteSheetDetail(String(newSheet.id))), 50);
-    } catch (err: unknown) {
-      logger.error('CreateSheet failed', err);
-      toast.error('Ошибка при создании листка осмотра');
-    }
-  }, [closeModal, createSheet, createdBy, createdDate, effectiveFilialId, isValid, lineId, navigate, voltageId]);
+  const handleSubmit = useCallback(() => {
+    const sheetFilialId = effectiveFilialId ?? selectedLine?.filialId ?? null;
+    if (!isValid || !voltageId || !lineId || !sheetFilialId) return;
+
+    // Мгновенно сохраняем локально — не ждём сервер
+    const pending = addPendingSheet({
+      filialId:    sheetFilialId,
+      voltageId:   voltageId!,
+      lineId:      lineId!,
+      createdBy:   createdBy.trim(),
+      createdDate,
+    });
+    closeModal();
+
+    // Фоновая синхронизация — если есть сеть, листок сразу перейдёт на сервер
+    window.dispatchEvent(new Event(SYNC_EVENT));
+
+    setTimeout(() => navigate(getRouteSheetDetail(String(pending.localId))), 50);
+  }, [closeModal, createdBy, createdDate, effectiveFilialId, isValid, lineId, navigate, selectedLine, voltageId]);
 
   return (
     <Modal
@@ -116,32 +131,22 @@ export const CreateSheetModal = memo(() => {
           <Button variant='secondary' onClick={() => closeModal()}>
             Отмена
           </Button>
-          <Button variant='primary' onClick={handleSubmit} disabled={!isValid} loading={isLoading}>
+          <Button variant='primary' onClick={handleSubmit} disabled={!isValid}>
             Создать
           </Button>
         </>
       }
     >
       <div className={cls.fields}>
-        {isAdmin ? (
-          <FormField label='Филиал' htmlFor='cs-filial' required>
-            <SelectMenu
-              options={filialOptions}
-              value={String(effectiveFilialId ?? '')}
-              onChange={(v) => v !== '' && setFilialId(Number(v))}
-              placeholder='— выберите филиал —'
-            />
-          </FormField>
-        ) : (
-          <div className={cls.filialBadge}>{userFilialName}</div>
-        )}
+        <div className={cls.filialBadge}>{userFilialName}</div>
 
         <FormField label='Напряжение' htmlFor='cs-voltage' required>
           <SelectMenu
             options={voltageOptions}
             value={String(voltageId ?? '')}
             onChange={(v) => setVoltageId(v === '' ? 0 : Number(v))}
-            placeholder='— выберите напряжение —'
+            placeholder={voltagesFetching && voltages.length === 0 ? 'Загрузка...' : '— выберите напряжение —'}
+            disabled={voltagesFetching && voltages.length === 0}
           />
         </FormField>
 
@@ -151,13 +156,17 @@ export const CreateSheetModal = memo(() => {
             options={lineOptions}
             value={String(lineId ?? '')}
             onChange={(v) => setLineId(v === '' ? 0 : Number(v))}
-            placeholder='— выберите линию —'
+            placeholder={!voltageId ? '— сначала выберите напряжение —' : '— выберите линию —'}
+            disabled={!voltageId}
           />
         </FormField>
 
-        {selectedLine && (
+        {selectedLine && selectedLine.poleCount != null && (
           <div className={cls.info}>
-            Опоры: <strong>{selectedLine.poleRange}</strong> ({selectedLine.poleCount} шт.)
+            {selectedLine.poleRange
+              ? <>Опоры: <strong>{selectedLine.poleRange}</strong>{' '}</>
+              : null}
+            ({selectedLine.poleCount} шт.)
           </div>
         )}
 

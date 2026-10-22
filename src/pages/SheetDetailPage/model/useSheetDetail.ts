@@ -20,14 +20,17 @@ export function useSheetDetail(sheetId: number) {
     const filial  = filials.find((f) => f.id === sheet.filialId);
     const voltage = voltages.find((v) => v.id === sheet.voltageId);
     const line    = lines.find((l) => l.id === sheet.lineId);
+    const ps = line?.poleStart ?? 1;
+    const pc = line?.poleCount ?? 0;
+    const pe = line?.poleEnd   ?? (pc > 0 ? ps + pc - 1 : ps);
     return {
       ...sheet,
       filialName:  filial?.name  ?? '—',
       voltageName: voltage?.name ?? '—',
       lineName:    line?.name    ?? '—',
-      poleStart:   line?.poleStart ?? 1,
-      poleEnd:     line?.poleEnd   ?? 1,
-      poleCount:   line?.poleCount ?? 0,
+      poleStart:   ps,
+      poleEnd:     pe,
+      poleCount:   pc,
       activeCount: 0,
       fixedCount:  0,
     };

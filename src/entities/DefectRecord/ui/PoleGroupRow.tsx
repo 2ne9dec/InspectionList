@@ -25,8 +25,6 @@ interface PoleGroupRowProps {
 }
 
 const MAX_CHIPS = 3;
-const NO_DEFECT_ELEMENT = 'Дефекты отсутствуют';
-
 interface SubGroup {
   key: string;
   ids: number[];
@@ -59,8 +57,6 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
   const span = locationKeyType(locationKey) === 'span';
 
   const uniqueElements = useMemo(() => Array.from(new Set(records.map((r) => r.elementName))), [records]);
-  const isNoDefectPole = useMemo(() => records.every((r) => r.elementName === NO_DEFECT_ELEMENT), [records]);
-
   const subGroups = useMemo<SubGroup[]>(() => {
     if (!isExpanded) return [];
     const map = new Map<string, SubGroup>();
@@ -114,7 +110,7 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
 
   const groupKebabItems = useMemo(() => {
     const items = [];
-    if (!isFixed && !isNoDefectPole) {
+    if (!isFixed) {
       items.push({ id: 'fix', label: 'Устранить все', onClick: () => onFix(locationKey) });
     }
     items.push({ id: 'copy', label: 'Копировать', onClick: () => onCopy(locationKey) });
@@ -125,7 +121,7 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
       onClick: () => onDeleteAll(records.map((r) => r.id)),
     });
     return items;
-  }, [isFixed, isNoDefectPole, locationKey, onFix, onCopy, onDeleteAll, records]);
+  }, [isFixed, locationKey, onFix, onCopy, onDeleteAll, records]);
 
   return (
     <>
@@ -153,13 +149,12 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
           <span className={cls.chipList}>
             {!isExpanded &&
               uniqueElements.slice(0, MAX_CHIPS).map((elName) => {
-                const isNoDefect = elName === NO_DEFECT_ELEMENT;
                 return (
                   <span
                     key={elName}
                     className={cls.chip}
                   >
-                    {!isNoDefect && <span className={cls.chipDot} />}
+                    <span className={cls.chipDot} />
                     {elName}
                   </span>
                 );
@@ -178,7 +173,7 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
           <span
             className={cls.badge}
           >
-            {isNoDefectPole ? '0' : records.length} деф.
+            {records.length} деф.
           </span>
         </td>
 
@@ -192,9 +187,8 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
       {isExpanded &&
         subGroups.map((group, idx) => {
           const { first, ids, phases, insulatorCount, garlandNumber: grNum } = group;
-          const isNoDefectRecord = first.elementName === NO_DEFECT_ELEMENT;
           const subKebabItems = [
-            ...(!isFixed && !isNoDefectRecord
+            ...(!isFixed
               ? [{ id: 'fix', label: 'Устранить', onClick: () => onFixOne(ids[0]) }]
               : []),
             { id: 'copy', label: 'Копировать', onClick: () => onCopy(locationKey) },

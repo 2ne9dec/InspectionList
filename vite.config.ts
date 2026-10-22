@@ -23,6 +23,17 @@ export default defineConfig(({ mode }) => {
     server: {
       open: true,
       port: 3000,
+      // Proxy API запросы на бэкенд (ибегаем CORS в dev)
+      proxy: env.VITE_API_URL ? {
+        '/login':             { target: env.VITE_API_URL, changeOrigin: true },
+        '/inspectionSheets':  { target: env.VITE_API_URL, changeOrigin: true },
+        '/defectRecords':     { target: env.VITE_API_URL, changeOrigin: true },
+        '/references':        { target: env.VITE_API_URL, changeOrigin: true },
+        '/lines':             { target: env.VITE_API_URL, changeOrigin: true },
+        '/users':             { target: env.VITE_API_URL, changeOrigin: true },
+        '/sync':              { target: env.VITE_API_URL, changeOrigin: true },
+        '/changePassword':    { target: env.VITE_API_URL, changeOrigin: true },
+      } : undefined,
     },
     plugins: [react()],
     resolve: {
