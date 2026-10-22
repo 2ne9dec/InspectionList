@@ -8,6 +8,7 @@
 
 const { Router }  = require('express');
 const { query, execute, queryOne, nextId } = require('../lib/fbDb');
+const { canAccessLine } = require('../lib/tenancy');
 
 const router = Router();
 
@@ -37,7 +38,17 @@ router.post('/sync/batch', async (req, res) => {
         continue;
       }
 
-      const existing = await queryOne('SELECT ID FROM INSPECTION_SHEETS WHERE ID = ?', [Number(id)]);
+      if (!canAccessLine(req, Number(lineId))) {
+        errors.push({ type: 'sheet', id, reason: 'access denied' });
+        continue;
+      }
+
+      const existing = await queryOne('SELECT ID, FILIAL_ID FROM INSPECTION_SHEETS WHERE ID = ?', [Number(id)]);
+      // Нельзя перезаписать листок другого филиала
+      if (existing && Number(existing.filial_id) !== req.filialId) {
+        errors.push({ type: 'sheet', id, reason: 'access denied' });
+        continue;
+      }
 
       if (existing) {
         await execute(
@@ -69,17 +80,29 @@ router.post('/sync/batch', async (req, res) => {
   for (const defect of defectRecords) {
     try {
       // Родительский лист может быть в текущем батче ИЛИ уже в Firebird (предыдущая синхронизация)
-      let lineId = sheetMap[defect.sheetId]?.lineId;
-      if (!lineId) {
-        const fbSheet = await queryOne('SELECT LINE_ID FROM INSPECTION_SHEETS WHERE ID=?', [Number(defect.sheetId)]);
-        if (!fbSheet) {
-          errors.push({ type: 'defect', id: defect.id, reason: 'parent sheet not found' });
-          continue;
-        }
-        lineId = fbSheet.line_id;
+      // Родительский листок берём из базы (после обработки листков выше он уже там)
+      // и проверяем, что он из филиала пользователя
+      const fbSheet = await queryOne('SELECT LINE_ID, FILIAL_ID FROM INSPECTION_SHEETS WHERE ID=?', [Number(defect.sheetId)]);
+      if (!fbSheet) {
+        errors.push({ type: 'defect', id: defect.id, reason: 'parent sheet not found' });
+        continue;
       }
+      if (Number(fbSheet.filial_id) !== req.filialId || !canAccessLine(req, fbSheet.line_id)) {
+        errors.push({ type: 'defect', id: defect.id, reason: 'access denied' });
+        continue;
+      }
+      const lineId = fbSheet.line_id;
 
-      const existing = await queryOne('SELECT ID FROM DEFECT_RECORDS WHERE ID = ?', [Number(defect.id)]);
+      // Если дефект с таким ID уже есть, он тоже должен быть из филиала пользователя
+      const existing = await queryOne(
+        `SELECT d.ID, s.FILIAL_ID FROM DEFECT_RECORDS d
+         LEFT JOIN INSPECTION_SHEETS s ON s.ID = d.SHEET_ID WHERE d.ID = ?`,
+        [Number(defect.id)],
+      );
+      if (existing && Number(existing.filial_id) !== req.filialId) {
+        errors.push({ type: 'defect', id: defect.id, reason: 'access denied' });
+        continue;
+      }
 
       if (existing) {
         await execute(
@@ -142,11 +165,24 @@ router.post('/sync/batch', async (req, res) => {
 
   if (hasDeletes) {
     for (const id of deletedDefectIds) {
-      try { await execute('DELETE FROM DEFECT_RECORDS WHERE ID = ?', [Number(id)]); }
+      try {
+        // Удаляем только дефекты своего филиала
+        await execute(
+          `DELETE FROM DEFECT_RECORDS WHERE ID = ?
+             AND SHEET_ID IN (SELECT ID FROM INSPECTION_SHEETS WHERE FILIAL_ID = ?)`,
+          [Number(id), req.filialId],
+        );
+      }
       catch (e) { errors.push({ type: 'defect_delete', id, reason: e.message }); }
     }
     for (const id of deletedSheetIds) {
       try {
+        const sheet = await queryOne('SELECT ID, FILIAL_ID, LINE_ID FROM INSPECTION_SHEETS WHERE ID = ?', [Number(id)]);
+        if (!sheet) continue;
+        if (Number(sheet.filial_id) !== req.filialId || !canAccessLine(req, sheet.line_id)) {
+          errors.push({ type: 'sheet_delete', id, reason: 'access denied' });
+          continue;
+        }
         // Каскад: сначала дефекты листа (иначе Firebird выбрасывает FK-ошибку)
         await execute('DELETE FROM DEFECT_RECORDS WHERE SHEET_ID = ?', [Number(id)]);
         await execute('DELETE FROM INSPECTION_SHEETS WHERE ID = ?', [Number(id)]);
@@ -231,7 +267,7 @@ router.get('/sync/pull', async (req, res) => {
   res.json({ sheets, defectRecords });
   } catch (err) {
     console.error('[sync/pull]', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 

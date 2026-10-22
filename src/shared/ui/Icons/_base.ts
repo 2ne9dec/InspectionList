@@ -3,7 +3,7 @@ import type { SVGProps } from 'react';
 export type IconProps = SVGProps<SVGSVGElement> & { size?: number };
 
 export const base = (size: number): SVGProps<SVGSVGElement> => ({
-  xmlns: 'http://www.w3.org/2000/svg',
+  xmlns: '',
   width: size,
   height: size,
   viewBox: '0 0 24 24',

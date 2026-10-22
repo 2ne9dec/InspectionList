@@ -11,7 +11,7 @@
  *   FB_PORT      -- порт (по умолчанию 3050)
  *   FB_DATABASE  -- полный путь к файлу .fdb на сервере
  *   FB_USER      -- пользователь (по умолчанию SYSDBA)
- *   FB_PASSWORD  -- пароль (по умолчанию masterkey)
+ *   FB_PASSWORD  -- пароль (обязателен, значения по умолчанию нет)
  */
 
 const path = require('path');
@@ -25,12 +25,17 @@ if (!process.env.FB_PASSWORD) {
 
 const Firebird = require('node-firebird');
 
+if (!process.env.FB_PASSWORD) {
+  console.error('[FATAL] FB_PASSWORD не задан в server/.env');
+  process.exit(1);
+}
+
 const options = {
   host:           process.env.FB_HOST     || '127.0.0.1',
   port:           Number(process.env.FB_PORT || 3050),
   database:       process.env.FB_DATABASE || 'C:\\InspectionList.fdb',
   user:           process.env.FB_USER     || 'SYSDBA',
-  password:       process.env.FB_PASSWORD || 'masterkey',
+  password:       process.env.FB_PASSWORD,
   lowercase_keys: true,   // колонки возвращаются в lowercase: sheet_id, is_fixed ...
   role:           null,
   pageSize:       4096,

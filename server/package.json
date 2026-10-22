@@ -4,8 +4,7 @@
   "description": "InspectionList backend — Express + Firebird",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "migrate": "node migrate-to-firebird.js"
+    "start": "node index.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

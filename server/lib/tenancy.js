@@ -87,6 +87,15 @@ function canAccessLine(req, lineId) {
 }
 
 /**
+ * Проверяет, что запись относится к филиалу пользователя.
+ * Пользователь без филиала (общий администратор) не ограничивается.
+ */
+function canAccessFilial(req, filialId) {
+  if (req.filialId == null) return true;
+  return filialId != null && Number(filialId) === Number(req.filialId);
+}
+
+/**
  * Строит фрагмент WHERE для фильтрации по LINE_ID.
  * Возвращает { sql, params } для вставки в запрос.
  */
@@ -105,5 +114,6 @@ module.exports = {
   tenancyMiddleware,
   filterByTenancy,
   canAccessLine,
+  canAccessFilial,
   lineWhereClause,
 };

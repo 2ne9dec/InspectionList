@@ -14,7 +14,12 @@
 
 const { Router } = require('express');
 const { query, execute, queryOne, nextId, withTransaction } = require('../lib/fbDb');
-const { canAccessLine, lineWhereClause } = require('../lib/tenancy');
+const { canAccessLine, canAccessFilial, lineWhereClause } = require('../lib/tenancy');
+
+/** Доступ к листку: линия доступна и листок из филиала пользователя. */
+function canAccessSheet(req, row) {
+  return canAccessLine(req, row.line_id) && canAccessFilial(req, row.filial_id);
+}
 
 const router = Router();
 
@@ -47,8 +52,9 @@ router.get('/inspectionSheets', async (req, res) => {
     let where  = ' WHERE 1=1';
     const params = [];
 
-    if (filialId)          { where += ' AND FILIAL_ID = ?'; params.push(Number(filialId)); }
-    else if (req.filialId) { where += ' AND FILIAL_ID = ?'; params.push(req.filialId); }
+    // Пользователь с филиалом видит только свой филиал; ?filialId= учитывается только без привязки к филиалу
+    if (req.filialId != null) { where += ' AND FILIAL_ID = ?'; params.push(req.filialId); }
+    else if (filialId)        { where += ' AND FILIAL_ID = ?'; params.push(Number(filialId)); }
     if (voltageId) { where += ' AND VOLTAGE_ID = ?'; params.push(Number(voltageId)); }
     if (lineId)    { where += ' AND LINE_ID = ?';    params.push(Number(lineId)); }
     if (createdBy) { where += ' AND CREATED_BY = ?'; params.push(createdBy); }
@@ -87,7 +93,8 @@ router.get('/inspectionSheets', async (req, res) => {
     res.setHeader('Access-Control-Expose-Headers', 'X-Total-Count');
     res.json(items);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', req.method, req.path, err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
@@ -97,20 +104,25 @@ router.get('/inspectionSheets/:id', async (req, res) => {
     const id  = Number(req.params.id);
     const row = await queryOne(SELECT_SHEET + ' WHERE ID = ?', [id]);
     if (!row) return res.status(404).json({ error: 'Not found' });
-    if (!canAccessLine(req, row.line_id))
+    if (!canAccessSheet(req, row))
       return res.status(403).json({ error: 'Доступ запрещён' });
     res.json(toSheet(row));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', req.method, req.path, err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
 // ── POST /inspectionSheets — создать лист ────────────────────────────────────
 router.post('/inspectionSheets', async (req, res) => {
   try {
-    const { filialId, voltageId, lineId, createdDate, createdBy, status, notes } = req.body;
+    const { voltageId, lineId, createdDate, createdBy, status, notes } = req.body;
+    // Листок всегда создаётся в филиале пользователя
+    const filialId = req.filialId != null ? req.filialId : req.body.filialId;
     if (!filialId || !voltageId || !lineId || !createdDate)
       return res.status(400).json({ error: 'Отсутствуют обязательные поля' });
+    if (req.body.filialId != null && Number(req.body.filialId) !== Number(filialId))
+      return res.status(403).json({ error: 'Доступ запрещён' });
     if (!canAccessLine(req, Number(lineId)))
       return res.status(403).json({ error: 'Доступ запрещён' });
 
@@ -137,7 +149,8 @@ router.post('/inspectionSheets', async (req, res) => {
     const row = await queryOne(SELECT_SHEET + ' WHERE ID = ?', [id]);
     res.status(201).json(toSheet(row));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', req.method, req.path, err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
@@ -150,7 +163,7 @@ router.post('/inspectionSheets/:id/clone', async (req, res) => {
 
     const orig = await queryOne(SELECT_SHEET + ' WHERE ID = ?', [id]);
     if (!orig) return res.status(404).json({ error: 'Листок не найден' });
-    if (!canAccessLine(req, orig.line_id))
+    if (!canAccessSheet(req, orig))
       return res.status(403).json({ error: 'Доступ запрещён' });
 
     const dup = await queryOne(
@@ -180,7 +193,8 @@ router.post('/inspectionSheets/:id/clone', async (req, res) => {
     const row = await queryOne(SELECT_SHEET + ' WHERE ID = ?', [newId]);
     res.status(201).json(toSheet(row));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', req.method, req.path, err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
@@ -190,7 +204,7 @@ router.patch('/inspectionSheets/:id', async (req, res) => {
     const id  = Number(req.params.id);
     const row = await queryOne(SELECT_SHEET + ' WHERE ID = ?', [id]);
     if (!row) return res.status(404).json({ error: 'Листок не найден' });
-    if (!canAccessLine(req, row.line_id))
+    if (!canAccessSheet(req, row))
       return res.status(403).json({ error: 'Доступ запрещён' });
 
     const sets   = [];
@@ -207,7 +221,8 @@ router.patch('/inspectionSheets/:id', async (req, res) => {
     const updated = await queryOne(SELECT_SHEET + ' WHERE ID = ?', [id]);
     res.json(toSheet(updated));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', req.method, req.path, err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
@@ -217,7 +232,7 @@ router.delete('/inspectionSheets/:id', async (req, res) => {
     const id  = Number(req.params.id);
     const row = await queryOne('SELECT ID, LINE_ID FROM INSPECTION_SHEETS WHERE ID = ?', [id]);
     if (!row) return res.status(404).json({ error: 'Not found' });
-    if (!canAccessLine(req, row.line_id))
+    if (!canAccessSheet(req, row))
       return res.status(403).json({ error: 'Доступ запрещён' });
 
     // FK constraint: сначала дефекты, потом лист
@@ -225,7 +240,8 @@ router.delete('/inspectionSheets/:id', async (req, res) => {
     await execute('DELETE FROM INSPECTION_SHEETS WHERE ID = ?', [id]);
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', req.method, req.path, err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
@@ -241,7 +257,7 @@ router.post('/inspectionSheets/merge', async (req, res) => {
     for (const sid of ids) {
       const row = await queryOne(SELECT_SHEET + ' WHERE ID = ?', [Number(sid)]);
       if (!row) return res.status(404).json({ error: `Листок ${sid} не найден` });
-      if (!canAccessLine(req, row.line_id))
+      if (!canAccessSheet(req, row))
         return res.status(403).json({ error: 'Доступ запрещён' });
       const defects = await query(
         'SELECT * FROM DEFECT_RECORDS WHERE SHEET_ID = ?', [Number(sid)],
@@ -320,7 +336,7 @@ router.post('/inspectionSheets/merge', async (req, res) => {
   } catch (err) {
     if (err.status === 409) return res.status(409).json({ error: err.message });
     console.error('[merge]', err.message, err.stack);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 

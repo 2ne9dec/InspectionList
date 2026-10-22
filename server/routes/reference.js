@@ -36,7 +36,8 @@ router.get('/filials', async (req, res) => {
     if (req.isAdmin || req.filialId == null) return res.json(data);
     res.json(data.filter(f => f.id === req.filialId));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', req.method, req.path, err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
@@ -48,7 +49,8 @@ router.get('/voltages', async (req, res) => {
     if (req.isAdmin || req.filialId == null) return res.json(data);
     res.json(data.filter(v => v.filialId === req.filialId));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', req.method, req.path, err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
@@ -66,7 +68,8 @@ router.get('/lines', async (req, res) => {
     if (req.isAdmin || !req.allowedLineIds) return res.json(data);
     res.json(data.filter(l => req.allowedLineIds.has(l.id)));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', req.method, req.path, err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
@@ -109,7 +112,8 @@ router.patch('/lines/:id', async (req, res) => {
       FROM LINES WHERE ID = ?`, [id]);
     res.json(row ? toLine(row) : { id });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', req.method, req.path, err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
@@ -119,7 +123,8 @@ router.get('/elements', async (req, res) => {
     const rows = await query('SELECT ID, NAME FROM ELEMENTS ORDER BY ID');
     res.json(rows.map(r => ({ id: r.id, name: r.name })));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', req.method, req.path, err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
@@ -136,7 +141,8 @@ router.get('/defectTypes', async (req, res) => {
       elementId: r.element_id,
     })));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', req.method, req.path, err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
@@ -146,7 +152,8 @@ router.get('/phases', async (req, res) => {
     const rows = await query('SELECT ID, NAME FROM PHASES ORDER BY ID');
     res.json(rows.map(r => ({ id: r.id, name: r.name })));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', req.method, req.path, err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
@@ -158,7 +165,8 @@ router.get('/phaseElementIds', async (req, res) => {
     );
     res.json(rows.map(r => ({ phaseId: r.phase_id, elementId: r.element_id })));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', req.method, req.path, err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
@@ -179,7 +187,8 @@ router.get('/filialVoltageFilter', async (req, res) => {
     const fid = String(req.filialId);
     res.json(fid in result ? { [fid]: result[fid] } : {});
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', req.method, req.path, err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 

@@ -18,14 +18,16 @@
 const { Router } = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-let rateLimit;
-try { rateLimit = require('express-rate-limit'); } catch { rateLimit = null; }
+let rateLimit, ipKeyGenerator;
+try { ({ rateLimit, ipKeyGenerator } = require('express-rate-limit')); } catch { rateLimit = null; }
 
 const { query, execute, queryOne } = require('../lib/fbDb');
 const { signToken } = require('../lib/auth');
 
 const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS ?? 12);
 const VALID_ROLES   = new Set(['director', 'engineer', 'master', 'viewer']);
+// Кто может управлять пользователями. 'admin' — старое значение роли, могло остаться в базе.
+const MANAGER_ROLES = new Set(['director', 'admin']);
 
 const router = Router();
 
@@ -33,7 +35,8 @@ const router = Router();
 const loginLimiter = rateLimit ? rateLimit({
   windowMs:    15 * 60 * 1000,
   max:         5,
-  keyGenerator: (req) => `${req.headers['x-forwarded-for'] ?? req.socket?.remoteAddress ?? 'local'}::${(req.body?.username ?? '').toLowerCase()}`,
+  // req.ip — адрес сокета (trust proxy не включён), заголовку X-Forwarded-For не доверяем
+  keyGenerator: (req) => `${ipKeyGenerator(req.ip ?? req.socket?.remoteAddress ?? '')}::${String(req.body?.username ?? '').toLowerCase()}`,
   message:     { error: 'Слишком много попыток. Попробуйте через 15 минут.' },
   standardHeaders: true,
   legacyHeaders:   false,
@@ -108,14 +111,34 @@ async function saveUserVoltages(userId, voltageIds) {
   }
 }
 
+/** Middleware: только руководитель (director) может управлять пользователями. */
+function requireManager(req, res, next) {
+  if (!req.userId) return res.status(401).json({ error: 'Не авторизован' });
+  if (!MANAGER_ROLES.has(req.role)) return res.status(403).json({ error: 'Недостаточно прав' });
+  next();
+}
+
+/** Руководитель филиала работает только с пользователями своего филиала. */
+function sameFilial(req, filialId) {
+  if (req.filialId == null) return true;
+  return filialId != null && Number(filialId) === Number(req.filialId);
+}
+
+function serverError(res, err) {
+  console.error('[auth]', err.message);
+  res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+}
+
 // ── GET /users ────────────────────────────────────────────────────────────────
-router.get('/users', async (req, res) => {
+router.get('/users', requireManager, async (req, res) => {
   try {
-    const rows = await query('SELECT * FROM USERS ORDER BY ID');
+    const rows = req.filialId == null
+      ? await query('SELECT * FROM USERS ORDER BY ID')
+      : await query('SELECT * FROM USERS WHERE FILIAL_ID = ? ORDER BY ID', [req.filialId]);
     const users = await Promise.all(rows.map(enrichUser));
     res.json(users.map(safeUser));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    serverError(res, err);
   }
 });
 
@@ -127,7 +150,7 @@ router.get('/users/me', async (req, res) => {
     if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
     res.json(safeUser(user));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    serverError(res, err);
   }
 });
 
@@ -153,16 +176,20 @@ router.post('/login', loginLimiter, async (req, res) => {
     const token = signToken(user);
     res.json({ ...safeUser(user), token });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    serverError(res, err);
   }
 });
 
 // ── POST /users ───────────────────────────────────────────────────────────────
-router.post('/users', async (req, res) => {
+router.post('/users', requireManager, async (req, res) => {
   try {
-    const { username, password, displayName, role, filialId, allowedLineIds, allowedVoltageIds } = req.body ?? {};
+    const { username, password, displayName, role, allowedLineIds, allowedVoltageIds } = req.body ?? {};
+    // Руководитель филиала создаёт пользователей только в своём филиале
+    const filialId = req.filialId != null ? req.filialId : req.body?.filialId;
     if (!username || !password)
       return res.status(400).json({ error: 'username и password обязательны' });
+    if (typeof password !== 'string' || password.length < 6)
+      return res.status(400).json({ error: 'Пароль должен быть не менее 6 символов' });
     if (role && !VALID_ROLES.has(role))
       return res.status(400).json({ error: `Недопустимая роль: ${role}` });
 
@@ -187,7 +214,7 @@ router.post('/users', async (req, res) => {
     const user = await findUserById(newId);
     res.status(201).json(safeUser(user));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    serverError(res, err);
   }
 });
 
@@ -199,9 +226,11 @@ router.patch('/users/:id', async (req, res) => {
     if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
 
     const isSelf = String(req.userId) === String(id);
-    const canManage = !!req.userId; // все авторизованные пользователи
+    const canManage = MANAGER_ROLES.has(req.role) && sameFilial(req, user.filialId);
     if (!isSelf && !canManage)
       return res.status(403).json({ error: 'Доступ запрещён' });
+    if (canManage && req.body?.filialId !== undefined && !sameFilial(req, req.body.filialId))
+      return res.status(403).json({ error: 'Нельзя перевести пользователя в другой филиал' });
 
     const body = req.body ?? {};
     const sets = [];
@@ -233,39 +262,41 @@ router.patch('/users/:id', async (req, res) => {
     const updated = await findUserById(id);
     res.json(safeUser(updated));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    serverError(res, err);
   }
 });
 
 // ── DELETE /users/:id ─────────────────────────────────────────────────────────
-router.delete('/users/:id', async (req, res) => {
+router.delete('/users/:id', requireManager, async (req, res) => {
   try {
     const id = req.params.id;
     if (String(id) === String(req.userId))
       return res.status(400).json({ error: 'Нельзя удалить самого себя' });
-    const user = await queryOne('SELECT ID FROM USERS WHERE ID = ?', [id]);
+    const user = await queryOne('SELECT ID, FILIAL_ID FROM USERS WHERE ID = ?', [id]);
     if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
+    if (!sameFilial(req, user.filial_id)) return res.status(403).json({ error: 'Доступ запрещён' });
     await execute('DELETE FROM USERS WHERE ID = ?', [id]);
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    serverError(res, err);
   }
 });
 
 // ── POST /users/:id/resetPassword ─────────────────────────────────────────────
-router.post('/users/:id/resetPassword', async (req, res) => {
+router.post('/users/:id/resetPassword', requireManager, async (req, res) => {
   try {
     const id          = req.params.id;
     const { newPass } = req.body ?? {};
-    if (!newPass || newPass.length < 6)
+    if (typeof newPass !== 'string' || newPass.length < 6)
       return res.status(400).json({ error: 'Пароль должен быть не менее 6 символов' });
-    const user = await queryOne('SELECT ID FROM USERS WHERE ID = ?', [id]);
+    const user = await queryOne('SELECT ID, FILIAL_ID FROM USERS WHERE ID = ?', [id]);
     if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
+    if (!sameFilial(req, user.filial_id)) return res.status(403).json({ error: 'Доступ запрещён' });
     const hash = bcrypt.hashSync(newPass, BCRYPT_ROUNDS);
     await execute('UPDATE USERS SET PASSWORD = ? WHERE ID = ?', [hash, id]);
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    serverError(res, err);
   }
 });
 
@@ -276,7 +307,7 @@ router.post('/changePassword', async (req, res) => {
     const { oldPass, newPass } = req.body ?? {};
     if (!oldPass || !newPass)
       return res.status(400).json({ error: 'oldPass и newPass обязательны' });
-    if (newPass.length < 6)
+    if (typeof newPass !== 'string' || newPass.length < 6)
       return res.status(400).json({ error: 'Пароль должен быть не менее 6 символов' });
     const user = await findUserById(req.userId);
     if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
@@ -286,7 +317,7 @@ router.post('/changePassword', async (req, res) => {
     await execute('UPDATE USERS SET PASSWORD = ? WHERE ID = ?', [hash, String(req.userId)]);
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    serverError(res, err);
   }
 });
 

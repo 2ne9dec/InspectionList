@@ -59,7 +59,6 @@ app.use((req, res, next) => {
     "default-src 'self'; "
     + "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
     + "style-src 'self' 'unsafe-inline'; "
-    + "img-src 'self' data: blob: https://*.tile.openstreetmap.org; "
     + "connect-src 'self'; "
     + "worker-src blob:;"
   );
@@ -80,14 +79,33 @@ if (fs.existsSync(distPath)) app.use(express.static(distPath));
 app.use(authMiddleware);
 app.use(tenancyMiddleware);
 
-// Guard пропускает:
-//   1. POST /login — публичный маршрут
-//   2. GET-запросы браузера (Accept: text/html) — обновление страницы SPA,
-//      они всё равно попадут на SPA fallback и получат index.html
-// Всё остальное (fetch API без токена) получает 401.
+// Guard: все API-пути требуют токен. Без токена пропускаем только
+// POST /login и GET-запросы к страницам SPA (они попадут на fallback и получат index.html).
+const API_PREFIXES = [
+  '/users', '/changePassword',
+  '/inspectionSheets',
+  '/defectRecords', '/defectRecordsBySheet', '/defectCounts', '/defectTrends', '/poleDefectStatus',
+  '/filials', '/voltages', '/lines', '/elements', '/defectTypes', '/phases', '/phaseElementIds',
+  '/filialVoltageFilter',
+  '/sync',
+];
+
+// Маршруты Express регистронезависимы, поэтому сравниваем в нижнем регистре
+const API_PREFIXES_LC = API_PREFIXES.map((p) => p.toLowerCase());
+
+function isApiPath(p) {
+  const lc = p.toLowerCase();
+  return API_PREFIXES_LC.some((prefix) => lc === prefix || lc.startsWith(prefix + '/'));
+}
+
 app.use((req, res, next) => {
-  if (req.path === '/login' && req.method === 'POST') return next();
-  if (req.method === 'GET' && req.accepts('html')) return next();
+  if (req.path.toLowerCase() === '/login') {
+    // POST /login — вход; GET /login — страница SPA
+    if (req.method === 'POST' || req.method === 'GET') return next();
+    return res.status(405).end();
+  }
+  if (isApiPath(req.path)) return requireAuth(req, res, next);
+  if (req.method === 'GET') return next();
   return requireAuth(req, res, next);
 });
 
@@ -108,7 +126,7 @@ if (fs.existsSync(distPath)) {
 // ── Глобальный обработчик ошибок ──────────────────────────────────────────────
 app.use((err, req, res, _next) => {
   console.error('[ERROR]', req.method, req.path, err.message);
-  res.status(500).json({ error: err.message || 'Внутренняя ошибка сервера' });
+  res.status(500).json({ error: 'Внутренняя ошибка сервера' });
 });
 
 // ── Запуск ────────────────────────────────────────────────────────────────────
