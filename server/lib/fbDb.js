@@ -25,11 +25,6 @@ if (!process.env.FB_PASSWORD) {
 
 const Firebird = require('node-firebird');
 
-if (!process.env.FB_PASSWORD) {
-  console.error('[FATAL] FB_PASSWORD не задан в server/.env');
-  process.exit(1);
-}
-
 const options = {
   host:           process.env.FB_HOST     || '127.0.0.1',
   port:           Number(process.env.FB_PORT || 3050),
