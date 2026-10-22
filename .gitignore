@@ -14,3 +14,5 @@ capacitor.config.ts.bak
 .env.local
 .env.production.local
 .env.development.local
+.env
+server/.env
