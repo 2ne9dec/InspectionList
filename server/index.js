@@ -24,9 +24,12 @@ require('dotenv').config({
 
 const express = require('express');
 const { PORT } = require('./lib/config');
-const { authMiddleware, requireAuth } = require('./lib/auth');
+const { authMiddleware, requireAuth, blockReadOnlyWrites, blockUntilPasswordChanged } = require('./lib/auth');
 const { tenancyMiddleware, initTenancy } = require('./lib/tenancy');
-const { testConnection } = require('./lib/fbDb');
+const { testConnection, runInDb, dbKeyForFilial, isKnownFilial, MULTI_DB, FILIAL_DB_IDS } = require('./lib/fbDb');
+const { ensureSchema, ensureGlobalAdmin } = require('./lib/schema');
+const { initPermissions } = require('./lib/permissions');
+const { ensureUsersDb } = require('./lib/usersDb');
 
 const app      = express();
 const distPath = path.join(baseDir, 'dist');
@@ -88,6 +91,7 @@ const API_PREFIXES = [
   '/filials', '/voltages', '/lines', '/elements', '/defectTypes', '/phases', '/phaseElementIds',
   '/filialVoltageFilter',
   '/sync',
+  '/permissions', '/rolePermissions',
 ];
 
 // Маршруты Express регистронезависимы, поэтому сравниваем в нижнем регистре
@@ -109,12 +113,32 @@ app.use((req, res, next) => {
   return requireAuth(req, res, next);
 });
 
+// ── Выбор базы ────────────────────────────────────────────────────────────────
+// Пользователь филиала работает с базой своего филиала. Пользователь без филиала
+// (наблюдатель РУП, главный администратор) выбирает филиал в интерфейсе — заголовок X-Filial-Id.
+app.use((req, res, next) => {
+  let filialId = req.filialId ?? null;
+  if (filialId == null && req.userId) {
+    const selected = Number(req.headers['x-filial-id']);
+    if (Number.isInteger(selected) && selected > 0 && isKnownFilial(selected)) filialId = selected;
+  }
+  req.dataFilialId = filialId;
+  runInDb(dbKeyForFilial(filialId), next);
+});
+
+// Пользователь «только просмотр» (наблюдатель РУП) не может ничего изменять
+app.use(blockReadOnlyWrites);
+
+// Пока пользователь не сменил временный пароль — доступна только смена пароля
+app.use(blockUntilPasswordChanged);
+
 // ── API роуты ─────────────────────────────────────────────────────────────────
 app.use(require('./routes/reference'));
 app.use(require('./routes/auth'));
 app.use(require('./routes/sheets'));
 app.use(require('./routes/defects'));
 app.use(require('./routes/sync'));
+app.use(require('./routes/permissions'));
 
 // ── SPA fallback ──────────────────────────────────────────────────────────────
 // Все неизвестные GET → index.html; React Router обработает маршрут.
@@ -135,6 +159,13 @@ async function start() {
     console.log('[boot] Подключение к Firebird...');
     await testConnection();
     console.log('[boot] Firebird OK');
+    console.log(MULTI_DB
+      ? `[boot] Базы филиалов: ${FILIAL_DB_IDS.join(', ')}`
+      : '[boot] Режим одной базы');
+    await ensureUsersDb();
+    await ensureSchema();
+    await ensureGlobalAdmin();
+    await initPermissions();
     await initTenancy();
     const BIND_HOST = process.env.BIND_HOST || '0.0.0.0';
     app.listen(PORT, BIND_HOST, () => {

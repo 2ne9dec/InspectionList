@@ -5,6 +5,8 @@
 @use 'mixins' as m;
 
 body {
+  // Шрифт и на body: модальные окна монтируются в body (через Portal), вне .app
+  font-family: var(--font-family-main);
   background-color: var(--color-bg-page);
   color: var(--color-text-primary);
   transition: background-color 0.2s ease, color 0.2s ease;

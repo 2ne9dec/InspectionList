@@ -3,17 +3,21 @@
 /**
  * routes/auth.js -- авторизация и управление пользователями (Firebird).
  *
- * POST   /login
- * GET    /users          (только director/engineer)
+ * Пользователи филиала хранятся в базе своего филиала, главный администратор
+ * и наблюдатели РУП — в основной базе. Логин уникален во всех базах.
+ *
+ * POST   /login                       { username, password, filialId: N | 'rup' }
+ * GET    /users                       (администраторы: главный — все, филиала — своего филиала)
  * GET    /users/me
- * POST   /users          (только director/engineer)
- * PATCH  /users/:id
- * DELETE /users/:id      (только director/engineer)
- * POST   /users/:id/resetPassword  (только director/engineer)
- * POST   /changePassword
+ * POST   /users                       (администраторы)
+ * PATCH  /users/:id?filialId=N        (администраторы; себе — только ФИО)
+ * DELETE /users/:id?filialId=N        (администраторы)
+ * POST   /users/:id/resetPassword?filialId=N  (администраторы: временный пароль)
+ * POST   /changePassword              (свой пароль)
+ *
+ * ?filialId=N — филиал (база) пользователя; пусто — основная база.
+ * Администратор филиала всегда работает только с базой своего филиала.
  */
-
-'use strict';
 
 const { Router } = require('express');
 const bcrypt = require('bcryptjs');
@@ -21,13 +25,16 @@ const crypto = require('crypto');
 let rateLimit, ipKeyGenerator;
 try { ({ rateLimit, ipKeyGenerator } = require('express-rate-limit')); } catch { rateLimit = null; }
 
-const { query, execute, queryOne } = require('../lib/fbDb');
+const { query, execute, queryOne, MAIN_DB, MULTI_DB, FILIAL_DB_IDS, HAS_SEPARATE_MAIN, dbKeyForFilial, isKnownFilial, physicalDbKey } = require('../lib/fbDb');
 const { signToken } = require('../lib/auth');
 
 const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS ?? 12);
-const VALID_ROLES   = new Set(['director', 'engineer', 'master', 'viewer']);
-// Кто может управлять пользователями. 'admin' — старое значение роли, могло остаться в базе.
+const VALID_ROLES   = new Set(['admin', 'director', 'engineer', 'master', 'viewer', 'observer']);
+// Кто может управлять пользователями. Без филиала — главный администратор (все филиалы),
+// с филиалом — администратор филиала (только пользователи своего филиала).
 const MANAGER_ROLES = new Set(['director', 'admin']);
+// Роли, которые могут быть без филиала: главный администратор и наблюдатель РУП.
+const GLOBAL_ROLES  = new Set(['admin', 'observer']);
 
 const router = Router();
 
@@ -43,27 +50,44 @@ const loginLimiter = rateLimit ? rateLimit({
   validate:    { xForwardedForHeader: false },
 }) : (req, res, next) => next();
 
-// ── Хелперы работы с пользователями ──────────────────────────────────────────
+// ── Базы пользователей ────────────────────────────────────────────────────────
 
-async function findUserById(id) {
-  const row = await queryOne('SELECT * FROM USERS WHERE ID = ?', [String(id)]);
-  if (!row) return null;
-  return await enrichUser(row);
+/**
+ * Где искать пользователей: { dbKey, filter, fparams }.
+ * Пользователи филиала — в базе своего филиала (FILIAL_ID = N),
+ * пользователи РУП (главный администратор, наблюдатели) — в базе РУП с пустым FILIAL_ID.
+ * База РУП может совпадать с базой Гомельских ЭС, поэтому фильтр по FILIAL_ID обязателен.
+ */
+function sourceFor(filialId) {
+  if (!MULTI_DB) return { dbKey: MAIN_DB, filter: '', fparams: [] };
+  // Отдельная база пользователей: все учётные записи в ней, филиал — поле FILIAL_ID
+  if (HAS_SEPARATE_MAIN) {
+    return filialId == null
+      ? { dbKey: MAIN_DB, filter: ' AND FILIAL_ID IS NULL', fparams: [] }
+      : { dbKey: MAIN_DB, filter: ' AND FILIAL_ID = ?', fparams: [Number(filialId)] };
+  }
+  if (filialId == null) return { dbKey: MAIN_DB, filter: ' AND FILIAL_ID IS NULL', fparams: [] };
+  return { dbKey: dbKeyForFilial(filialId), filter: ' AND FILIAL_ID = ?', fparams: [Number(filialId)] };
 }
 
-async function findUserByUsername(username) {
-  const row = await queryOne('SELECT * FROM USERS WHERE USERNAME = ?', [username]);
-  if (!row) return null;
-  return await enrichUser(row);
+function userSources() {
+  if (!MULTI_DB) return [sourceFor(null)];
+  if (HAS_SEPARATE_MAIN) return [{ dbKey: MAIN_DB, filter: '', fparams: [] }];
+  return [sourceFor(null), ...FILIAL_DB_IDS.map((id) => sourceFor(id))];
+}
+
+/** База, в которой хранится пользователь с указанным филиалом. */
+function userDbKey(filialId) {
+  return sourceFor(filialId).dbKey;
 }
 
 /** Добавляет allowedLineIds и allowedVoltageIds из junction-таблиц. */
-async function enrichUser(row) {
+async function enrichUser(row, dbKey) {
   const lines = await query(
-    'SELECT LINE_ID FROM USER_ALLOWED_LINES WHERE USER_ID = ?', [row.id],
+    'SELECT LINE_ID FROM USER_ALLOWED_LINES WHERE USER_ID = ?', [row.id], dbKey,
   );
   const voltages = await query(
-    'SELECT VOLTAGE_ID FROM USER_ALLOWED_VOLTAGES WHERE USER_ID = ?', [row.id],
+    'SELECT VOLTAGE_ID FROM USER_ALLOWED_VOLTAGES WHERE USER_ID = ?', [row.id], dbKey,
   );
   return {
     id:                row.id,
@@ -74,7 +98,68 @@ async function enrichUser(row) {
     filialId:          row.filial_id,
     allowedLineIds:    lines.length    > 0 ? lines.map(r => r.line_id)       : null,
     allowedVoltageIds: voltages.length > 0 ? voltages.map(r => r.voltage_id) : null,
+    mustChangePassword: Number(row.must_change_password ?? 0) === 1,
   };
+}
+
+/** Пользователь по ID в базе филиала filialId (null — основная база). */
+async function findUser(id, filialId) {
+  const { dbKey, filter, fparams } = sourceFor(filialId);
+  const row = await queryOne('SELECT * FROM USERS WHERE ID = ?' + filter, [String(id), ...fparams], dbKey);
+  return row ? enrichUser(row, dbKey) : null;
+}
+
+/**
+ * Поиск по логину. scope — что выбрано на странице входа:
+ *   число   — филиал: ищем в базе этого филиала;
+ *   'rup'   — РУП (главный администратор, наблюдатели): основная база;
+ *   undefined — филиал не выбран: вход администратора; ищем во всех базах.
+ * Главный администратор входит при любом выборе филиала.
+ */
+async function findUserByUsername(username, scope) {
+  let sources = userSources();
+  if (MULTI_DB && scope === 'rup') sources = [sourceFor(null)];
+  else if (MULTI_DB && Number.isInteger(scope)) sources = isKnownFilial(scope) ? [sourceFor(scope)] : [];
+  for (const { dbKey, filter, fparams } of sources) {
+    const row = await queryOne('SELECT * FROM USERS WHERE USERNAME = ?' + filter, [username, ...fparams], dbKey);
+    if (row) return enrichUser(row, dbKey);
+  }
+  // Главный администратор не привязан к филиалу: находим его, даже если филиал выбран
+  if (MULTI_DB && scope !== undefined) {
+    const { dbKey, filter, fparams } = sourceFor(null);
+    const row = await queryOne(
+      "SELECT * FROM USERS WHERE USERNAME = ? AND ROLE = 'admin'" + filter, [username, ...fparams], dbKey,
+    );
+    if (row) return enrichUser(row, dbKey);
+  }
+  return null;
+}
+
+/** Логин занят в какой-либо базе (кроме пользователя exceptId в базе exceptDbKey). */
+async function usernameTaken(username, exceptId, exceptDbKey) {
+  // Логин уникален в пределах физической базы (ограничение UQ_USERS_USERNAME), проверяем без фильтра филиала
+  // База РУП может совпадать с базой Гомеля — сравниваем физические базы, а не ключи
+  const exceptPhysical = exceptDbKey !== undefined ? physicalDbKey(exceptDbKey) : undefined;
+  for (const dbKey of new Set(userSources().map((s) => physicalDbKey(s.dbKey)))) {
+    const row = await queryOne('SELECT ID FROM USERS WHERE UPPER(USERNAME) = UPPER(?)', [username], dbKey);
+    if (row && !(dbKey === exceptPhysical && String(row.id) === String(exceptId))) return true;
+  }
+  return false;
+}
+
+/**
+ * Требования к паролю (свой новый пароль и временный пароль от администратора):
+ * не менее 8 символов, буквы и цифры, не совпадает с прежним.
+ * Возвращает текст ошибки или null.
+ */
+function validateNewPassword(newPass, oldPass) {
+  if (typeof newPass !== 'string' || newPass.length < 8)
+    return 'Пароль должен быть не менее 8 символов';
+  if (!/[A-Za-zА-Яа-яЁё]/.test(newPass) || !/\d/.test(newPass))
+    return 'Пароль должен содержать буквы и цифры';
+  if (oldPass && newPass === oldPass)
+    return 'Новый пароль должен отличаться от текущего';
+  return null;
 }
 
 function safeUser(user) {
@@ -91,37 +176,63 @@ async function verifyPass(plain, storedHash) {
   return bcrypt.compare(plain, storedHash);
 }
 
-async function saveUserLines(userId, lineIds) {
-  await execute('DELETE FROM USER_ALLOWED_LINES WHERE USER_ID = ?', [userId]);
+async function saveUserLines(userId, lineIds, dbKey) {
+  await execute('DELETE FROM USER_ALLOWED_LINES WHERE USER_ID = ?', [userId], dbKey);
   for (const lid of (lineIds ?? [])) {
-    await execute(
-      'INSERT INTO USER_ALLOWED_LINES (USER_ID, LINE_ID) VALUES (?, ?)',
-      [userId, Number(lid)],
-    );
+    await execute('INSERT INTO USER_ALLOWED_LINES (USER_ID, LINE_ID) VALUES (?, ?)', [userId, Number(lid)], dbKey);
   }
 }
 
-async function saveUserVoltages(userId, voltageIds) {
-  await execute('DELETE FROM USER_ALLOWED_VOLTAGES WHERE USER_ID = ?', [userId]);
+async function saveUserVoltages(userId, voltageIds, dbKey) {
+  await execute('DELETE FROM USER_ALLOWED_VOLTAGES WHERE USER_ID = ?', [userId], dbKey);
   for (const vid of (voltageIds ?? [])) {
-    await execute(
-      'INSERT INTO USER_ALLOWED_VOLTAGES (USER_ID, VOLTAGE_ID) VALUES (?, ?)',
-      [userId, Number(vid)],
-    );
+    await execute('INSERT INTO USER_ALLOWED_VOLTAGES (USER_ID, VOLTAGE_ID) VALUES (?, ?)', [userId, Number(vid)], dbKey);
   }
 }
 
-/** Middleware: только руководитель (director) может управлять пользователями. */
+// ── Права ─────────────────────────────────────────────────────────────────────
+
+/** Middleware: только администраторы управляют пользователями. */
 function requireManager(req, res, next) {
   if (!req.userId) return res.status(401).json({ error: 'Не авторизован' });
   if (!MANAGER_ROLES.has(req.role)) return res.status(403).json({ error: 'Недостаточно прав' });
   next();
 }
 
-/** Руководитель филиала работает только с пользователями своего филиала. */
-function sameFilial(req, filialId) {
-  if (req.filialId == null) return true;
-  return filialId != null && Number(filialId) === Number(req.filialId);
+/** Главный администратор: управляет пользователями всех филиалов. */
+function isGlobalManager(req) {
+  return MANAGER_ROLES.has(req.role) && req.filialId == null;
+}
+
+/**
+ * Проверка сочетания роли и филиала. Возвращает текст ошибки или null.
+ *  - наблюдатель РУП (observer) — всегда без филиала, назначает только главный администратор;
+ *  - без филиала могут быть только главный администратор и наблюдатель;
+ *  - остальные роли обязательно привязаны к филиалу.
+ */
+function validateRoleFilial(req, role, filialId) {
+  if (role === 'observer' && !isGlobalManager(req))
+    return 'Роль «Наблюдатель РУП» может назначить только главный администратор';
+  if (role === 'observer' && filialId != null)
+    return 'Наблюдатель РУП не привязывается к филиалу';
+  if (filialId == null && !GLOBAL_ROLES.has(role))
+    return 'Для этой роли укажите филиал';
+  if (filialId == null && !isGlobalManager(req))
+    return 'Недостаточно прав';
+  if (filialId != null && !isKnownFilial(filialId))
+    return 'Для этого филиала не настроена база';
+  return null;
+}
+
+/**
+ * Филиал (база) целевого пользователя из ?filialId=.
+ * Администратор филиала всегда работает только со своим филиалом —
+ * пользователей РУП и других филиалов он не видит и не меняет.
+ */
+function targetFilial(req) {
+  if (req.filialId != null) return req.filialId;
+  const raw = req.query.filialId;
+  return raw === undefined || raw === '' || raw === 'null' ? null : Number(raw);
 }
 
 function serverError(res, err) {
@@ -132,11 +243,14 @@ function serverError(res, err) {
 // ── GET /users ────────────────────────────────────────────────────────────────
 router.get('/users', requireManager, async (req, res) => {
   try {
-    const rows = req.filialId == null
-      ? await query('SELECT * FROM USERS ORDER BY ID')
-      : await query('SELECT * FROM USERS WHERE FILIAL_ID = ? ORDER BY ID', [req.filialId]);
-    const users = await Promise.all(rows.map(enrichUser));
-    res.json(users.map(safeUser));
+    const result = [];
+    // Главный администратор — все базы, администратор филиала — только свой филиал
+    const sources = req.filialId == null ? userSources() : [sourceFor(req.filialId)];
+    for (const { dbKey, filter, fparams } of sources) {
+      const rows = await query('SELECT * FROM USERS WHERE 1=1' + filter + ' ORDER BY ID', fparams, dbKey);
+      for (const row of rows) result.push(safeUser(await enrichUser(row, dbKey)));
+    }
+    res.json(result);
   } catch (err) {
     serverError(res, err);
   }
@@ -146,7 +260,7 @@ router.get('/users', requireManager, async (req, res) => {
 router.get('/users/me', async (req, res) => {
   try {
     if (!req.userId) return res.status(401).json({ error: 'Не авторизован' });
-    const user = await findUserById(req.userId);
+    const user = await findUser(req.userId, req.filialId);
     if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
     res.json(safeUser(user));
   } catch (err) {
@@ -160,8 +274,12 @@ router.post('/login', loginLimiter, async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password)
       return res.status(400).json({ error: 'Укажите логин и пароль' });
+    // Филиал, выбранный на странице входа ('rup' — РУП)
+    const rawScope = req.body.filialId;
+    const scope = rawScope === 'rup' ? 'rup'
+      : (rawScope != null && rawScope !== '' && Number.isInteger(Number(rawScope)) ? Number(rawScope) : undefined);
 
-    const user = await findUserByUsername(username);
+    const user = await findUserByUsername(username, scope);
     if (!user) return res.status(401).json({ error: 'Неверный логин или пароль' });
 
     const ok = await verifyPass(password, user.password);
@@ -170,7 +288,7 @@ router.post('/login', loginLimiter, async (req, res) => {
     // Lazy migration: SHA-256 -> bcrypt
     if (/^[a-f0-9]{64}$/.test(user.password)) {
       const newHash = bcrypt.hashSync(password, BCRYPT_ROUNDS);
-      await execute('UPDATE USERS SET PASSWORD = ? WHERE ID = ?', [newHash, user.id]);
+      await execute('UPDATE USERS SET PASSWORD = ? WHERE ID = ?', [newHash, user.id], userDbKey(user.filialId));
     }
 
     const token = signToken(user);
@@ -184,34 +302,43 @@ router.post('/login', loginLimiter, async (req, res) => {
 router.post('/users', requireManager, async (req, res) => {
   try {
     const { username, password, displayName, role, allowedLineIds, allowedVoltageIds } = req.body ?? {};
-    // Руководитель филиала создаёт пользователей только в своём филиале
-    const filialId = req.filialId != null ? req.filialId : req.body?.filialId;
+    const effRole  = role ?? 'viewer';
+    // Администратор филиала создаёт пользователей только в своём филиале;
+    // наблюдатель РУП не привязан к филиалу
+    const filialId = effRole === 'observer' ? null
+      : (req.filialId != null ? req.filialId
+        : (req.body?.filialId != null && req.body.filialId !== '' ? Number(req.body.filialId) : null));
     if (!username || !password)
-      return res.status(400).json({ error: 'username и password обязательны' });
-    if (typeof password !== 'string' || password.length < 6)
-      return res.status(400).json({ error: 'Пароль должен быть не менее 6 символов' });
-    if (role && !VALID_ROLES.has(role))
-      return res.status(400).json({ error: `Недопустимая роль: ${role}` });
+      return res.status(400).json({ error: 'Укажите логин и временный пароль' });
+    const passErr = validateNewPassword(password);
+    if (passErr) return res.status(400).json({ error: passErr });
+    if (!VALID_ROLES.has(effRole))
+      return res.status(400).json({ error: `Недопустимая роль: ${effRole}` });
+    const roleErr = validateRoleFilial(req, effRole, filialId);
+    if (roleErr) return res.status(400).json({ error: roleErr });
 
-    const existing = await queryOne('SELECT ID FROM USERS WHERE USERNAME = ?', [username]);
-    if (existing)
+    const login = String(username).trim().toLowerCase();
+    if (await usernameTaken(login))
       return res.status(409).json({ error: 'Пользователь с таким логином уже существует' });
 
-    // Генерируем числовой ID
-    const maxRow = await queryOne('SELECT MAX(CAST(ID AS INTEGER)) AS MX FROM USERS');
-    const newId  = String((maxRow?.mx ?? 0) + 1);
+    const dbKey = userDbKey(filialId);
+    // Числовой ID в пределах базы
+    const ids = await query('SELECT ID FROM USERS', [], dbKey);
+    const maxId = ids.reduce((m, r) => Math.max(m, Number(r.id) || 0), 0);
+    const newId = String(maxId + 1);
 
     const hash = bcrypt.hashSync(password, BCRYPT_ROUNDS);
+    // Пароль от администратора временный: при первом входе пользователь задаёт свой
     await execute(
-      'INSERT INTO USERS (ID, USERNAME, PASSWORD, DISPLAY_NAME, ROLE, FILIAL_ID) VALUES (?,?,?,?,?,?)',
-      [newId, username.trim(), hash, (displayName ?? username).trim(), role ?? 'viewer',
-      filialId != null ? Number(filialId) : null],
+      'INSERT INTO USERS (ID, USERNAME, PASSWORD, DISPLAY_NAME, ROLE, FILIAL_ID, MUST_CHANGE_PASSWORD) VALUES (?,?,?,?,?,?,1)',
+      [newId, login, hash, String(displayName ?? login).trim(), effRole, filialId],
+      dbKey,
     );
 
-    if (Array.isArray(allowedLineIds))    await saveUserLines(newId, allowedLineIds);
-    if (Array.isArray(allowedVoltageIds)) await saveUserVoltages(newId, allowedVoltageIds);
+    if (Array.isArray(allowedLineIds))    await saveUserLines(newId, allowedLineIds, dbKey);
+    if (Array.isArray(allowedVoltageIds)) await saveUserVoltages(newId, allowedVoltageIds, dbKey);
 
-    const user = await findUserById(newId);
+    const user = await findUser(newId, filialId);
     res.status(201).json(safeUser(user));
   } catch (err) {
     serverError(res, err);
@@ -222,44 +349,56 @@ router.post('/users', requireManager, async (req, res) => {
 router.patch('/users/:id', async (req, res) => {
   try {
     const id     = req.params.id;
-    const user   = await findUserById(id);
+    const isSelf = String(req.userId) === String(id) && targetFilial(req) == req.filialId;
+    const userFilial = isSelf ? req.filialId : targetFilial(req);
+    const user   = await findUser(id, userFilial);
     if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
 
-    const isSelf = String(req.userId) === String(id);
-    const canManage = MANAGER_ROLES.has(req.role) && sameFilial(req, user.filialId);
+    const canManage = MANAGER_ROLES.has(req.role);
     if (!isSelf && !canManage)
       return res.status(403).json({ error: 'Доступ запрещён' });
-    if (canManage && req.body?.filialId !== undefined && !sameFilial(req, req.body.filialId))
-      return res.status(403).json({ error: 'Нельзя перевести пользователя в другой филиал' });
 
-    const body = req.body ?? {};
-    const sets = [];
+    const body   = req.body ?? {};
+    const dbKey  = userDbKey(user.filialId);
+    const sets   = [];
     const params = [];
 
     if (canManage) {
-      if (body.displayName !== undefined) { sets.push('DISPLAY_NAME = ?'); params.push(String(body.displayName).trim()); }
+      if (isSelf && body.role !== undefined && body.role !== user.role)
+        return res.status(400).json({ error: 'Нельзя изменить собственную роль' });
+      const newRole = body.role !== undefined ? body.role : user.role;
+      const newFilial = body.filialId !== undefined
+        ? (body.filialId != null && body.filialId !== '' ? Number(body.filialId) : null)
+        : user.filialId;
+      if (newFilial !== user.filialId) {
+        // Пользователь хранится в базе своего филиала — перенос между базами не выполняется
+        if (MULTI_DB) return res.status(400).json({ error: 'Филиал пользователя изменить нельзя — создайте нового пользователя в нужном филиале' });
+        if (!isGlobalManager(req)) return res.status(403).json({ error: 'Нельзя перевести пользователя в другой филиал' });
+        sets.push('FILIAL_ID = ?'); params.push(newFilial);
+      }
       if (body.role !== undefined) {
-        if (!VALID_ROLES.has(body.role)) return res.status(400).json({ error: `Недопустимая роль: ${body.role}` });
-        sets.push('ROLE = ?'); params.push(body.role);
+        if (!VALID_ROLES.has(newRole)) return res.status(400).json({ error: `Недопустимая роль: ${newRole}` });
+        const roleErr = validateRoleFilial(req, newRole, newFilial);
+        if (roleErr) return res.status(400).json({ error: roleErr });
+        sets.push('ROLE = ?'); params.push(newRole);
       }
-      if (body.filialId !== undefined) { sets.push('FILIAL_ID = ?'); params.push(body.filialId != null ? Number(body.filialId) : null); }
       if (body.username !== undefined) {
-        const taken = await queryOne('SELECT ID FROM USERS WHERE USERNAME = ? AND ID != ?', [body.username, id]);
-        if (taken) return res.status(409).json({ error: 'Логин уже занят' });
-        sets.push('USERNAME = ?'); params.push(String(body.username).trim());
+        const login = String(body.username).trim().toLowerCase();
+        if (!login) return res.status(400).json({ error: 'Укажите логин' });
+        if (await usernameTaken(login, id, dbKey)) return res.status(409).json({ error: 'Логин уже занят' });
+        sets.push('USERNAME = ?'); params.push(login);
       }
-      if (body.allowedLineIds    !== undefined) await saveUserLines(id, Array.isArray(body.allowedLineIds)    ? body.allowedLineIds    : null);
-      if (body.allowedVoltageIds !== undefined) await saveUserVoltages(id, Array.isArray(body.allowedVoltageIds) ? body.allowedVoltageIds : null);
-    } else {
-      if (body.displayName !== undefined) { sets.push('DISPLAY_NAME = ?'); params.push(String(body.displayName).trim()); }
+      if (body.allowedLineIds    !== undefined) await saveUserLines(id, Array.isArray(body.allowedLineIds)    ? body.allowedLineIds    : null, dbKey);
+      if (body.allowedVoltageIds !== undefined) await saveUserVoltages(id, Array.isArray(body.allowedVoltageIds) ? body.allowedVoltageIds : null, dbKey);
     }
+    if (body.displayName !== undefined) { sets.push('DISPLAY_NAME = ?'); params.push(String(body.displayName).trim()); }
 
     if (sets.length > 0) {
       params.push(id);
-      await execute(`UPDATE USERS SET ${sets.join(', ')} WHERE ID = ?`, params);
+      await execute(`UPDATE USERS SET ${sets.join(', ')} WHERE ID = ?`, params, dbKey);
     }
 
-    const updated = await findUserById(id);
+    const updated = await findUser(id, user.filialId);
     res.json(safeUser(updated));
   } catch (err) {
     serverError(res, err);
@@ -270,12 +409,15 @@ router.patch('/users/:id', async (req, res) => {
 router.delete('/users/:id', requireManager, async (req, res) => {
   try {
     const id = req.params.id;
-    if (String(id) === String(req.userId))
+    const filialId = targetFilial(req);
+    if (String(id) === String(req.userId) && filialId == req.filialId)
       return res.status(400).json({ error: 'Нельзя удалить самого себя' });
-    const user = await queryOne('SELECT ID, FILIAL_ID FROM USERS WHERE ID = ?', [id]);
+    const user = await findUser(id, filialId);
     if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
-    if (!sameFilial(req, user.filial_id)) return res.status(403).json({ error: 'Доступ запрещён' });
-    await execute('DELETE FROM USERS WHERE ID = ?', [id]);
+    const dbKey = userDbKey(user.filialId);
+    await execute('DELETE FROM USER_ALLOWED_LINES WHERE USER_ID = ?', [id], dbKey);
+    await execute('DELETE FROM USER_ALLOWED_VOLTAGES WHERE USER_ID = ?', [id], dbKey);
+    await execute('DELETE FROM USERS WHERE ID = ?', [id], dbKey);
     res.json({ ok: true });
   } catch (err) {
     serverError(res, err);
@@ -283,17 +425,20 @@ router.delete('/users/:id', requireManager, async (req, res) => {
 });
 
 // ── POST /users/:id/resetPassword ─────────────────────────────────────────────
+// Администратор задаёт временный пароль (пользователь забыл свой).
+// Администратор филиала — только пользователям своего филиала; пользователей РУП
+// (главный администратор, наблюдатели) — только главный администратор.
 router.post('/users/:id/resetPassword', requireManager, async (req, res) => {
   try {
     const id          = req.params.id;
     const { newPass } = req.body ?? {};
-    if (typeof newPass !== 'string' || newPass.length < 6)
-      return res.status(400).json({ error: 'Пароль должен быть не менее 6 символов' });
-    const user = await queryOne('SELECT ID, FILIAL_ID FROM USERS WHERE ID = ?', [id]);
+    const passErr = validateNewPassword(newPass);
+    if (passErr) return res.status(400).json({ error: passErr });
+    const user = await findUser(id, targetFilial(req));
     if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
-    if (!sameFilial(req, user.filial_id)) return res.status(403).json({ error: 'Доступ запрещён' });
     const hash = bcrypt.hashSync(newPass, BCRYPT_ROUNDS);
-    await execute('UPDATE USERS SET PASSWORD = ? WHERE ID = ?', [hash, id]);
+    // Пароль, заданный администратором, временный: при входе пользователь обязан его сменить
+    await execute('UPDATE USERS SET PASSWORD = ?, MUST_CHANGE_PASSWORD = 1 WHERE ID = ?', [hash, id], userDbKey(user.filialId));
     res.json({ ok: true });
   } catch (err) {
     serverError(res, err);
@@ -306,16 +451,22 @@ router.post('/changePassword', async (req, res) => {
     if (!req.userId) return res.status(401).json({ error: 'Не авторизован' });
     const { oldPass, newPass } = req.body ?? {};
     if (!oldPass || !newPass)
-      return res.status(400).json({ error: 'oldPass и newPass обязательны' });
-    if (typeof newPass !== 'string' || newPass.length < 6)
-      return res.status(400).json({ error: 'Пароль должен быть не менее 6 символов' });
-    const user = await findUserById(req.userId);
+      return res.status(400).json({ error: 'Укажите текущий и новый пароль' });
+    const passErr = validateNewPassword(newPass, oldPass);
+    if (passErr) return res.status(400).json({ error: passErr });
+    const user = await findUser(req.userId, req.filialId);
     if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
     const ok = await verifyPass(oldPass, user.password);
     if (!ok) return res.status(403).json({ error: 'Неверный текущий пароль' });
     const hash = bcrypt.hashSync(newPass, BCRYPT_ROUNDS);
-    await execute('UPDATE USERS SET PASSWORD = ? WHERE ID = ?', [hash, String(req.userId)]);
-    res.json({ ok: true });
+    await execute(
+      'UPDATE USERS SET PASSWORD = ?, MUST_CHANGE_PASSWORD = 0 WHERE ID = ?',
+      [hash, String(req.userId)],
+      userDbKey(req.filialId),
+    );
+    // Новый токен — уже без признака обязательной смены пароля
+    const updated = await findUser(req.userId, req.filialId);
+    res.json({ ...safeUser(updated), token: signToken(updated) });
   } catch (err) {
     serverError(res, err);
   }

@@ -9,8 +9,10 @@ export interface SheetCardProps {
   sheet: InspectionSheetFull;
   index: number;
   onOpen: (id: number) => void;
-  onDelete: (id: number) => void;
-  onClone: (id: number) => void;
+  /** Не передан — пункт «Удалить» скрыт (режим только просмотра). */
+  onDelete?: (id: number) => void;
+  /** Не передан — пункт «Копировать» скрыт (режим только просмотра). */
+  onClone?: (id: number) => void;
   onEdit?: (id: number) => void;
   showFilial?: boolean;
   selected?: boolean;
@@ -54,8 +56,8 @@ export const SheetCard = memo((props: SheetCardProps) => {
 
   const handleRowClick = useCallback(() => onOpen(sheet.id), [onOpen, sheet.id]);
   const stopRowClick   = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
-  const handleDelete   = useCallback(() => onDelete(sheet.id), [onDelete, sheet.id]);
-  const handleClone    = useCallback(() => onClone(sheet.id), [onClone, sheet.id]);
+  const handleDelete   = useCallback(() => onDelete?.(sheet.id), [onDelete, sheet.id]);
+  const handleClone    = useCallback(() => onClone?.(sheet.id), [onClone, sheet.id]);
   const handleEdit     = useCallback(() => onEdit?.(sheet.id), [onEdit, sheet.id]);
   const handleCheck    = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
@@ -130,15 +132,19 @@ export const SheetCard = memo((props: SheetCardProps) => {
                   Редактировать
                 </button>
               )}
-              <button type="button" role="menuitem" className={cls.menuItem}
-                onClick={() => { close(); handleClone(); }}>
-                Копировать
-              </button>
-              <button type="button" role="menuitem"
-                className={`${cls.menuItem} ${cls.menuItemDanger}`}
-                onClick={() => { close(); handleDelete(); }}>
-                <IconTrash size={13} /> Удалить
-              </button>
+              {onClone && (
+                <button type="button" role="menuitem" className={cls.menuItem}
+                  onClick={() => { close(); handleClone(); }}>
+                  Копировать
+                </button>
+              )}
+              {onDelete && (
+                <button type="button" role="menuitem"
+                  className={`${cls.menuItem} ${cls.menuItemDanger}`}
+                  onClick={() => { close(); handleDelete(); }}>
+                  <IconTrash size={13} /> Удалить
+                </button>
+              )}
             </>
           )}
         </Dropdown>

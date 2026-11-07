@@ -53,8 +53,14 @@ export const Dropdown = memo((props: DropdownProps) => {
       panel.style.left  = `${tr.left}px`;
       panel.style.right = 'auto';
     }
-    // Всегда открываем вниз, ограничиваем доступным пространством
-    const spaceBelow = window.innerHeight - tr.bottom - 8;
+    // Всегда открываем вниз, ограничиваем доступным пространством.
+    // Внутри модального окна список не выходит за нижний край окна (подложки),
+    // а не тянется до низа всей страницы.
+    const modal = triggerRef.current.closest('[data-modal-content]');
+    const bottomLimit = modal
+      ? Math.min(window.innerHeight, modal.getBoundingClientRect().bottom)
+      : window.innerHeight;
+    const spaceBelow = bottomLimit - tr.bottom - 8;
     const spaceAbove = tr.top - 8;
     if (spaceBelow < 100 && spaceAbove > spaceBelow) {
       // Открываем вверх: нижний край панели прибит к верху кнопки

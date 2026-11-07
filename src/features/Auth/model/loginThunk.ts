@@ -27,17 +27,18 @@ async function sha256(str: string): Promise<string> {
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-export const loginByUsername = createAsyncThunk<User, { username: string; password: string }, ThunkConfig<string>>(
+export const loginByUsername = createAsyncThunk<User, { username: string; password: string; filialId?: string }, ThunkConfig<string>>(
   'auth/loginByUsername',
-  async ({ username, password }, { dispatch, rejectWithValue }) => {
+  async ({ username, password, filialId }, { dispatch, rejectWithValue }) => {
     // ── 1. Пытаемся войти через сервер (JWT) ────────────────────────────────
     try {
       const res = await fetch(`${getApiUrl()}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username.trim().toLowerCase(), password }),
-        // Таймаут 3 сек — если сервер недоступен, сразу переходим в офлайн
-        signal: AbortSignal.timeout(3000),
+        // filialId — филиал, выбранный на странице входа ('rup' — РУП): сервер ищет пользователя в его базе
+        body: JSON.stringify({ username: username.trim().toLowerCase(), password, filialId }),
+        // Таймаут 8 сек — если сервер недоступен, переходим в офлайн
+        signal: AbortSignal.timeout(8000),
       });
 
       if (res.ok) {
@@ -58,11 +59,13 @@ export const loginByUsername = createAsyncThunk<User, { username: string; passwo
     }
 
     // ── 2. Офлайн-режим: проверяем SHA-256 из встроенной таблицы ────────────
+    // Сюда попадаем, только если сервер не ответил: говорим об этом прямо,
+    // иначе «пользователь не найден» выглядит как ошибка в логине
     const found = OFFLINE_USERS.find((u) => u.username === username.trim().toLowerCase());
-    if (!found) return rejectWithValue('Пользователь не найден');
+    if (!found) return rejectWithValue(`Сервер недоступен (${getApiUrl() || window.location.origin}). Проверьте, что сервер запущен и есть связь с сетью`);
 
     const hash = await sha256(password);
-    if (hash !== found.password) return rejectWithValue('Неверный пароль');
+    if (hash !== found.password) return rejectWithValue('Сервер недоступен, вход без сети: неверный пароль');
 
     const { password: _omit, ...user } = found;
     sessionStorage.setItem(USER_KEY, JSON.stringify(user));

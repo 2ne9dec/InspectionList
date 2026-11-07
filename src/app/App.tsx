@@ -3,8 +3,9 @@ import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import { Navbar } from '@/widgets/Navbar';
 import { SheetsListNavbarSlot } from '@/pages/SheetsListPage';
+import ForcePasswordChangePage from '@/pages/ForcePasswordChangePage';
 import { getRouteSheets } from '@/shared/const/router';
-import { getUserAuthData, getUserInited, userActions } from '@/entities/User';
+import { getUserAuthData, getUserInited, getUserMustChangePassword, userActions } from '@/entities/User';
 import { useAppDispatch, useTheme } from '@/shared/lib/hooks';
 import { classNames } from '@/shared/lib/classNames/classNames';
 import { Toaster } from '@/shared/ui/Toaster';
@@ -26,6 +27,7 @@ const App = () => {
   const dispatch = useAppDispatch();
   const inited   = useSelector(getUserInited);
   const auth     = useSelector(getUserAuthData);
+  const mustChangePassword = useSelector(getUserMustChangePassword);
 
   useTheme();
   useSyncService(inited);
@@ -35,6 +37,16 @@ const App = () => {
   }, [dispatch]);
 
   if (!inited) return null;
+
+  // Временный пароль: до его смены приложение недоступно
+  if (auth && mustChangePassword) {
+    return (
+      <div className='app'>
+        <ForcePasswordChangePage />
+        <Toaster />
+      </div>
+    );
+  }
 
   const withNavbar = Boolean(auth);
 

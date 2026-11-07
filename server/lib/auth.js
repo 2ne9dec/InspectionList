@@ -83,6 +83,7 @@ function authMiddleware(req, res, next) {
     req.role              = payload.role             ?? 'viewer';
     req.allowedLineIds    = Array.isArray(payload.allowedLineIds)    ? payload.allowedLineIds    : null;
     req.allowedVoltageIds = Array.isArray(payload.allowedVoltageIds) ? payload.allowedVoltageIds : null;
+    req.mustChangePassword = payload.mcp === true;
     next();
   } catch {
     return res.status(401).json({ error: 'Токен недействителен или истёк' });
@@ -98,6 +99,7 @@ function signToken(user) {
       role:              user.role,
       allowedLineIds:    user.allowedLineIds    ?? null,
       allowedVoltageIds: user.allowedVoltageIds ?? null,
+      mcp:               user.mustChangePassword === true,
     },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES },
@@ -117,6 +119,39 @@ function requireAuth(req, res, next) {
  */
 const FULL_ACCESS_ROLES = new Set(['director', 'engineer', 'master', 'viewer']);
 
+/**
+ * Роли «только просмотр»: видят данные, но не могут ничего создавать,
+ * изменять или удалять. observer — наблюдатель РУП (все филиалы).
+ */
+const READ_ONLY_ROLES = new Set(['observer']);
+
+/** Запросы, которые разрешены и пользователю «только просмотр». */
+const READ_ONLY_ALLOWED_WRITES = new Set(['/changepassword']);
+
+/**
+ * Middleware: для ролей «только просмотр» запрещает любые изменяющие запросы.
+ * Проверка на сервере — скрытие кнопок в интерфейсе не является защитой.
+ */
+function blockReadOnlyWrites(req, res, next) {
+  if (!READ_ONLY_ROLES.has(req.role)) return next();
+  if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next();
+  if (READ_ONLY_ALLOWED_WRITES.has(req.path.toLowerCase())) return next();
+  return res.status(403).json({ error: 'Режим только для просмотра' });
+}
+
+/** Запросы, доступные до смены временного пароля. */
+const BEFORE_PASSWORD_CHANGE_ALLOWED = new Set(['/changepassword', '/users/me']);
+
+/**
+ * Middleware: пользователь с временным паролем (новый или сброшенный администратором)
+ * не получает доступа к данным, пока не сменит пароль.
+ */
+function blockUntilPasswordChanged(req, res, next) {
+  if (!req.mustChangePassword) return next();
+  if (BEFORE_PASSWORD_CHANGE_ALLOWED.has(req.path.toLowerCase())) return next();
+  return res.status(403).json({ error: 'Необходимо сменить временный пароль', code: 'PASSWORD_CHANGE_REQUIRED' });
+}
+
 /** Middleware: требует наличие одной из указанных ролей. */
 function requireRole(...roles) {
   return (req, res, next) => {
@@ -128,4 +163,7 @@ function requireRole(...roles) {
   };
 }
 
-module.exports = { authMiddleware, signToken, JWT_SECRET, requireAuth, requireRole, FULL_ACCESS_ROLES };
+module.exports = {
+  authMiddleware, signToken, JWT_SECRET, requireAuth, requireRole, FULL_ACCESS_ROLES,
+  READ_ONLY_ROLES, blockReadOnlyWrites, blockUntilPasswordChanged,
+};

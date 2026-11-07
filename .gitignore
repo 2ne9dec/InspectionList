@@ -16,3 +16,5 @@ capacitor.config.ts.bak
 .env.development.local
 .env
 server/.env
+# База пользователей (логины, хеши паролей) — не хранить в git
+db/users.fdb

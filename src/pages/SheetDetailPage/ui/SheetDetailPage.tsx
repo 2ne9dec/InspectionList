@@ -29,6 +29,7 @@ import type { PendingDefect } from '@/shared/lib/offline/pendingDefects';
 import { useSheetDetail } from '../model/useSheetDetail';
 import { useSheetKeyboard } from '../model/useSheetKeyboard';
 import { getRouteSheetDetail } from '@/shared/const/router';
+import { usePermissions } from '@/entities/User';
 import cls from './SheetDetailPage.module.scss';
 
 const reducers: ReducersList = {
@@ -213,6 +214,7 @@ OfflinePendingDetail.displayName = 'OfflinePendingDetail';
 // ── Онлайн-листок ─────────────────────────────────────────────────────────────────
 const OnlineSheetDetail = memo(({ sheetId }: { sheetId: number }) => {
   const { sheet, sheetFull, defectsFull, fixedPct, totalCount, isLoading } = useSheetDetail(sheetId);
+  const { can } = usePermissions();
 
   const [sidebarDefect, setSidebarDefect] = useState<DefectRecordFull | null>(null);
   const [showTimeline,  setShowTimeline]  = useState(false);
@@ -289,17 +291,19 @@ const OnlineSheetDetail = memo(({ sheetId }: { sheetId: number }) => {
 
           <div className={cls.spacer} />
 
-          <ExportButton sheet={sheetFull} />
+          {can('export.excel') && <ExportButton sheet={sheetFull} />}
         </div>
 
-        <AddDefectBar
-          key={`${sheetId}-${sheetFull.createdDate}-${sheetFull.createdBy}`}
-          sheetId={sheetId}
-          poleStart={sheetFull.poleStart}
-          poleEnd={sheetFull.poleEnd}
-          sheetDate={sheetFull.createdDate}
-          sheetInspector={sheetFull.createdBy}
-        />
+        {can('defects.create') && (
+          <AddDefectBar
+            key={`${sheetId}-${sheetFull.createdDate}-${sheetFull.createdBy}`}
+            sheetId={sheetId}
+            poleStart={sheetFull.poleStart}
+            poleEnd={sheetFull.poleEnd}
+            sheetDate={sheetFull.createdDate}
+            sheetInspector={sheetFull.createdBy}
+          />
+        )}
 
         <div className={cls.body}>
           <DefectTable
@@ -307,6 +311,9 @@ const OnlineSheetDetail = memo(({ sheetId }: { sheetId: number }) => {
             onRowClick={setSidebarDefect}
             onFix={openFixModal}
             onCopy={openCopyModal}
+            canFix={can('defects.fix')}
+            canCopy={can('defects.create')}
+            canDelete={can('defects.delete')}
           />
         </div>
 
@@ -317,6 +324,9 @@ const OnlineSheetDetail = memo(({ sheetId }: { sheetId: number }) => {
             onFix={handleSidebarFix}
             onDelete={handleSidebarDelete}
             onSaveInspector={handleSaveInspector}
+            canEdit={can('defects.edit')}
+            canFix={can('defects.fix')}
+            canDelete={can('defects.delete')}
           />
         )}
 

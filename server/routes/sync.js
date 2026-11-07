@@ -9,10 +9,11 @@
 const { Router }  = require('express');
 const { query, execute, queryOne, nextId } = require('../lib/fbDb');
 const { canAccessLine } = require('../lib/tenancy');
+const { requirePermission } = require('../lib/permissions');
 
 const router = Router();
 
-router.post('/sync/batch', async (req, res) => {
+router.post('/sync/batch', requirePermission('defects.create'), async (req, res) => {
   if (!req.userId) return res.status(401).json({ error: 'Не авторизован' });
 
   if (!req.filialId) return res.status(403).json({ error: 'Нет филиала' });

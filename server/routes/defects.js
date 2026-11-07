@@ -17,6 +17,7 @@ const { requireRole } = require('../lib/auth');
 const { Router } = require('express');
 const { query, execute, queryOne, nextId } = require('../lib/fbDb');
 const { canAccessLine, canAccessFilial, lineWhereClause } = require('../lib/tenancy');
+const { requirePermission, hasPermission } = require('../lib/permissions');
 
 const NO_DEFECT_ID = 117; // маркер «дефекты отсутствуют» — не считается дефектом
 
@@ -126,7 +127,7 @@ router.get('/defectRecords', async (req, res) => {
 });
 
 // ── POST /defectRecords — создать дефект ───────────────────────────────────────────────────────
-router.post('/defectRecords', async (req, res) => {
+router.post('/defectRecords', requirePermission('defects.create'), async (req, res) => {
   try {
     const body = req.body;
     const sheetId = Number(body.sheetId);
@@ -190,9 +191,28 @@ router.post('/defectRecords', async (req, res) => {
 });
 
 // ── PATCH /defectRecords/:id — обновить дефект ──────────────────────────────────────────────────
+/**
+ * Какие права нужны для изменения дефекта — по набору полей:
+ *   isFixed (+ дата, кто устранил)                      → defects.fix
+ *   заключение мастера (мероприятия, срок, мастер, объём работ,
+ *   дата устранения и производитель работ из журнала)  → journal.conclusion
+ *   примечание, обнаружил, статус                      → defects.edit
+ */
+function requiredForDefectPatch(body) {
+  const has = (k) => k in body;
+  const need = new Set();
+  if (has('isFixed')) need.add('defects.fix');
+  if (['masterConclusion', 'resolutionDeadline', 'masterName', 'fixWorkVolume'].some(has)) need.add('journal.conclusion');
+  if (!has('isFixed') && ['dateFixed', 'inspectorFix'].some(has)) need.add('journal.conclusion');
+  if (['notes', 'inspectorFind', 'status'].some(has)) need.add('defects.edit');
+  return [...need];
+}
+
 router.patch('/defectRecords/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
+    const missing = requiredForDefectPatch(req.body ?? {}).find((k) => !hasPermission(req.role, k));
+    if (missing) return res.status(403).json({ error: 'Недостаточно прав для этого действия', permission: missing });
 
     // Проверяем доступ через линию дефекта
     const existing = await queryOne(
@@ -237,7 +257,7 @@ router.patch('/defectRecords/:id', async (req, res) => {
 });
 
 // ── DELETE /defectRecords/:id — удалить дефект ─────────────────────────────────────────────────
-router.delete('/defectRecords/:id', async (req, res) => {
+router.delete('/defectRecords/:id', requirePermission('defects.delete'), async (req, res) => {
   try {
     const id = Number(req.params.id);
     const row = await queryOne('SELECT d.ID, d.LINE_ID, s.FILIAL_ID FROM DEFECT_RECORDS d LEFT JOIN INSPECTION_SHEETS s ON s.ID = d.SHEET_ID WHERE d.ID = ?', [id]);
@@ -253,7 +273,7 @@ router.delete('/defectRecords/:id', async (req, res) => {
 });
 
 // ── DELETE /defectRecordsBySheet/:sheetId — удалить дефекты листа ─────────────────────────────────────
-router.delete('/defectRecordsBySheet/:sheetId', async (req, res) => {
+router.delete('/defectRecordsBySheet/:sheetId', requirePermission('defects.delete'), async (req, res) => {
   try {
     const sheetId = Number(req.params.sheetId);
     const sheet   = await queryOne(

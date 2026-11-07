@@ -10,6 +10,8 @@ interface JournalTableProps {
   onSelectAll: (checked: boolean) => void;
   onSelect:    (id: number, checked: boolean) => void;
   onEditRow:   (id: number) => void;
+  /** Только просмотр: выбор строк и заключение мастера недоступны */
+  readOnly?:   boolean;
 }
 
 /** Одна строка таблицы, мемоизирована по id + выделению */
@@ -18,22 +20,26 @@ const Row = memo(({
   index,
   selected,
   onSelect,
-  onEdit,
+  onEdit: onEditProp,
+  readOnly,
 }: {
   row:      JournalRow;
   index:    number;
   selected: boolean;
   onSelect: (id: number, checked: boolean) => void;
   onEdit:   (id: number) => void;
+  readOnly?: boolean;
 }) => {
   const { d, line, voltage, location } = row;
+  const onEdit = readOnly ? () => {} : onEditProp;
+  const editable = readOnly ? '' : cls.editable;
   return (
     <tr className={[d.isFixed ? cls.rowFixed : '', selected ? cls.rowSelected : ''].join(' ').trim()}>
       <td className={cls.tdCheck} onClick={(e) => e.stopPropagation()}>
         <input
           type='checkbox'
           checked={selected}
-          disabled={!!d.isFixed}
+          disabled={!!d.isFixed || readOnly}
           onChange={(e) => onSelect(d.id, e.target.checked)}
         />
       </td>
@@ -46,7 +52,7 @@ const Row = memo(({
         <div className={cls.clamp} title={location}>{location}</div>
       </td>
       <td
-        className={`${cls.tdConclusion} ${cls.editable}`}
+        className={`${cls.tdConclusion} ${editable}`}
         onClick={() => onEdit(d.id)}
       >
         {d.masterConclusion
@@ -54,7 +60,7 @@ const Row = memo(({
           : <span className={cls.editHint}>—</span>}
       </td>
       <td
-        className={`${cls.tdDate} ${cls.editable}`}
+        className={`${cls.tdDate} ${editable}`}
         onClick={() => onEdit(d.id)}
       >
         {(d.resolutionDeadline || d.masterName) ? (
@@ -65,7 +71,7 @@ const Row = memo(({
         ) : <span className={cls.editHint}>—</span>}
       </td>
       <td
-        className={`${cls.tdDate} ${cls.editable}`}
+        className={`${cls.tdDate} ${editable}`}
         onClick={() => onEdit(d.id)}
       >
         {(d.dateFixed || d.fixWorkVolume) ? (
@@ -75,7 +81,7 @@ const Row = memo(({
           </>
         ) : <span className={cls.editHint}>—</span>}
       </td>
-      <td className={cls.editable} onClick={() => onEdit(d.id)}>
+      <td className={editable} onClick={() => onEdit(d.id)}>
         {d.inspectorFix
           ? <div className={cls.clamp} title={d.inspectorFix}>{d.inspectorFix}</div>
           : <span className={cls.editHint}>—</span>}
@@ -92,6 +98,7 @@ export const JournalTable = memo(({
   onSelectAll,
   onSelect,
   onEditRow,
+  readOnly,
 }: JournalTableProps) => (
   <div className={cls.tableWrap}>
     <table className={cls.table}>
@@ -101,6 +108,7 @@ export const JournalTable = memo(({
             <input
               type='checkbox'
               checked={allSelected}
+              disabled={readOnly}
               onChange={(e) => onSelectAll(e.target.checked)}
               aria-label='Выбрать все'
             />
@@ -147,6 +155,7 @@ export const JournalTable = memo(({
             selected={selectedIds.has(row.d.id)}
             onSelect={onSelect}
             onEdit={onEditRow}
+            readOnly={readOnly}
           />
         ))}
       </tbody>

@@ -9,7 +9,7 @@
  * Middleware и хелперы остаются синхронными (карта в памяти).
  */
 
-const { query } = require('./fbDb');
+const { query, allDbKeys, MAIN_DB, HAS_SEPARATE_MAIN } = require('./fbDb');
 
 let FILIAL_LINE_MAP = new Map(); // filialId (number) -> Set<lineId>
 
@@ -18,8 +18,14 @@ let FILIAL_LINE_MAP = new Map(); // filialId (number) -> Set<lineId>
  * Вызывается один раз при старте.
  */
 async function initTenancy() {
-  const lines = await query('SELECT ID, FILIAL_ID, VOLTAGE_ID FROM LINES');
-  const fvf   = await query('SELECT FILIAL_ID, VOLTAGE_ID FROM FILIAL_VOLTAGE_FILTER');
+  // Справочники всех баз (основной и баз филиалов); ID линий во всех базах общие
+  const lines = [];
+  const fvf   = [];
+  // База пользователей справочников не содержит
+  for (const dbKey of allDbKeys().filter((k) => !(HAS_SEPARATE_MAIN && k === MAIN_DB))) {
+    lines.push(...await query('SELECT ID, FILIAL_ID, VOLTAGE_ID FROM LINES', [], dbKey));
+    fvf.push(...await query('SELECT FILIAL_ID, VOLTAGE_ID FROM FILIAL_VOLTAGE_FILTER', [], dbKey));
+  }
 
   // filialId -> Set<voltageId> из фильтра напряжений
   const filialVoltages = new Map();
