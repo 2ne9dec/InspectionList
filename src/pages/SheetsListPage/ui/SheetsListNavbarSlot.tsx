@@ -10,12 +10,14 @@ import {
   useGetElementsQuery,
 } from '@/entities/InspectionLine';
 import { DefectTreePopup } from '@/features/AddDefect';
+import { useCan } from '@/entities/User';
 import { Button, HStack, Input } from '@/shared/ui';
 import cls from './SheetsListNavbarSlot.module.scss';
 
 export const SheetsListNavbarSlot = memo(() => {
   const search      = useSelector(selectCreateSheetSearch);
   const selectedIds = useSelector(selectCreateSheetSelectedDefectTypeIds);
+  const canCreate   = useCan('sheets.create');
   const { openModal, setSearch, setSelectedDefectTypeIds } = createSheetActions.useActions();
 
   const { data: elements    = [] } = useGetElementsQuery();
@@ -87,9 +89,11 @@ export const SheetsListNavbarSlot = memo(() => {
         )}
       </div>
 
-      <Button variant='primary' size='s' onClick={() => openModal()}>
-        + Новый листок
-      </Button>
+      {canCreate && (
+        <Button variant='primary' size='s' onClick={() => openModal()}>
+          + Новый листок
+        </Button>
+      )}
     </HStack>
   );
 });

@@ -2,6 +2,7 @@
 export const STORAGE_KEYS = {
   USER:      'defect_tracker_user',
   TOKEN:     'defect_tracker_token', // JWT access token
+  VIEW_FILIAL: 'defect_tracker_view_filial', // филиал, выбранный наблюдателем РУП
   INSPECTOR: 'defect_tracker_inspector', // последнее введённое ФИО
   THEME:     'theme',
 } as const;

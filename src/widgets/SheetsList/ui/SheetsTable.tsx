@@ -12,8 +12,8 @@ export interface SheetsTableProps {
   sortDir: SortDir;
   onSort: (key: SheetSortKey) => void;
   onOpen: (id: number) => void;
-  onDelete: (id: number) => void;
-  onClone: (id: number) => void;
+  onDelete?: (id: number) => void;
+  onClone?: (id: number) => void;
   onEdit?: (id: number) => void;
   selectedIds?: ReadonlySet<number>;
   onSelect?: (id: number, checked: boolean) => void;

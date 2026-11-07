@@ -5,6 +5,7 @@ export enum AppRoutes {
   MAIN         = 'main',
   SHEET_DETAIL = 'sheet_detail',
   JOURNAL      = 'journal',
+  ADMIN        = 'admin',
   NOT_FOUND    = 'not_found',
 }
 
@@ -13,3 +14,5 @@ export const getRouteSheets      = () => '/sheets';
 export const getRouteMain        = () => '/sheets';
 export const getRouteSheetDetail = (id: string) => `/sheet/${id}`;
 export const getRouteJournal     = () => '/journal';
+/** Админ-панель (пользователи). Не /users — этот путь занят API. */
+export const getRouteAdmin       = () => '/admin';

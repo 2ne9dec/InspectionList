@@ -23,11 +23,21 @@ export const userSlice = createSlice({
           state.authData = JSON.parse(raw);
         } catch {}
       }
+      const view = Number(sessionStorage.getItem(STORAGE_KEYS.VIEW_FILIAL));
+      state.viewFilialId = Number.isInteger(view) && view > 0 ? view : null;
       state._inited = true;
+    },
+    /** Выбор филиала пользователем без филиала (переключатель в шапке). */
+    setViewFilialId: (state, action: PayloadAction<number | null>) => {
+      state.viewFilialId = action.payload;
+      if (action.payload != null) sessionStorage.setItem(STORAGE_KEYS.VIEW_FILIAL, String(action.payload));
+      else sessionStorage.removeItem(STORAGE_KEYS.VIEW_FILIAL);
     },
     logout: (state) => {
       state.authData = undefined;
+      state.viewFilialId = null;
       sessionStorage.removeItem(USER_KEY);
+      sessionStorage.removeItem(STORAGE_KEYS.VIEW_FILIAL);
     },
   },
 });

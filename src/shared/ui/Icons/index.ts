@@ -14,6 +14,8 @@ export { IconEdit }            from './IconEdit';
 export { IconTrash }           from './IconTrash';
 export { IconSave }            from './IconSave';
 export { IconLock }            from './IconLock';
+export { IconEye }            from './IconEye';
+export { IconEyeOff }            from './IconEyeOff';
 export { IconChart }           from './IconChart';
 export { IconWarning }         from './IconWarning';
 export { IconPin }             from './IconPin';

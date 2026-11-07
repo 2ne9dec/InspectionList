@@ -15,8 +15,9 @@
  */
 
 const { Router } = require('express');
-const { query, execute, queryOne } = require('../lib/fbDb');
+const { query, execute, queryOne, MULTI_DB, FILIAL_DB_IDS } = require('../lib/fbDb');
 const { canAccessLine } = require('../lib/tenancy');
+const { requirePermission } = require('../lib/permissions');
 
 const router = Router();
 
@@ -31,6 +32,16 @@ const SHEET_SELECT = `
 // ── GET /filials ──────────────────────────────────────────────────────────────
 router.get('/filials', async (req, res) => {
   try {
+    // Пользователь без филиала (наблюдатель РУП, главный администратор) получает
+    // список всех филиалов, у которых настроена база, — для переключателя филиала
+    if (req.filialId == null && MULTI_DB) {
+      const list = [];
+      for (const fid of FILIAL_DB_IDS) {
+        const row = await queryOne('SELECT ID, NAME FROM FILIALS WHERE ID = ?', [fid], String(fid));
+        if (row) list.push({ id: row.id, name: row.name });
+      }
+      return res.json(list);
+    }
     const rows = await query('SELECT ID, NAME FROM FILIALS ORDER BY ID');
     const data = rows.map(r => ({ id: r.id, name: r.name }));
     if (req.isAdmin || req.filialId == null) return res.json(data);
@@ -84,7 +95,7 @@ const EDITABLE_LINE_COLS = {
   poleCount:          'POLE_COUNT',
 };
 
-router.patch('/lines/:id', async (req, res) => {
+router.patch('/lines/:id', requirePermission('lines.edit'), async (req, res) => {
   try {
     const id = Number(req.params.id);
     if (!canAccessLine(req, id))

@@ -85,7 +85,7 @@ export const Modal = memo((props: ModalProps) => {
         aria-label={typeof title === 'string' ? title : rest['aria-label']}
       >
         <Overlay onClick={disableOverlayClose ? undefined : close} />
-        <div className={cls.content} onClick={(e) => e.stopPropagation()}>
+        <div className={cls.content} data-modal-content onClick={(e) => e.stopPropagation()}>
           {title && (
             <header className={cls.header}>
               <h2 className={cls.title}>{title}</h2>

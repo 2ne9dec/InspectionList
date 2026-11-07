@@ -15,6 +15,7 @@
 const { Router } = require('express');
 const { query, execute, queryOne, nextId, withTransaction } = require('../lib/fbDb');
 const { canAccessLine, canAccessFilial, lineWhereClause } = require('../lib/tenancy');
+const { requirePermission } = require('../lib/permissions');
 
 /** Доступ к листку: линия доступна и листок из филиала пользователя. */
 function canAccessSheet(req, row) {
@@ -114,7 +115,7 @@ router.get('/inspectionSheets/:id', async (req, res) => {
 });
 
 // ── POST /inspectionSheets — создать лист ────────────────────────────────────
-router.post('/inspectionSheets', async (req, res) => {
+router.post('/inspectionSheets', requirePermission('sheets.create'), async (req, res) => {
   try {
     const { voltageId, lineId, createdDate, createdBy, status, notes } = req.body;
     // Листок всегда создаётся в филиале пользователя
@@ -155,7 +156,7 @@ router.post('/inspectionSheets', async (req, res) => {
 });
 
 // ── POST /inspectionSheets/:id/clone — клонировать лист ──────────────────────
-router.post('/inspectionSheets/:id/clone', async (req, res) => {
+router.post('/inspectionSheets/:id/clone', requirePermission('sheets.create'), async (req, res) => {
   try {
     const id                    = Number(req.params.id);
     const { newDate, createdBy } = req.body;
@@ -199,7 +200,7 @@ router.post('/inspectionSheets/:id/clone', async (req, res) => {
 });
 
 // ── PATCH /inspectionSheets/:id — обновить лист ──────────────────────────────
-router.patch('/inspectionSheets/:id', async (req, res) => {
+router.patch('/inspectionSheets/:id', requirePermission('sheets.edit'), async (req, res) => {
   try {
     const id  = Number(req.params.id);
     const row = await queryOne(SELECT_SHEET + ' WHERE ID = ?', [id]);
@@ -227,7 +228,7 @@ router.patch('/inspectionSheets/:id', async (req, res) => {
 });
 
 // ── DELETE /inspectionSheets/:id — удалить лист ──────────────────────────────
-router.delete('/inspectionSheets/:id', async (req, res) => {
+router.delete('/inspectionSheets/:id', requirePermission('sheets.delete'), async (req, res) => {
   try {
     const id  = Number(req.params.id);
     const row = await queryOne('SELECT ID, LINE_ID FROM INSPECTION_SHEETS WHERE ID = ?', [id]);
@@ -246,7 +247,7 @@ router.delete('/inspectionSheets/:id', async (req, res) => {
 });
 
 // ── POST /inspectionSheets/merge — объединить листы ──────────────────────────
-router.post('/inspectionSheets/merge', async (req, res) => {
+router.post('/inspectionSheets/merge', requirePermission('sheets.merge'), async (req, res) => {
   try {
     const { ids, createdDate, createdBy } = req.body;
     if (!Array.isArray(ids) || ids.length < 2 || !createdDate)

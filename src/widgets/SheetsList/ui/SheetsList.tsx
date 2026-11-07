@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { usePermissions } from '@/entities/User';
 import { ConfirmModal, EmptyState, Loader, Button, Modal, Input, FormField, VStack } from '@/shared/ui';
 import { getRouteSheetDetail } from '@/shared/const/router';
 import { toast } from '@/shared/lib/toast';
@@ -31,6 +32,10 @@ export const SheetsList = memo(() => {
   const [dateFrom, setDateFrom] = useState(getDefaultDateFrom);
   const [dateTo,   setDateTo]   = useState('');
   const hasDateFilter = !!(dateFrom || dateTo);
+
+  // Действия с листками — по правам роли (задаёт администратор)
+  const { can } = usePermissions();
+  const isReadOnly = !can('sheets.create');
 
   const { sheets, isLoading, deleteSheet, hasSearch, sortKey, sortDir, toggleSort } =
     useSheetsList({ dateFrom, dateTo, statusFilter: 'all' });
@@ -143,7 +148,8 @@ export const SheetsList = memo(() => {
             title={hasSearch || hasDateFilter ? 'Ничего не найдено' : 'Нет листков осмотра'}
             description={hasSearch || hasDateFilter
               ? 'Попробуйте изменить параметры фильтрации.'
-              : 'Создайте первый листок осмотра, чтобы начать работу.'}
+              : isReadOnly ? 'Листки осмотра появятся после их создания в филиалах.'
+                : 'Создайте первый листок осмотра, чтобы начать работу.'}
           />
         ) : (
           <>
@@ -154,11 +160,11 @@ export const SheetsList = memo(() => {
               sortDir={sortDir}
               onSort={toggleSort}
               onOpen={handleOpen}
-              onDelete={handleDelete}
-              onClone={handleClone}
-              onEdit={handleEdit}
+              onDelete={can('sheets.delete') ? handleDelete : undefined}
+              onClone={can('sheets.create') ? handleClone : undefined}
+              onEdit={can('sheets.edit') ? handleEdit : undefined}
               selectedIds={merge.selectedIds}
-              onSelect={merge.handleSelect}
+              onSelect={can('sheets.merge') ? merge.handleSelect : undefined}
               mergeLineId={merge.mergeLineId}
             />
             {hasMore && <div ref={sentinelRef} className={cls.sentinel}><Loader /></div>}

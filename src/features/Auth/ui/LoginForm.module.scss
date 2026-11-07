@@ -107,3 +107,9 @@
     padding: 56px var(--space-9);
   }
 }
+
+/* Выбор филиала — на всю ширину формы, как поля логина и пароля */
+.filialSelect {
+  width: 100%;
+  align-self: stretch;
+}

@@ -29,6 +29,11 @@ const dynamicBaseQuery: BaseQueryFn<
       const token = user?.token ?? sessionStorage.getItem(STORAGE_KEYS.TOKEN);
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
+        // Пользователь без филиала (наблюдатель РУП) — база выбранного в шапке филиала
+        const viewFilialId = state.user?.viewFilialId;
+        if (user && user.filialId == null && viewFilialId != null) {
+          headers.set('X-Filial-Id', String(viewFilialId));
+        }
       } else {
         if (user?.filialId != null) headers.set('X-Filial-Id', String(user.filialId));
         if (user?.id)               headers.set('X-User-Id',   String(user.id));
@@ -68,6 +73,6 @@ const baseQueryWith401: BaseQueryFn<
 export const rtkApi = createApi({
   reducerPath: 'api',
   baseQuery:   baseQueryWith401,
-  tagTypes:    ['References', 'Sheet', 'Sheets', 'Defect', 'Defects', 'DefectCount', 'User'],
+  tagTypes:    ['References', 'Sheet', 'Sheets', 'Defect', 'Defects', 'DefectCount', 'User', 'Permissions'],
   endpoints:   () => ({}),
 });

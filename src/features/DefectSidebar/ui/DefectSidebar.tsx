@@ -14,9 +14,13 @@ interface DefectSidebarProps {
   onDelete?: (id: number) => void;
   /** Вызывается после успешного сохранения inspectorFind — чтобы родитель обновил состояние */
   onSaveInspector?: (id: number, value: string) => void;
+  /** Права роли: редактирование, устранение, удаление */
+  canEdit?: boolean;
+  canFix?: boolean;
+  canDelete?: boolean;
 }
 
-export const DefectSidebar = memo(({ defect, onClose, onFix, onDelete, onSaveInspector }: DefectSidebarProps) => {
+export const DefectSidebar = memo(({ defect, onClose, onFix, onDelete, onSaveInspector, canEdit = true, canFix = true, canDelete = true }: DefectSidebarProps) => {
   const isOpen = !!defect;
   const sidebarRef = useRef<HTMLElement>(null);
 
@@ -156,7 +160,7 @@ export const DefectSidebar = memo(({ defect, onClose, onFix, onDelete, onSaveIns
                 ) : (
                   <span className={cls.inspectorValue}>
                     {defect.inspectorFind}
-                    <button type='button' className={cls.editInspectorBtn} onClick={handleEditInspector}>Изменить</button>
+                    {canEdit && <button type='button' className={cls.editInspectorBtn} onClick={handleEditInspector}>Изменить</button>}
                   </span>
                 )}
               </dd>
@@ -192,19 +196,22 @@ export const DefectSidebar = memo(({ defect, onClose, onFix, onDelete, onSaveIns
                     {(currentNotes !== undefined ? currentNotes : defect.notes)
                       ? <span>{currentNotes !== undefined ? currentNotes : defect.notes}</span>
                       : <span className={cls.notePlaceholder}>Добавить…</span>}
-                    <button type='button' className={cls.editNoteBtn} onClick={handleEditNotes}>Изменить</button>
+                    {canEdit && <button type='button' className={cls.editNoteBtn} onClick={handleEditNotes}>Изменить</button>}
                   </span>
                 )}
               </dd>
             </dl>
 
-            {!defect.isFixed && (
+            {!defect.isFixed && (canFix || canDelete) && (
               <div className={cls.actions}>
+                {canFix && (
                 <Button variant='primary' size='s' fullWidth
                   leftIcon={<IconCheck size={13} />}
                   onClick={() => onFix?.(defect.id)}>
                   Отметить устранённым
                 </Button>
+                )}
+                {canDelete && (
                 <Button
                   variant='danger'
                   size='s'
@@ -217,6 +224,7 @@ export const DefectSidebar = memo(({ defect, onClose, onFix, onDelete, onSaveIns
                 >
                   Удалить дефект
                 </Button>
+                )}
               </div>
             )}
           </div>

@@ -1,13 +1,18 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { getRouteSheets, getRouteLogin, getRouteJournal } from '@/shared/const/router';
-import { getUserAuthData, getUserDisplayName, userActions } from '@/entities/User';
+import { getRouteSheets, getRouteLogin, getRouteJournal, getRouteAdmin } from '@/shared/const/router';
+import {
+  getUserAuthData, getUserDisplayName, getUserCanManageUsers, userActions,
+} from '@/entities/User';
+import { ChangePasswordModal } from '@/features/ChangePassword';
+import { FilialSwitcher } from '@/features/FilialSwitcher';
+import { STORAGE_KEYS } from '@/shared/const/storageKeys';
 import { useAppDispatch } from '@/shared/lib/hooks';
 import { ThemeSwitcher } from '@/features/ThemeSwitcher';
 import { SyncButton } from '@/features/SyncToServer';
 import { Button, HStack } from '@/shared/ui';
-import { IconSheet, IconLogout, IconClipboard } from '@/shared/ui/Icons';
+import { IconSheet, IconLogout, IconClipboard, IconUser } from '@/shared/ui/Icons';
 import cls from './Navbar.module.scss';
 
 interface NavbarProps {
@@ -20,11 +25,15 @@ export const Navbar = memo(({ centerSlot }: NavbarProps) => {
   const dispatch    = useAppDispatch();
   const displayName = useSelector(getUserDisplayName);
   const auth        = useSelector(getUserAuthData);
+  const canManage   = useSelector(getUserCanManageUsers);
+  const [passwordOpen, setPasswordOpen] = useState(false);
 
   const isSheets  = location.pathname === getRouteSheets();
   const isJournal = location.pathname === getRouteJournal();
+  const isAdmin   = location.pathname === getRouteAdmin();
 
   const handleLogout = useCallback(() => {
+    sessionStorage.removeItem(STORAGE_KEYS.TOKEN);
     dispatch(userActions.logout());
     navigate(getRouteLogin());
   }, [dispatch, navigate]);
@@ -54,6 +63,17 @@ export const Navbar = memo(({ centerSlot }: NavbarProps) => {
               Журнал
             </Button>
           )}
+          {auth && canManage && (
+            <Button
+              variant={isAdmin ? 'primary' : 'secondary'}
+              size="s"
+              onClick={() => navigate(getRouteAdmin())}
+              leftIcon={<IconUser size={14} />}
+            >
+              Пользователи
+            </Button>
+          )}
+          {auth && <FilialSwitcher />}
         </HStack>
 
         {centerSlot && (
@@ -61,7 +81,16 @@ export const Navbar = memo(({ centerSlot }: NavbarProps) => {
         )}
 
         <HStack gap="2" align="center" className={cls.right}>
-          {auth && <span className={cls.userName}>{displayName}</span>}
+          {auth && (
+            <button
+              type="button"
+              className={cls.userName}
+              onClick={() => setPasswordOpen(true)}
+              title="Сменить пароль"
+            >
+              {displayName}
+            </button>
+          )}
           {auth && <SyncButton />}
           {auth && <ThemeSwitcher />}
           {auth && (
@@ -77,6 +106,7 @@ export const Navbar = memo(({ centerSlot }: NavbarProps) => {
         </HStack>
 
       </div>
+      <ChangePasswordModal isOpen={passwordOpen} onClose={() => setPasswordOpen(false)} />
     </nav>
   );
 });

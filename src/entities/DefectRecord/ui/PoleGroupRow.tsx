@@ -22,6 +22,10 @@ interface PoleGroupRowProps {
   onRowClick?: (defect: DefectRecordFull) => void;
   onDelete: (id: number) => void;
   onDeleteAll: (ids: number[]) => void;
+  /** Доступные действия (по правам роли); недоступные пункты меню скрыты. */
+  canFix?: boolean;
+  canCopy?: boolean;
+  canDelete?: boolean;
 }
 
 const MAX_CHIPS = 3;
@@ -51,6 +55,9 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
     onDeleteAll,
     onRowClick,
     defectStartIndex = 0,
+    canFix = true,
+    canCopy = true,
+    canDelete = true,
   } = props;
 
   const locationLabel = formatLocationLabel(locationKey);
@@ -110,18 +117,18 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
 
   const groupKebabItems = useMemo(() => {
     const items = [];
-    if (!isFixed) {
+    if (!isFixed && canFix) {
       items.push({ id: 'fix', label: 'Устранить все', onClick: () => onFix(locationKey) });
     }
-    items.push({ id: 'copy', label: 'Копировать', onClick: () => onCopy(locationKey) });
-    items.push({
+    if (canCopy) items.push({ id: 'copy', label: 'Копировать', onClick: () => onCopy(locationKey) });
+    if (canDelete) items.push({
       id: 'delete',
       label: 'Удалить все',
       danger: true,
       onClick: () => onDeleteAll(records.map((r) => r.id)),
     });
     return items;
-  }, [isFixed, locationKey, onFix, onCopy, onDeleteAll, records]);
+  }, [isFixed, locationKey, onFix, onCopy, onDeleteAll, records, canFix, canCopy, canDelete]);
 
   return (
     <>
@@ -179,7 +186,7 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
 
         <td className={cls.cell} onClick={(e) => e.stopPropagation()}>
           <div className={cls.actions}>
-            <KebabMenu items={groupKebabItems} ariaLabel='Действия' size='m' />
+            {groupKebabItems.length > 0 && <KebabMenu items={groupKebabItems} ariaLabel='Действия' size='m' />}
           </div>
         </td>
       </tr>
@@ -188,16 +195,16 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
         subGroups.map((group, idx) => {
           const { first, ids, phases, insulatorCount, garlandNumber: grNum } = group;
           const subKebabItems = [
-            ...(!isFixed
+            ...(!isFixed && canFix
               ? [{ id: 'fix', label: 'Устранить', onClick: () => onFixOne(ids[0]) }]
               : []),
-            { id: 'copy', label: 'Копировать', onClick: () => onCopy(locationKey) },
-            {
+            ...(canCopy ? [{ id: 'copy', label: 'Копировать', onClick: () => onCopy(locationKey) }] : []),
+            ...(canDelete ? [{
               id: 'delete',
               label: 'Удалить',
               danger: true,
               onClick: () => (ids.length === 1 ? onDelete(ids[0]) : onDeleteAll(ids)),
-            },
+            }] : []),
           ];
 
           return (
@@ -234,7 +241,7 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
               <td className={cls.subCell} />
               <td className={cls.subCell}>
                 <div className={cls.subActions}>
-                  <KebabMenu items={subKebabItems} ariaLabel='Действия с дефектом' />
+                  {subKebabItems.length > 0 && <KebabMenu items={subKebabItems} ariaLabel='Действия с дефектом' />}
                 </div>
               </td>
             </tr>

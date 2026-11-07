@@ -15,6 +15,10 @@ interface DefectTableProps {
   onFix: (locationKey: string) => void;
   /** Открыть модал копирования для locationKey */
   onCopy: (locationKey: string) => void;
+  /** Доступные действия по правам роли */
+  canFix?: boolean;
+  canCopy?: boolean;
+  canDelete?: boolean;
 }
 
 const INITIAL_POLES = 50;
@@ -27,7 +31,7 @@ const LOAD_MORE_POLES = 50;
  * рендерятся только видимые опоры. Сентинель — div ПОСЛЕ таблицы
  * (не внутри tbody), чтобы не нарушать table-layout: fixed.
  */
-export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy }: DefectTableProps) => {
+export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy, canFix = true, canCopy = true, canDelete = true }: DefectTableProps) => {
   const {
     isLoading,
     groupedByPole,
@@ -191,6 +195,9 @@ export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy }: DefectT
                     onDelete={handleDelete}
                     onDeleteAll={handleDeleteAll}
                     onRowClick={onRowClick}
+                    canFix={canFix}
+                    canCopy={canCopy}
+                    canDelete={canDelete}
                   />
                     );
                   });

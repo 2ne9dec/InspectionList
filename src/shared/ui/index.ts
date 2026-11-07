@@ -11,6 +11,9 @@ export type { IconButtonProps } from './IconButton';
 export { Input } from './Input';
 export type { InputProps, InputSize } from './Input';
 
+export { PasswordInput } from './PasswordInput';
+export type { PasswordInputProps } from './PasswordInput';
+
 export { Select } from './Select';
 export type { SelectProps, SelectOption, SelectSize } from './Select';
 

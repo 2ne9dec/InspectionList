@@ -1,5 +1,6 @@
 import { memo, useCallback } from 'react';
 import { Button } from '@/shared/ui';
+import { useCan } from '@/entities/User';
 import { useJournalFilters } from '../model/useJournalFilters';
 import { useJournalEdit } from '../model/useJournalEdit';
 import { JournalFilters } from './JournalFilters';
@@ -10,6 +11,8 @@ import cls from './JournalPage.module.scss';
 
 export const JournalPage = memo(() => {
   const filters = useJournalFilters();
+  // Заключение мастера — по правам роли
+  const isReadOnly = !useCan('journal.conclusion');
   const edit    = useJournalEdit(filters.defects);
 
   const handleSave = useCallback(() => {
@@ -50,7 +53,7 @@ export const JournalPage = memo(() => {
       />
 
       <div className={cls.selectionRow}>
-        {filters.selectedIds.size > 0 && (
+        {!isReadOnly && filters.selectedIds.size > 0 && (
           <>
             <span className={cls.selectionCount}>
               Выбрано: <strong>{filters.selectedIds.size}</strong>
@@ -86,6 +89,7 @@ export const JournalPage = memo(() => {
           onSelectAll={filters.handleSelectAll}
           onSelect={filters.handleSelect}
           onEditRow={(id) => edit.openEdit([id])}
+          readOnly={isReadOnly}
         />
       )}
 

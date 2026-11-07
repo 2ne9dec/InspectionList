@@ -8,7 +8,7 @@ import {
   useGetVoltagesQuery,
 } from '@/entities/InspectionLine';
 import { useGetDefectCountsQuery } from '@/entities/DefectRecord';
-import { getUserFilialId } from '@/entities/User';
+import { getUserEffectiveFilialId } from '@/entities/User';
 import { selectCreateSheetSearch } from '@/features/CreateSheet';
 import { usePendingSheets } from '@/shared/lib/offline/pendingSheets';
 
@@ -24,7 +24,8 @@ interface UseSheetsListOptions {
 
 export function useSheetsList({ dateFrom, dateTo, statusFilter }: UseSheetsListOptions) {
   const search = useSelector(selectCreateSheetSearch);
-  const userFilialId = useSelector(getUserFilialId);
+  // Свой филиал пользователя или выбранный в переключателе (наблюдатель РУП)
+  const userFilialId = useSelector(getUserEffectiveFilialId);
 
   const [sortKey, setSortKey] = useState<SheetSortKey>('voltage');
   const [sortDir, setSortDir] = useState<SortDir>('asc');

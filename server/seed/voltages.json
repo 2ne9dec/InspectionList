@@ -23,5 +23,55 @@
     "id": 5,
     "name": "ВЛ-750 кВ",
     "filialId": 2
+  },
+  {
+    "id": 6,
+    "name": "ВЛ-35 кВ",
+    "filialId": 1
+  },
+  {
+    "id": 7,
+    "name": "ВЛ-110 кВ",
+    "filialId": 1
+  },
+  {
+    "id": 9,
+    "name": "ВЛ-330 кВ",
+    "filialId": 1
+  },
+  {
+    "id": 10,
+    "name": "ВЛ-35 кВ",
+    "filialId": 3
+  },
+  {
+    "id": 11,
+    "name": "ВЛ-110 кВ",
+    "filialId": 3
+  },
+  {
+    "id": 12,
+    "name": "ВЛ-330 кВ",
+    "filialId": 3
+  },
+  {
+    "id": 13,
+    "name": "ВЛ-35 кВ",
+    "filialId": 4
+  },
+  {
+    "id": 14,
+    "name": "ВЛ-110 кВ",
+    "filialId": 4
+  },
+  {
+    "id": 15,
+    "name": "ВЛ-220 кВ",
+    "filialId": 4
+  },
+  {
+    "id": 16,
+    "name": "ВЛ-330 кВ",
+    "filialId": 4
   }
 ]

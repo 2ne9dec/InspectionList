@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '@/shared/lib/hooks';
 import { loginByUsername } from '../model/loginThunk';
 import { getRouteSheets } from '@/shared/const/router';
-import { Button, Input, VStack } from '@/shared/ui';
+import { Button, Input, PasswordInput, Select, VStack } from '@/shared/ui';
+import { LOGIN_FILIALS, LOGIN_FILIAL_KEY } from '@/shared/const/filials';
 import cls from './LoginForm.module.scss';
 
 export const LoginForm = memo(() => {
@@ -13,6 +14,12 @@ export const LoginForm = memo(() => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  // Филиал не запоминается: при каждой загрузке выбирается заново
+  const [filial, setFilial] = useState<string>(() => {
+    // Убираем выбор, сохранённый прежними версиями
+    try { localStorage.removeItem(LOGIN_FILIAL_KEY); } catch { /* недоступно */ }
+    return '';
+  });
 
   const handleLogin = useCallback(async () => {
     if (!username.trim() || !password.trim()) {
@@ -22,14 +29,15 @@ export const LoginForm = memo(() => {
     setLoading(true);
     setError('');
     try {
-      await dispatch(loginByUsername({ username: username.trim(), password })).unwrap();
+      // Филиал не выбран — вход администратора (сервер ищет учётную запись без филиала)
+      await dispatch(loginByUsername({ username: username.trim(), password, filialId: filial || undefined })).unwrap();
       navigate(getRouteSheets(), { replace: true });
     } catch (err: unknown) {
       setError(typeof err === 'string' ? err : 'Неверный логин или пароль');
     } finally {
       setLoading(false);
     }
-  }, [dispatch, navigate, username, password]);
+  }, [dispatch, navigate, username, password, filial]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -107,25 +115,41 @@ export const LoginForm = memo(() => {
           {error}
         </div>
       )}
-      <Input
-        id='login-username'
-        name='username'
-        placeholder='Логин'
-        value={username}
-        onChange={setUsername}
-        autofocus
-        autoComplete='username'
-        onKeyDown={handleKeyDown}
+      <Select<string>
+        id='login-filial'
+        className={cls.filialSelect}
+        name='filial'
+        aria-label='Филиал'
+        options={LOGIN_FILIALS}
+        value={filial}
+        placeholder='Филиал'
+        onChange={(v) => {
+          // Другой филиал — другая учётная запись: очищаем логин, пароль и ошибку
+          setFilial(String(v));
+          setUsername('');
+          setPassword('');
+          setError('');
+        }}
       />
 
       <Input
+        id='login-username'
+        name='il-login'
+        placeholder='Логин'
+        value={username}
+        onChange={setUsername}
+        // Не подставлять сохранённые браузером логин и пароль при загрузке
+        autoComplete='off'
+        onKeyDown={handleKeyDown}
+      />
+
+      <PasswordInput
         id='login-password'
-        name='password'
+        name='il-secret'
         placeholder='Пароль'
-        type='password'
         value={password}
         onChange={setPassword}
-        autoComplete='current-password'
+        autoComplete='new-password'
         onKeyDown={handleKeyDown}
       />
       <Button variant='primary' size='l' fullWidth loading={loading}

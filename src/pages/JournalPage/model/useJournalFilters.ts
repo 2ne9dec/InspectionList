@@ -11,8 +11,9 @@ import {
   useGetLinesQuery,
   useGetVoltagesQuery,
   useGetFilialVoltageFilterQuery,
+  useGetFilialsQuery,
 } from '@/entities/InspectionLine';
-import { getUserFilialId } from '@/entities/User';
+import { getUserEffectiveFilialId } from '@/entities/User';
 
 export type StatusFilter = 'all' | 'active' | 'fixed';
 
@@ -20,6 +21,8 @@ export interface JournalRow {
   d: DefectRecord;
   line: Line | undefined;
   voltage: Voltage | undefined;
+  /** Название филиала (показывается пользователям, видящим все филиалы) */
+  filialName: string;
   location: string;
 }
 
@@ -52,7 +55,8 @@ function matchesSpanRange(spanRange: string | null | undefined, min: number, max
   return false;
 }
 export function useJournalFilters() {
-  const userFilialId = useSelector(getUserFilialId);
+  // Свой филиал или выбранный в переключателе (наблюдатель РУП)
+  const userFilialId = useSelector(getUserEffectiveFilialId);
 
   const { data: defects     = [] } = useGetAllDefectsQuery();
   const { data: sheets      = [] } = useGetSheetsQuery({})  // no date filter: load all sheets;
@@ -62,6 +66,8 @@ export function useJournalFilters() {
   const { data: lines       = [] } = useGetLinesQuery();
   const { data: voltages    = [] } = useGetVoltagesQuery();
   const { data: filialVoltageMap = {} } = useGetFilialVoltageFilterQuery();
+  const { data: filials = [] } = useGetFilialsQuery();
+  const filialNameMap = useMemo(() => new Map(filials.map((f) => [f.id, f.name])), [filials]);
 
   // ── Фильтры ────────────────────────────────────────────────────────────────────────
   const [statusFilter,          setStatusFilter]          = useState<StatusFilter>('all');
@@ -87,11 +93,13 @@ export function useJournalFilters() {
     [sheets, userFilialId],
   );
 
+  // Напряжения филиала: свои (VOLTAGES.FILIAL_ID) + дополнительно разрешённые фильтром
   const filialVoltageIds = useMemo(() => {
     if (userFilialId === null) return null;
-    const ids = filialVoltageMap[String(userFilialId)];
-    return ids ? new Set(ids) : new Set<number>();
-  }, [filialVoltageMap, userFilialId]);
+    const ids = new Set<number>(voltages.filter((v) => v.filialId === userFilialId).map((v) => v.id));
+    for (const id of filialVoltageMap[String(userFilialId)] ?? []) ids.add(id);
+    return ids;
+  }, [filialVoltageMap, userFilialId, voltages]);
 
   const filialVoltages = useMemo(
     () => filialVoltageIds === null
@@ -103,15 +111,15 @@ export function useJournalFilters() {
   const filialLines = useMemo(
     () => filialVoltageIds === null
       ? lines
-      : lines.filter((l) => filialVoltageIds.has(l.voltageId)),
-    [lines, filialVoltageIds],
+      : lines.filter((l) => l.filialId === userFilialId || filialVoltageIds.has(l.voltageId)),
+    [lines, filialVoltageIds, userFilialId],
   );
 
   const sheetMap      = useMemo(() => new Map(filialSheets.map((s) => [s.id, s])),  [filialSheets]);
   const defectTypeMap = useMemo(() => new Map(defectTypes.map((d) => [d.id, d])),   [defectTypes]);
   const elementMap    = useMemo(() => new Map(elements.map((e) => [e.id, e])),       [elements]);
   const phaseMap      = useMemo(() => new Map(phases.map((p) => [p.id, p])),         [phases]);
-  const lineMap       = useMemo(() => new Map(filialLines.map((l) => [l.id, l])),   [filialLines]);
+  const lineMap       = useMemo(() => new Map(lines.map((l) => [l.id, l])),         [lines]);
   const voltageMap    = useMemo(() => new Map(voltages.map((v) => [v.id, v])),       [voltages]);
 
   const filteredLines = useMemo(() => {
@@ -157,13 +165,14 @@ export function useJournalFilters() {
           phase?.name  ?? null,
           element && defectType ? `${element.name}: ${defectType.name}` : defectType?.name ?? null,
         ].filter(Boolean).join(' / ');
-        return { d, line, voltage, location };
+        const filialName = filialNameMap.get(sheet.filialId) ?? '—';
+        return { d, line, voltage, filialName, location };
       })
       .sort((a, b) => (a.d.dateFound < b.d.dateFound ? 1 : -1));
   }, [
     defects, statusFilter, dateFrom, dateTo, voltageFilter, lineFilter,
     selectedDefectTypeIds, inspectorFilter, poleFilter, sheetMap, defectTypeMap, elementMap,
-    phaseMap, lineMap, voltageMap,
+    phaseMap, lineMap, voltageMap, filialNameMap,
   ]);
 
   const selectableIds = useMemo(() => rows.filter((r) => !r.d.isFixed).map((r) => r.d.id), [rows]);
