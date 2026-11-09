@@ -285,6 +285,11 @@ router.post('/login', loginLimiter, async (req, res) => {
     const ok = await verifyPass(password, user.password);
     if (!ok) return res.status(401).json({ error: 'Неверный логин или пароль' });
 
+    // Филиал на странице входа обязателен для всех, кроме администратора системы
+    const isSystemAdmin = user.role === 'admin' && user.filialId == null;
+    if (MULTI_DB && scope === undefined && !isSystemAdmin)
+      return res.status(400).json({ error: 'Выберите филиал' });
+
     // Lazy migration: SHA-256 -> bcrypt
     if (/^[a-f0-9]{64}$/.test(user.password)) {
       const newHash = bcrypt.hashSync(password, BCRYPT_ROUNDS);

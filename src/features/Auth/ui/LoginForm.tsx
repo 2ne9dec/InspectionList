@@ -4,7 +4,7 @@ import { useAppDispatch } from '@/shared/lib/hooks';
 import { loginByUsername } from '../model/loginThunk';
 import { getRouteSheets } from '@/shared/const/router';
 import { Button, Input, PasswordInput, Select, VStack } from '@/shared/ui';
-import { LOGIN_FILIALS, LOGIN_FILIAL_KEY } from '@/shared/const/filials';
+import { LOGIN_FILIALS } from '@/shared/const/filials';
 import cls from './LoginForm.module.scss';
 
 export const LoginForm = memo(() => {
@@ -14,12 +14,8 @@ export const LoginForm = memo(() => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  // Филиал не запоминается: при каждой загрузке выбирается заново
-  const [filial, setFilial] = useState<string>(() => {
-    // Убираем выбор, сохранённый прежними версиями
-    try { localStorage.removeItem(LOGIN_FILIAL_KEY); } catch { /* недоступно */ }
-    return '';
-  });
+  // Филиал выбирают все, кроме администратора системы; при загрузке не выбран
+  const [filial, setFilial] = useState('');
 
   const handleLogin = useCallback(async () => {
     if (!username.trim() || !password.trim()) {
@@ -29,7 +25,7 @@ export const LoginForm = memo(() => {
     setLoading(true);
     setError('');
     try {
-      // Филиал не выбран — вход администратора (сервер ищет учётную запись без филиала)
+      // Без филиала входит только администратор системы — остальным сервер ответит «Выберите филиал»
       await dispatch(loginByUsername({ username: username.trim(), password, filialId: filial || undefined })).unwrap();
       navigate(getRouteSheets(), { replace: true });
     } catch (err: unknown) {

@@ -35,7 +35,7 @@ export const loginByUsername = createAsyncThunk<User, { username: string; passwo
       const res = await fetch(`${getApiUrl()}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // filialId — филиал, выбранный на странице входа ('rup' — РУП): сервер ищет пользователя в его базе
+        // filialId — филиал со страницы входа ('rup' — РУП); без него входит только администратор системы
         body: JSON.stringify({ username: username.trim().toLowerCase(), password, filialId }),
         // Таймаут 8 сек — если сервер недоступен, переходим в офлайн
         signal: AbortSignal.timeout(8000),
