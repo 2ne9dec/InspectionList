@@ -1,9 +1,11 @@
 import { memo, useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useGetFilialsQuery } from '@/entities/InspectionLine';
 import { getUserIsAllFilials, getUserViewFilialId, userActions } from '@/entities/User';
 import { rtkApi } from '@/shared/api/rtkApi';
 import { useAppDispatch } from '@/shared/lib/hooks';
+import { getRouteSheets } from '@/shared/const/router';
 import { Select } from '@/shared/ui';
 import cls from './FilialSwitcher.module.scss';
 
@@ -13,6 +15,8 @@ import cls from './FilialSwitcher.module.scss';
  */
 export const FilialSwitcher = memo(() => {
   const dispatch     = useAppDispatch();
+  const navigate     = useNavigate();
+  const { pathname } = useLocation();
   const isAllFilials = useSelector(getUserIsAllFilials);
   const viewFilialId = useSelector(getUserViewFilialId);
   const { data: filials = [] } = useGetFilialsQuery(undefined, { skip: !isAllFilials });
@@ -22,6 +26,12 @@ export const FilialSwitcher = memo(() => {
     // Данные другого филиала — из другой базы: перезапрашиваем листки, дефекты и справочники
     dispatch(rtkApi.util.invalidateTags(['Sheet', 'Sheets', 'Defect', 'Defects', 'DefectCount', 'References']));
   }, [dispatch]);
+
+  // Ручное переключение: открытый листок принадлежит прежнему филиалу — возвращаемся к списку листков
+  const handleChange = useCallback((id: number) => {
+    if (pathname.startsWith('/sheet/')) navigate(getRouteSheets());
+    select(id);
+  }, [navigate, pathname, select]);
 
   // По умолчанию — первый филиал
   useEffect(() => {
@@ -38,7 +48,7 @@ export const FilialSwitcher = memo(() => {
         aria-label='Филиал'
         options={filials.map((f) => ({ value: f.id, label: f.name }))}
         value={viewFilialId ?? ''}
-        onChange={(v) => { if (v !== '' && v !== viewFilialId) select(Number(v)); }}
+        onChange={(v) => { if (v !== '' && v !== viewFilialId) handleChange(Number(v)); }}
       />
     </div>
   );

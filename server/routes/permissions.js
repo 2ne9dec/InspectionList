@@ -9,7 +9,7 @@
  */
 
 const { Router } = require('express');
-const { PERMISSIONS, EDITABLE_ROLES, permissionsOf, savePermissions } = require('../lib/permissions');
+const { PERMISSIONS, EDITABLE_ROLES, OBSERVER_ALLOWED, permissionsOf, savePermissions } = require('../lib/permissions');
 
 const router = Router();
 
@@ -23,13 +23,18 @@ function requireSystemAdmin(req, res, next) {
 
 router.get('/permissions/me', (req, res) => {
   if (!req.userId) return res.status(401).json({ error: 'Не авторизован' });
-  res.json({ role: req.role, permissions: permissionsOf(req.role) });
+  res.json({ role: req.role, permissions: permissionsOf(req.role, req.filialId) });
 });
 
 router.get('/rolePermissions', requireSystemAdmin, (req, res) => {
   const roles = {};
-  for (const role of ['admin', ...EDITABLE_ROLES, 'observer']) roles[role] = permissionsOf(role);
-  res.json({ permissions: PERMISSIONS, editableRoles: EDITABLE_ROLES, roles });
+  for (const role of ['admin', ...EDITABLE_ROLES]) roles[role] = permissionsOf(role, req.filialId);
+  res.json({
+    permissions: PERMISSIONS,
+    editableRoles: EDITABLE_ROLES,
+    observerAllowed: [...OBSERVER_ALLOWED],
+    roles,
+  });
 });
 
 router.put('/rolePermissions/:role', requireSystemAdmin, async (req, res) => {

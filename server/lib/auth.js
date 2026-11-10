@@ -80,7 +80,7 @@ function authMiddleware(req, res, next) {
     const payload = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
     req.userId            = payload.sub              ?? null;
     req.filialId          = payload.filialId         != null ? Number(payload.filialId)        : null;
-    req.role              = payload.role             ?? 'viewer';
+    req.role              = payload.role             ?? 'electrician';
     req.allowedLineIds    = Array.isArray(payload.allowedLineIds)    ? payload.allowedLineIds    : null;
     req.allowedVoltageIds = Array.isArray(payload.allowedVoltageIds) ? payload.allowedVoltageIds : null;
     req.mustChangePassword = payload.mcp === true;
@@ -115,9 +115,8 @@ function requireAuth(req, res, next) {
 
 /**
  * Роли с полным доступом (удаление, объединение).
- * master/viewer: только создание листков и дефектов.
  */
-const FULL_ACCESS_ROLES = new Set(['director', 'engineer', 'master', 'viewer']);
+const FULL_ACCESS_ROLES = new Set(['director_sbpl', 'engineer_sbpl', 'director', 'engineer', 'master', 'electrician']);
 
 /**
  * Роли «только просмотр»: видят данные, но не могут ничего создавать,

@@ -9,10 +9,10 @@
  * POST   /login                       { username, password, filialId: N | 'rup' }
  * GET    /users                       (администраторы: главный — все, филиала — своего филиала)
  * GET    /users/me
- * POST   /users                       (администраторы)
+ * POST   /users                       (администраторы; руководитель — инженер/мастер/пользователь своего филиала)
  * PATCH  /users/:id?filialId=N        (администраторы; себе — только ФИО)
  * DELETE /users/:id?filialId=N        (администраторы)
- * POST   /users/:id/resetPassword?filialId=N  (администраторы: временный пароль)
+ * POST   /users/:id/resetPassword?filialId=N  (администраторы; руководитель — инженер/мастер/пользователь своего филиала)
  * POST   /changePassword              (свой пароль)
  *
  * ?filialId=N — филиал (база) пользователя; пусто — основная база.
@@ -29,12 +29,21 @@ const { query, execute, queryOne, MAIN_DB, MULTI_DB, FILIAL_DB_IDS, HAS_SEPARATE
 const { signToken } = require('../lib/auth');
 
 const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS ?? 12);
-const VALID_ROLES   = new Set(['admin', 'director', 'engineer', 'master', 'viewer', 'observer']);
+const VALID_ROLES   = new Set(['admin', 'director_sbpl', 'engineer_sbpl', 'director', 'engineer', 'master', 'electrician', 'observer']);
 // Кто может управлять пользователями. Без филиала — главный администратор (все филиалы),
 // с филиалом — администратор филиала (только пользователи своего филиала).
-const MANAGER_ROLES = new Set(['director', 'admin']);
+const MANAGER_ROLES = new Set(['director_sbpl', 'director', 'admin']);
 // Роли, которые могут быть без филиала: главный администратор и наблюдатель РУП.
 const GLOBAL_ROLES  = new Set(['admin', 'observer']);
+// Руководители создают пользователей и задают временный пароль только сотрудникам своей службы,
+// не изменяют и не удаляют пользователей:
+//   Руководитель СБПЛСиОИ — инженеры СБПЛСиОИ; Руководитель СЛ — инженеры, мастера, электромонтёры СЛ.
+const DIRECTOR_ASSIGNABLE = {
+  director_sbpl: new Set(['engineer_sbpl']),
+  director:      new Set(['engineer', 'master', 'electrician']),
+};
+const isDirectorRole = (role) => Object.prototype.hasOwnProperty.call(DIRECTOR_ASSIGNABLE, role);
+const directorMay = (directorRole, targetRole) => DIRECTOR_ASSIGNABLE[directorRole].has(targetRole);
 
 const router = Router();
 
@@ -199,6 +208,13 @@ function requireManager(req, res, next) {
   next();
 }
 
+/** Middleware: изменять и удалять пользователей могут только администраторы. */
+function requireAdmin(req, res, next) {
+  if (!req.userId) return res.status(401).json({ error: 'Не авторизован' });
+  if (req.role !== 'admin') return res.status(403).json({ error: 'Недостаточно прав' });
+  next();
+}
+
 /** Главный администратор: управляет пользователями всех филиалов. */
 function isGlobalManager(req) {
   return MANAGER_ROLES.has(req.role) && req.filialId == null;
@@ -215,6 +231,8 @@ function validateRoleFilial(req, role, filialId) {
     return 'Роль «Наблюдатель РУП» может назначить только главный администратор';
   if (role === 'observer' && filialId != null)
     return 'Наблюдатель РУП не привязывается к филиалу';
+  if (role === 'admin' && filialId != null)
+    return 'Администратор назначается только без филиала (главный администратор)';
   if (filialId == null && !GLOBAL_ROLES.has(role))
     return 'Для этой роли укажите филиал';
   if (filialId == null && !isGlobalManager(req))
@@ -307,7 +325,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 router.post('/users', requireManager, async (req, res) => {
   try {
     const { username, password, displayName, role, allowedLineIds, allowedVoltageIds } = req.body ?? {};
-    const effRole  = role ?? 'viewer';
+    const effRole  = role ?? 'electrician';
     // Администратор филиала создаёт пользователей только в своём филиале;
     // наблюдатель РУП не привязан к филиалу
     const filialId = effRole === 'observer' ? null
@@ -319,6 +337,8 @@ router.post('/users', requireManager, async (req, res) => {
     if (passErr) return res.status(400).json({ error: passErr });
     if (!VALID_ROLES.has(effRole))
       return res.status(400).json({ error: `Недопустимая роль: ${effRole}` });
+    if (isDirectorRole(req.role) && !directorMay(req.role, effRole))
+      return res.status(403).json({ error: 'Руководитель может создавать только сотрудников своей службы' });
     const roleErr = validateRoleFilial(req, effRole, filialId);
     if (roleErr) return res.status(400).json({ error: roleErr });
 
@@ -359,7 +379,8 @@ router.patch('/users/:id', async (req, res) => {
     const user   = await findUser(id, userFilial);
     if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
 
-    const canManage = MANAGER_ROLES.has(req.role);
+    // Изменять пользователей могут только администраторы; руководитель — только своё ФИО
+    const canManage = req.role === 'admin';
     if (!isSelf && !canManage)
       return res.status(403).json({ error: 'Доступ запрещён' });
 
@@ -381,7 +402,8 @@ router.patch('/users/:id', async (req, res) => {
         if (!isGlobalManager(req)) return res.status(403).json({ error: 'Нельзя перевести пользователя в другой филиал' });
         sets.push('FILIAL_ID = ?'); params.push(newFilial);
       }
-      if (body.role !== undefined) {
+      // Роль проверяется только при смене (старые роли, например администратор филиала, сохраняются)
+      if (body.role !== undefined && newRole !== user.role) {
         if (!VALID_ROLES.has(newRole)) return res.status(400).json({ error: `Недопустимая роль: ${newRole}` });
         const roleErr = validateRoleFilial(req, newRole, newFilial);
         if (roleErr) return res.status(400).json({ error: roleErr });
@@ -411,7 +433,7 @@ router.patch('/users/:id', async (req, res) => {
 });
 
 // ── DELETE /users/:id ─────────────────────────────────────────────────────────
-router.delete('/users/:id', requireManager, async (req, res) => {
+router.delete('/users/:id', requireAdmin, async (req, res) => {
   try {
     const id = req.params.id;
     const filialId = targetFilial(req);
@@ -441,6 +463,8 @@ router.post('/users/:id/resetPassword', requireManager, async (req, res) => {
     if (passErr) return res.status(400).json({ error: passErr });
     const user = await findUser(id, targetFilial(req));
     if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
+    if (isDirectorRole(req.role) && !directorMay(req.role, user.role))
+      return res.status(403).json({ error: 'Руководитель задаёт временный пароль только сотрудникам своей службы' });
     const hash = bcrypt.hashSync(newPass, BCRYPT_ROUNDS);
     // Пароль, заданный администратором, временный: при входе пользователь обязан его сменить
     await execute('UPDATE USERS SET PASSWORD = ?, MUST_CHANGE_PASSWORD = 1 WHERE ID = ?', [hash, id], userDbKey(user.filialId));

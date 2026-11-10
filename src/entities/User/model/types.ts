@@ -1,10 +1,12 @@
 /**
  * Роль пользователя.
  *  admin    — администратор: без филиала — главный (все филиалы), с филиалом — администратор филиала;
- *  director / engineer / master / viewer — работа с данными своего филиала;
+ *  director_sbpl / engineer_sbpl — руководитель и инженер СБПЛСиОИ;
+ *  director / engineer / master / electrician — руководитель, инженер, мастер, электромонтёр службы линий (СЛ);
  *  observer — наблюдатель РУП: видит все филиалы, только просмотр.
  */
-export type UserRole = 'admin' | 'director' | 'engineer' | 'master' | 'viewer' | 'observer';
+export type UserRole =
+  | 'admin' | 'director_sbpl' | 'engineer_sbpl' | 'director' | 'engineer' | 'master' | 'electrician' | 'observer';
 
 export interface User {
   id: string;

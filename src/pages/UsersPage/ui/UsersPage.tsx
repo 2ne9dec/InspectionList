@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
 import type { UserProfile } from '@/entities/User';
 import {
-  getRoleLabel, getUserAuthData, getUserCanManageUsers, getUserIsGlobalManager, getUserRole,
+  DIRECTOR_ASSIGNABLE, ROLE_ORDER, getRoleLabel, getUserAuthData, getUserCanManageUsers, getUserIsGlobalManager, getUserRole,
   useDeleteUserMutation, useGetUsersQuery,
 } from '@/entities/User';
 import { useGetFilialsQuery } from '@/entities/InspectionLine';
@@ -21,12 +21,19 @@ import cls from './UsersPage.module.scss';
  * (в том числе наблюдателей РУП), администратор филиала — только своего филиала.
  * Права проверяются на сервере; здесь только интерфейс.
  */
+/** 0 — главный администратор, 1 — наблюдатели РУП, 2 — пользователи филиалов. */
+const rank = (u: UserProfile) => (u.filialId == null ? (u.role === 'admin' ? 0 : 1) : 2);
+
 const UsersPage = () => {
   const me          = useSelector(getUserAuthData);
   const canManage   = useSelector(getUserCanManageUsers);
   const isGlobal    = useSelector(getUserIsGlobalManager);
   // Права ролей настраивает только администратор системы
-  const isSystemAdmin = useSelector(getUserRole) === 'admin' && isGlobal;
+  const myRole      = useSelector(getUserRole);
+  const isSystemAdmin = myRole === 'admin' && isGlobal;
+  // Руководитель: только создаёт инженеров/мастеров/пользователей и задаёт им временный пароль
+  const directorRoles = myRole ? DIRECTOR_ASSIGNABLE[myRole] : undefined;
+  const isDirector  = directorRoles != null;
   const [tab, setTab] = useState<'users' | 'roles'>('users');
   const { data: users = [], isLoading } = useGetUsersQuery(undefined, { skip: !canManage });
   const { data: filials = [] } = useGetFilialsQuery();
@@ -46,7 +53,11 @@ const UsersPage = () => {
     return users
       .filter((u) => filialFilter === '' || (filialFilter === 0 ? u.filialId == null : u.filialId === filialFilter))
       .filter((u) => !q || u.username.toLowerCase().includes(q) || (u.displayName ?? '').toLowerCase().includes(q))
-      .sort((a, b) => (a.filialId ?? 0) - (b.filialId ?? 0) || a.username.localeCompare(b.username));
+      // Сверху главный администратор, затем пользователи РУП, затем по филиалам и ролям
+      .sort((a, b) => rank(a) - rank(b)
+        || (a.filialId ?? 0) - (b.filialId ?? 0)
+        || ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role)
+        || a.username.localeCompare(b.username));
   }, [users, search, filialFilter]);
 
   const handleCreate = useCallback(() => { setEditUser(null); setFormOpen(true); }, []);
@@ -160,14 +171,23 @@ const UsersPage = () => {
                         : <span className={cls.muted}>задан</span>}
                     </td>
                     <td className={cls.actions}>
-                      <KebabMenu
-                        ariaLabel='Действия с пользователем'
-                        items={[
-                          { id: 'edit',  label: 'Изменить', onClick: () => handleEdit(u) },
-                          { id: 'reset', label: 'Задать временный пароль', onClick: () => setResetUser(u) },
-                          ...(!isMe ? [{ id: 'delete', label: 'Удалить', danger: true, onClick: () => { void handleDelete(u); } }] : []),
-                        ]}
-                      />
+                      {isDirector ? (
+                        directorRoles?.includes(u.role) && (
+                          <KebabMenu
+                            ariaLabel='Действия с пользователем'
+                            items={[{ id: 'reset', label: 'Задать временный пароль', onClick: () => setResetUser(u) }]}
+                          />
+                        )
+                      ) : (
+                        <KebabMenu
+                          ariaLabel='Действия с пользователем'
+                          items={[
+                            { id: 'edit',  label: 'Изменить', onClick: () => handleEdit(u) },
+                            { id: 'reset', label: 'Задать временный пароль', onClick: () => setResetUser(u) },
+                            ...(!isMe ? [{ id: 'delete', label: 'Удалить', danger: true, onClick: () => { void handleDelete(u); } }] : []),
+                          ]}
+                        />
+                      )}
                     </td>
                   </tr>
                 );

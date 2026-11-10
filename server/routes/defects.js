@@ -211,7 +211,7 @@ function requiredForDefectPatch(body) {
 router.patch('/defectRecords/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const missing = requiredForDefectPatch(req.body ?? {}).find((k) => !hasPermission(req.role, k));
+    const missing = requiredForDefectPatch(req.body ?? {}).find((k) => !hasPermission(req.role, k, req.filialId));
     if (missing) return res.status(403).json({ error: 'Недостаточно прав для этого действия', permission: missing });
 
     // Проверяем доступ через линию дефекта

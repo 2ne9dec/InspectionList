@@ -10,7 +10,7 @@ export {
 } from './model/selectors';
 export {
   getRoleLabel, getRoleDescription, READ_ONLY_ROLES, MANAGER_ROLES,
-  FILIAL_ASSIGNABLE_ROLES, GLOBAL_ASSIGNABLE_ROLES, ROLES_WITHOUT_FILIAL,
+  FILIAL_ASSIGNABLE_ROLES, GLOBAL_ASSIGNABLE_ROLES, ROLES_WITHOUT_FILIAL, DIRECTOR_ASSIGNABLE, ROLE_ORDER,
 } from './model/roles';
 export type {
   UpdateUserParams, ChangePasswordParams, CreateUserParams, AdminUpdateUserParams, ResetPasswordParams,

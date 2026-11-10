@@ -2,8 +2,8 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import type { UserProfile, UserRole } from '@/entities/User';
 import {
-  getRoleDescription, getRoleLabel, getUserIsGlobalManager, getUserFilialId,
-  FILIAL_ASSIGNABLE_ROLES, GLOBAL_ASSIGNABLE_ROLES, ROLES_WITHOUT_FILIAL,
+  getRoleDescription, getRoleLabel, getUserIsGlobalManager, getUserFilialId, getUserRole,
+  DIRECTOR_ASSIGNABLE, FILIAL_ASSIGNABLE_ROLES, GLOBAL_ASSIGNABLE_ROLES, ROLES_WITHOUT_FILIAL,
   useAdminUpdateUserMutation, useCreateUserMutation,
 } from '@/entities/User';
 import { useGetFilialsQuery } from '@/entities/InspectionLine';
@@ -23,6 +23,7 @@ interface UserFormModalProps {
 export const UserFormModal = memo(({ isOpen, user, onClose }: UserFormModalProps) => {
   const isGlobal     = useSelector(getUserIsGlobalManager);
   const myFilialId   = useSelector(getUserFilialId);
+  const myRole       = useSelector(getUserRole);
   const { data: filials = [] } = useGetFilialsQuery();
   const [createUser, { isLoading: creating }] = useCreateUserMutation();
   const [updateUser, { isLoading: updating }] = useAdminUpdateUserMutation();
@@ -31,7 +32,7 @@ export const UserFormModal = memo(({ isOpen, user, onClose }: UserFormModalProps
 
   const [username,    setUsername]    = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [role,        setRole]        = useState<UserRole>('viewer');
+  const [role,        setRole]        = useState<UserRole>('electrician');
   const [filialId,    setFilialId]    = useState<number | ''>('');
   const [password,    setPassword]    = useState('');
   const [error,       setError]       = useState('');
@@ -41,21 +42,31 @@ export const UserFormModal = memo(({ isOpen, user, onClose }: UserFormModalProps
     setError('');
     setUsername(user?.username ?? '');
     setDisplayName(user?.displayName ?? '');
-    setRole(user?.role ?? 'viewer');
+    setRole(user?.role ?? 'electrician');
     setFilialId(user ? (user.filialId ?? '') : (myFilialId ?? ''));
     setPassword(user ? '' : generateTempPassword());
   }, [isOpen, user, myFilialId]);
 
   const roleOptions = useMemo(() => {
-    let roles = isGlobal ? GLOBAL_ASSIGNABLE_ROLES : FILIAL_ASSIGNABLE_ROLES;
-    // При редактировании филиал не меняется: пользователю РУП — роли РУП, пользователю филиала — роли филиала
+    // Руководитель создаёт только сотрудников своей службы
+    let roles = (myRole && DIRECTOR_ASSIGNABLE[myRole])
+      ?? (isGlobal ? GLOBAL_ASSIGNABLE_ROLES : FILIAL_ASSIGNABLE_ROLES);
+    // При редактировании филиал не меняется: пользователю без филиала — роли без филиала, пользователю филиала — роли филиала
     if (isEdit && user) {
       roles = user.filialId == null
         ? roles.filter((r) => ROLES_WITHOUT_FILIAL.has(r))
-        : roles.filter((r) => r !== 'observer');
+        : roles.filter((r) => !ROLES_WITHOUT_FILIAL.has(r));
+      // Прежняя роль, которой больше нет в списке (например, администратор филиала)
+      if (!roles.includes(user.role)) roles = [user.role, ...roles];
     }
-    return roles.map((r) => ({ value: r, label: getRoleLabel(r, r === 'admin' && filialId === '' ? null : 1) }));
-  }, [isGlobal, isEdit, user, filialId]);
+    return roles.map((r) => ({ value: r, label: getRoleLabel(r, isEdit && user ? user.filialId : null) }));
+  }, [isGlobal, isEdit, user, myRole]);
+
+  // Новый пользователь: роль по умолчанию — первая доступная
+  useEffect(() => {
+    if (!isOpen || isEdit || roleOptions.length === 0) return;
+    if (!roleOptions.some((o) => o.value === role)) setRole(roleOptions[0].value);
+  }, [isOpen, isEdit, role, roleOptions]);
 
   const filialOptions = useMemo(
     () => filials.map((f) => ({ value: f.id, label: f.name })),
@@ -63,12 +74,13 @@ export const UserFormModal = memo(({ isOpen, user, onClose }: UserFormModalProps
   );
 
   // Филиал задаётся при создании: пользователь хранится в базе своего филиала
-  const showFilial = isGlobal && role !== 'observer';
-  const filialOptional = ROLES_WITHOUT_FILIAL.has(role);
+  // Главный администратор и наблюдатель РУП — без филиала
+  const withoutFilial = !isEdit && ROLES_WITHOUT_FILIAL.has(role);
+  const showFilial = isGlobal && (isEdit ? user?.filialId != null : !withoutFilial);
 
   const handleSave = useCallback(async () => {
     setError('');
-    const effFilial = role === 'observer' ? null : (filialId === '' ? null : Number(filialId));
+    const effFilial = withoutFilial ? null : (filialId === '' ? null : Number(filialId));
     if (!username.trim()) { setError('Укажите логин'); return; }
     if (!displayName.trim()) { setError('Укажите ФИО'); return; }
     if (effFilial == null && !ROLES_WITHOUT_FILIAL.has(role)) { setError('Укажите филиал'); return; }
@@ -102,7 +114,7 @@ export const UserFormModal = memo(({ isOpen, user, onClose }: UserFormModalProps
       const msg = (e as { data?: { error?: string } })?.data?.error;
       setError(msg ?? 'Не удалось сохранить пользователя');
     }
-  }, [createUser, displayName, filialId, isEdit, isGlobal, myFilialId, onClose, password, role, updateUser, user, username]);
+  }, [createUser, displayName, filialId, isEdit, isGlobal, myFilialId, onClose, password, role, updateUser, user, username, withoutFilial]);
 
   return (
     <Modal
@@ -138,14 +150,14 @@ export const UserFormModal = memo(({ isOpen, user, onClose }: UserFormModalProps
           <FormField
             label='Филиал'
             htmlFor='uf-filial'
-            hint={isEdit ? 'Филиал после создания не меняется' : filialOptional ? 'Без филиала — администратор системы' : undefined}
+            hint={isEdit ? 'Филиал после создания не меняется' : undefined}
           >
             <Select<number>
               id='uf-filial'
               disabled={isEdit}
               options={filialOptions}
               value={filialId}
-              placeholder={filialOptional ? '— все филиалы —' : '— выберите филиал —'}
+              placeholder='— выберите филиал —'
               onChange={(v) => setFilialId(v)}
             />
           </FormField>

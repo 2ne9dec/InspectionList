@@ -17,7 +17,13 @@
 const { Router } = require('express');
 const { query, execute, queryOne, MULTI_DB, FILIAL_DB_IDS } = require('../lib/fbDb');
 const { canAccessLine } = require('../lib/tenancy');
-const { requirePermission } = require('../lib/permissions');
+
+/** Паспорт линии меняет только администратор системы (без филиала). */
+function requireSystemAdmin(req, res, next) {
+  if (req.role !== 'admin' || req.filialId != null)
+    return res.status(403).json({ error: 'Изменять паспорт линии может только администратор системы' });
+  next();
+}
 
 const router = Router();
 
@@ -95,7 +101,7 @@ const EDITABLE_LINE_COLS = {
   poleCount:          'POLE_COUNT',
 };
 
-router.patch('/lines/:id', requirePermission('lines.edit'), async (req, res) => {
+router.patch('/lines/:id', requireSystemAdmin, async (req, res) => {
   try {
     const id = Number(req.params.id);
     if (!canAccessLine(req, id))

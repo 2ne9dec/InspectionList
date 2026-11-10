@@ -51,7 +51,7 @@ async function createTables() {
        USERNAME             VARCHAR(100) NOT NULL,
        PASSWORD             VARCHAR(200) CHARACTER SET NONE NOT NULL,
        DISPLAY_NAME         VARCHAR(200),
-       ROLE                 VARCHAR(50) DEFAULT 'viewer',
+       ROLE                 VARCHAR(50) DEFAULT 'electrician',
        FILIAL_ID            INTEGER,
        MUST_CHANGE_PASSWORD SMALLINT DEFAULT 0 NOT NULL,
        CONSTRAINT PK_USERS PRIMARY KEY (ID),
@@ -97,7 +97,7 @@ async function migrateFromFilialDbs() {
       const mcp = Number(hasMcp?.cnt ?? 0) > 0 ? Number(u.must_change_password ?? 0) : 1;
       await execute(
         'INSERT INTO USERS (ID, USERNAME, PASSWORD, DISPLAY_NAME, ROLE, FILIAL_ID, MUST_CHANGE_PASSWORD) VALUES (?,?,?,?,?,?,?)',
-        [newId, login, u.password, u.display_name ?? login, u.role ?? 'viewer', u.filial_id ?? null, mcp],
+        [newId, login, u.password, u.display_name ?? login, u.role === 'viewer' || u.role == null ? 'electrician' : u.role, u.filial_id ?? null, mcp],
         MAIN_DB,
       );
       for (const r of await query('SELECT LINE_ID FROM USER_ALLOWED_LINES WHERE USER_ID = ?', [u.id], key)) {
@@ -133,6 +133,8 @@ async function ensureUsersDb() {
     const moved = await migrateFromFilialDbs();
     console.log(`[users] Перенесено пользователей из баз филиалов: ${moved}. Таблицы USERS в базах филиалов больше не используются.`);
   }
+  // Роль «Пользователь» (viewer) упразднена: такие учётные записи становятся «Электромонтёр СЛ»
+  await execute("UPDATE USERS SET ROLE = 'electrician' WHERE ROLE = 'viewer'", [], MAIN_DB);
 }
 
 module.exports = { ensureUsersDb };

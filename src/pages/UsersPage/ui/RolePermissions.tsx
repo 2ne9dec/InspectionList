@@ -9,8 +9,9 @@ type Matrix = Record<string, Set<Permission>>;
 
 /**
  * «Роли и права»: администратор системы отмечает, что может каждая роль.
- * Администратор может всё, наблюдатель РУП — только просмотр (не настраиваются).
- * Просмотр листков и дефектов доступен всем.
+ * Администратор может всё (не настраивается). Наблюдателю РУП можно дать только
+ * права, не изменяющие данные (выгрузка в Excel). Удаление листков — только
+ * администратор системы. Просмотр листков и дефектов доступен всем.
  */
 export const RolePermissions = memo(() => {
   const { data, isLoading } = useGetRolePermissionsQuery();
@@ -34,7 +35,8 @@ export const RolePermissions = memo(() => {
   }, [data]);
 
   const editable = useMemo(() => data?.editableRoles ?? [], [data]);
-  const columns: UserRole[] = ['admin', ...editable, 'observer'];
+  const columns: UserRole[] = ['admin', ...editable];
+  const observerAllowed = useMemo(() => new Set(data?.observerAllowed ?? []), [data]);
 
   const changed = useMemo(() => editable.filter((role) => {
     const a = matrix[role];
@@ -69,7 +71,8 @@ export const RolePermissions = memo(() => {
     <div className={cls.rolesWrap}>
       <div className={cls.rolesHint}>
         Отметьте, что может каждая роль. Просмотр листков и дефектов доступен всем.
-        Администратор может всё, наблюдатель РУП только просматривает — эти роли не настраиваются.
+        Администратор может всё. Наблюдателю РУП можно разрешить только выгрузку в Excel.
+        Удаление листков — только главный администратор.
       </div>
       <div className={cls.tableWrap}>
         <table className={cls.table}>
@@ -78,7 +81,7 @@ export const RolePermissions = memo(() => {
               <th>Действие</th>
               {columns.map((r) => (
                 <th key={r} className={cls.roleCol}>
-                  {r === 'observer' ? 'Наблюдатель РУП' : getRoleLabel(r, r === 'admin' ? null : 1)}
+                  {getRoleLabel(r, r === 'admin' ? null : 1)}
                 </th>
               ))}
             </tr>
@@ -91,8 +94,9 @@ export const RolePermissions = memo(() => {
                   <tr key={p.key}>
                     <td>{p.label}</td>
                     {columns.map((role) => {
-                      const fixed = role === 'admin' || role === 'observer';
-                      const checked = role === 'admin' ? true : role === 'observer' ? false : !!matrix[role]?.has(p.key);
+                      const observerLocked = role === 'observer' && !observerAllowed.has(p.key);
+                      const fixed = role === 'admin' || observerLocked;
+                      const checked = role === 'admin' ? true : observerLocked ? false : !!matrix[role]?.has(p.key);
                       return (
                         <td key={role} className={cls.roleCol}>
                           <input
