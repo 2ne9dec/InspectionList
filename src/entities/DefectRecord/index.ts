@@ -3,6 +3,7 @@ export type {
   DefectRecordFull,
   DefectCount,
   CreateDefectParams,
+  EditDefectParams,
   FixDefectParams,
 } from './model/types';
 
@@ -18,6 +19,7 @@ export {
   useDeleteDefectsBySheetMutation,
   usePatchDefectMasterMutation,
   usePatchDefectBasicMutation,
+  useEditDefectMutation,
 } from './api/defectsApi';
 
 export { DefectRow } from './ui/DefectRow';

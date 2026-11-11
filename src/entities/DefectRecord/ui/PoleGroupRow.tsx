@@ -22,10 +22,13 @@ interface PoleGroupRowProps {
   onRowClick?: (defect: DefectRecordFull) => void;
   onDelete: (id: number) => void;
   onDeleteAll: (ids: number[]) => void;
+  /** Исправить ошибочно внесённый дефект. */
+  onEdit?: (defect: DefectRecordFull) => void;
   /** Доступные действия (по правам роли); недоступные пункты меню скрыты. */
   canFix?: boolean;
   canCopy?: boolean;
   canDelete?: boolean;
+  canEdit?: boolean;
 }
 
 const MAX_CHIPS = 3;
@@ -53,12 +56,16 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
     onCopy,
     onDelete,
     onDeleteAll,
+    onEdit,
     onRowClick,
     defectStartIndex = 0,
     canFix = true,
     canCopy = true,
     canDelete = true,
+    canEdit = false,
   } = props;
+  // Исправлять можно только неустранённые дефекты
+  const editable = canEdit && !isFixed && !!onEdit;
 
   const locationLabel = formatLocationLabel(locationKey);
   const span = locationKeyType(locationKey) === 'span';
@@ -121,6 +128,8 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
       items.push({ id: 'fix', label: 'Устранить все', onClick: () => onFix(locationKey) });
     }
     if (canCopy) items.push({ id: 'copy', label: 'Копировать', onClick: () => onCopy(locationKey) });
+    // В группе один дефект — его можно исправить прямо отсюда
+    if (editable && records.length === 1) items.push({ id: 'edit', label: 'Исправить дефект', onClick: () => onEdit?.(records[0]) });
     if (canDelete) items.push({
       id: 'delete',
       label: 'Удалить все',
@@ -128,7 +137,7 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
       onClick: () => onDeleteAll(records.map((r) => r.id)),
     });
     return items;
-  }, [isFixed, locationKey, onFix, onCopy, onDeleteAll, records, canFix, canCopy, canDelete]);
+  }, [isFixed, locationKey, onFix, onCopy, onDeleteAll, records, canFix, canCopy, canDelete, editable, onEdit]);
 
   return (
     <>
@@ -199,6 +208,14 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
               ? [{ id: 'fix', label: 'Устранить', onClick: () => onFixOne(ids[0]) }]
               : []),
             ...(canCopy ? [{ id: 'copy', label: 'Копировать', onClick: () => onCopy(locationKey) }] : []),
+            // Несколько фаз — отдельная запись на каждую фазу: свой пункт для каждой
+            ...(editable
+              ? records.filter((r) => ids.includes(r.id)).map((r) => ({
+                id: `edit-${r.id}`,
+                label: ids.length > 1 && r.phaseName ? `Исправить (фаза ${r.phaseName})` : 'Исправить дефект',
+                onClick: () => onEdit?.(r),
+              }))
+              : []),
             ...(canDelete ? [{
               id: 'delete',
               label: 'Удалить',

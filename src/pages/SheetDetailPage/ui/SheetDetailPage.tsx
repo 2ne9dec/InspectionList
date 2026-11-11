@@ -8,7 +8,7 @@ import type { DefectRecordFull } from '@/entities/DefectRecord';
 import { fixDefectActions } from '@/features/FixDefect';
 import { copyDefectActions } from '@/features/CopyDefect';
 import { DefectTable } from '@/widgets/DefectTable';
-import { AddDefectBar, addDefectReducer } from '@/features/AddDefect';
+import { AddDefectBar, EditDefectModal, addDefectReducer } from '@/features/AddDefect';
 import { FixDefectModal, fixDefectReducer } from '@/features/FixDefect';
 import { CopyDefectModal, copyDefectReducer } from '@/features/CopyDefect';
 import { ExportButton } from '@/features/ExportToExcel';
@@ -217,6 +217,12 @@ const OnlineSheetDetail = memo(({ sheetId }: { sheetId: number }) => {
   const { can } = usePermissions();
 
   const [sidebarDefect, setSidebarDefect] = useState<DefectRecordFull | null>(null);
+  const [editingDefect, setEditingDefect] = useState<DefectRecordFull | null>(null);
+  const handleEditDefect = useCallback((d: DefectRecordFull) => {
+    setSidebarDefect(null);
+    setEditingDefect(d);
+  }, []);
+  const handleCloseEdit = useCallback(() => setEditingDefect(null), []);
   const [showTimeline,  setShowTimeline]  = useState(false);
 
   const { openModal: openFixModal }  = fixDefectActions.useActions();
@@ -311,9 +317,11 @@ const OnlineSheetDetail = memo(({ sheetId }: { sheetId: number }) => {
             onRowClick={setSidebarDefect}
             onFix={openFixModal}
             onCopy={openCopyModal}
+            onEdit={handleEditDefect}
             canFix={can('defects.fix')}
             canCopy={can('defects.create')}
             canDelete={can('defects.delete')}
+            canEdit={can('defects.edit')}
           />
         </div>
 
@@ -323,6 +331,7 @@ const OnlineSheetDetail = memo(({ sheetId }: { sheetId: number }) => {
             onClose={handleCloseSidebar}
             onFix={handleSidebarFix}
             onDelete={handleSidebarDelete}
+            onEdit={handleEditDefect}
             onSaveInspector={handleSaveInspector}
             canEdit={can('defects.edit')}
             canFix={can('defects.fix')}
@@ -335,6 +344,12 @@ const OnlineSheetDetail = memo(({ sheetId }: { sheetId: number }) => {
         )}
 
         <FixDefectModal sheetId={sheetId} />
+        <EditDefectModal
+          defect={editingDefect}
+          poleStart={sheetFull.poleStart}
+          poleEnd={sheetFull.poleEnd}
+          onClose={handleCloseEdit}
+        />
         <CopyDefectModal sheetId={sheetId} poleStart={sheetFull.poleStart} poleEnd={sheetFull.poleEnd} />
         <ConfirmModal {...confirmProps} />
       </div>

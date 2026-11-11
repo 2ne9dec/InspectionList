@@ -35,7 +35,8 @@ const UsersPage = () => {
   const directorRoles = myRole ? DIRECTOR_ASSIGNABLE[myRole] : undefined;
   const isDirector  = directorRoles != null;
   const [tab, setTab] = useState<'users' | 'roles'>('users');
-  const { data: users = [], isLoading } = useGetUsersQuery(undefined, { skip: !canManage });
+  // Список обновляется сам каждые 10 секунд: новые пользователи появляются без перезагрузки страницы
+  const { data: users = [], isLoading } = useGetUsersQuery(undefined, { skip: !canManage, pollingInterval: 10_000 });
   const { data: filials = [] } = useGetFilialsQuery();
   const [deleteUser] = useDeleteUserMutation();
   const { confirm, confirmProps } = useConfirm();

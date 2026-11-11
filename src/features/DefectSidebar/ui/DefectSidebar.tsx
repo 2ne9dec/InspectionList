@@ -3,7 +3,7 @@ import { formatDate } from '@/shared/lib/helpers/formatDate';
 import type { DefectRecordFull } from '@/entities/DefectRecord';
 import { usePatchDefectBasicMutation, usePatchDefectNotesMutation } from '@/entities/DefectRecord';
 import { Button, Input } from '@/shared/ui';
-import { IconClose, IconTasks, IconCheck, IconTrash } from '@/shared/ui/Icons';
+import { IconClose, IconTasks, IconCheck, IconTrash, IconEdit } from '@/shared/ui/Icons';
 import cls from './DefectSidebar.module.scss';
 
 interface DefectSidebarProps {
@@ -12,6 +12,8 @@ interface DefectSidebarProps {
   onClose: () => void;
   onFix?: (id: number) => void;
   onDelete?: (id: number) => void;
+  /** Исправить ошибочно внесённый дефект (место, вид, фаза и т.д.) */
+  onEdit?: (defect: DefectRecordFull) => void;
   /** Вызывается после успешного сохранения inspectorFind — чтобы родитель обновил состояние */
   onSaveInspector?: (id: number, value: string) => void;
   /** Права роли: редактирование, устранение, удаление */
@@ -20,7 +22,7 @@ interface DefectSidebarProps {
   canDelete?: boolean;
 }
 
-export const DefectSidebar = memo(({ defect, onClose, onFix, onDelete, onSaveInspector, canEdit = true, canFix = true, canDelete = true }: DefectSidebarProps) => {
+export const DefectSidebar = memo(({ defect, onClose, onFix, onDelete, onEdit, onSaveInspector, canEdit = true, canFix = true, canDelete = true }: DefectSidebarProps) => {
   const isOpen = !!defect;
   const sidebarRef = useRef<HTMLElement>(null);
 
@@ -202,8 +204,15 @@ export const DefectSidebar = memo(({ defect, onClose, onFix, onDelete, onSaveIns
               </dd>
             </dl>
 
-            {!defect.isFixed && (canFix || canDelete) && (
+            {!defect.isFixed && (canFix || canDelete || (canEdit && onEdit)) && (
               <div className={cls.actions}>
+                {canEdit && onEdit && (
+                <Button variant='secondary' size='s' fullWidth
+                  leftIcon={<IconEdit size={13} />}
+                  onClick={() => onEdit(defect)}>
+                  Исправить дефект
+                </Button>
+                )}
                 {canFix && (
                 <Button variant='primary' size='s' fullWidth
                   leftIcon={<IconCheck size={13} />}

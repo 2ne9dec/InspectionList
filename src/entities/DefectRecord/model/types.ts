@@ -29,6 +29,18 @@ export interface DefectRecordFull extends DefectRecord {
   severity: Severity;
 }
 
+/** Исправление ошибочно внесённого дефекта (пока он не устранён). */
+export interface EditDefectParams {
+  id: number;
+  poleNumber: number;
+  spanRange: string | null;
+  defectId: number;
+  phaseId: number | null;
+  insulatorCount: number | null;
+  dateFound: string;
+  inspectorFind: string;
+}
+
 export interface CreateDefectParams {
   sheetId: number;
   poleNumber: number;
