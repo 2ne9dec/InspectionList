@@ -159,7 +159,9 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
                     onClick={() => handleDefectClick(defect)}
                   >
                     <span className={cls.bar} data-severity={defect.severity} />
-                    <span className={cls.defectName}>{cap(defect.name)}</span>
+                    <span className={cls.defectName}>
+                      {defect.custom ? 'Вписать свой дефект' : cap(defect.name)}
+                    </span>
                     <span className={cls.sev} data-severity={defect.severity}>
                       {SEVERITY_LABELS[defect.severity]}
                     </span>
@@ -216,7 +218,9 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
                 onClick={() => handleDefectClick(defect)}
               >
                 <span className={cls.bar} data-severity={defect.severity} />
-                <span className={cls.defectName}>{cap(defect.name)}</span>
+                <span className={cls.defectName}>
+                  {defect.custom ? 'Вписать свой дефект' : cap(defect.name)}
+                </span>
                 <span className={cls.sev} data-severity={defect.severity}>
                   {SEVERITY_LABELS[defect.severity]}
                 </span>

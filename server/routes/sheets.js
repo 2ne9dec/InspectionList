@@ -309,11 +309,11 @@ router.post('/inspectionSheets/merge', requirePermission('sheets.merge'), async 
                (ID, SHEET_ID, LINE_ID, POLE_NUMBER, DEFECT_ID, PHASE_ID, ELEMENT_ID,
                 DATE_FOUND, INSPECTOR_FIND, IS_FIXED, DATE_FIXED, INSPECTOR_FIX,
                 INSULATOR_COUNT, SPAN_RANGE, NOTES, STATUS,
-                MASTER_CONCLUSION, RESOLUTION_DEADLINE, MASTER_NAME, FIX_WORK_VOLUME)
+                MASTER_CONCLUSION, RESOLUTION_DEADLINE, MASTER_NAME, FIX_WORK_VOLUME, CUSTOM_NAME)
              VALUES (?,?,?,?,?,?,?,
                      CAST(? AS DATE),?,?,CAST(? AS DATE),?,
                      ?,?,?,?,
-                     ?,CAST(? AS DATE),?,?)`,
+                     ?,CAST(? AS DATE),?,?,?)`,
             [defId, newId, d.line_id ?? base.line_id,
              d.pole_number, d.defect_id, d.phase_id ?? null, d.element_id ?? null,
              d.date_found   ? String(d.date_found).slice(0,10)  : null,
@@ -324,7 +324,8 @@ router.post('/inspectionSheets/merge', requirePermission('sheets.merge'), async 
              d.notes ?? null, d.status ?? null,
              d.master_conclusion ?? null,
              d.resolution_deadline ? String(d.resolution_deadline).slice(0,10) : null,
-             d.master_name ?? null, d.fix_work_volume ?? null],
+             d.master_name ?? null, d.fix_work_volume ?? null,
+             d.custom_name ?? null],
           );
         }
       }

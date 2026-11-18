@@ -9,6 +9,8 @@ export interface DefectPickerProps {
   defectTypes: ReadonlyArray<DefectType>;
   selectedDefect: DefectType | undefined;
   selectedElement: Element | undefined;
+  /** Введённый вручную текст для дефекта с признаком custom. */
+  customValue?: string;
   onSelect: (defect: DefectType) => void;
   onClear: () => void;
 }
@@ -18,7 +20,7 @@ export interface DefectPickerHandle {
 }
 
 export const DefectPicker = memo(forwardRef<DefectPickerHandle, DefectPickerProps>((props, ref) => {
-  const { elements, defectTypes, selectedDefect, selectedElement, onSelect, onClear } = props;
+  const { elements, defectTypes, selectedDefect, selectedElement, customValue, onSelect, onClear } = props;
 
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState({ top: 0, left: 0 });
@@ -53,9 +55,12 @@ export const DefectPicker = memo(forwardRef<DefectPickerHandle, DefectPickerProp
           <>
             <span className={cls.dot} data-severity={selectedDefect.severity} />
             <span className={cls.text}>
-              {selectedElement?.name === selectedDefect.name
-                ? selectedDefect.name
-                : (selectedElement?.name ?? '') + ' → ' + selectedDefect.name}
+              {selectedDefect.custom
+                ? (selectedElement?.name ?? '') + ' → '
+                  + (customValue?.trim() || 'впишите дефект')
+                : selectedElement?.name === selectedDefect.name
+                  ? selectedDefect.name
+                  : (selectedElement?.name ?? '') + ' → ' + selectedDefect.name}
             </span>
             <span className={cls.sev} data-severity={selectedDefect.severity}>
               {SEVERITY_LABELS[selectedDefect.severity]}

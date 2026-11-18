@@ -44,7 +44,7 @@ export const SheetDefectRows = memo((props: SheetDefectRowsProps) => {
             <td className={cls.cell}>{lineName}</td>
             <td className={cls.cell}>{d.poleNumber}</td>
             <td className={cls.cell}>{el?.name ?? '—'}</td>
-            <td className={cls.cell}>{dt?.name ?? '—'}</td>
+            <td className={cls.cell}>{d.customName?.trim() || dt?.name || '—'}</td>
             <td className={cls.cell}>
               <span className={cls.badge} data-severity={sev}>
                 {SEVERITY_LABELS[sev]}

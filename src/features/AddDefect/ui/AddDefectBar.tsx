@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useEffect } from 'react';
+import { memo, useCallback, useMemo, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useCreateDefectMutation } from '@/entities/DefectRecord';
 import {
@@ -77,6 +77,15 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
 
   const { handleClearDraft } = useDraft({ sheetId, selectedDefectId, poleNumber, selectedPhaseIds });
 
+  // Свободное описание дефекта — для вида «Линейная арматура» (DefectType.custom)
+  const [customName, setCustomName] = useState('');
+  const customNameTrimmed = customName.trim();
+
+  const handleClearAll = useCallback(() => {
+    setCustomName('');
+    handleClearDraft();
+  }, [handleClearDraft]);
+
   const { data: elements    = [] } = useGetElementsQuery();
   const { data: defectTypes = [] } = useGetDefectTypesQuery();
   const { data: phases      = [] } = useGetPhasesQuery();
@@ -98,7 +107,10 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
     && parsePoleList(poleNumber, poleStart, poleEnd).length > 0;
   const isSpanOk = mode === 'span' && isSpanValid(spanRange, poleStart, maxSpan);
   const hasLocation = isPoleValid || isSpanOk;
-  const isValid = !!selectedDefectId && hasLocation && inspector.trim().length > 0 && !!dateFound;
+  const needsCustomName = !!selectedDefect?.custom;
+  const isCustomNameValid = !needsCustomName || customNameTrimmed.length > 0;
+  const isValid = !!selectedDefectId && hasLocation && inspector.trim().length > 0
+    && !!dateFound && isCustomNameValid;
 
   // Подсветка ошибок
   const poleInvalid = mode === 'pole' && !!poleNumber.trim() && !isPoleValid;
@@ -122,7 +134,10 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
   );
 
   const handlePickDefect = useCallback(
-    (defect: DefectType) => selectDefect({ defectId: defect.id, elementId: defect.elementId }),
+    (defect: DefectType) => {
+      setCustomName('');
+      selectDefect({ defectId: defect.id, elementId: defect.elementId });
+    },
     [selectDefect],
   );
 
@@ -140,6 +155,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
     const phaseIdsToCreate = sortedPhaseIds.length > 0 ? sortedPhaseIds : [null];
     const insCount   = insulatorCount ? Number(insulatorCount) : null;
     const garlandNum = garlandNumber  ? Number(garlandNumber)  : null;
+    const customNameForSave = needsCustomName ? customNameTrimmed : null;
 
     // Офлайн-режим: sheetId < 0 — листок не синхронизован
     if (sheetId < 0) {
@@ -158,6 +174,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
               spanRange:      null,
               garlandNumber:  garlandNum,
               notes:          null,
+              customName:     customNameForSave,
             });
           }
         }
@@ -174,10 +191,11 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
             spanRange:      spanRange.trim(),
             garlandNumber:  garlandNum,
             notes:          null,
+            customName:     customNameForSave,
           });
         }
       }
-      handleClearDraft();
+      handleClearAll();
       toast.success('Дефект сохранён офлайн');
       return;
     }
@@ -199,6 +217,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
                 spanRange: null,
                 garlandNumber: garlandNum,
                 notes: null,
+                customName: customNameForSave,
               }).unwrap(),
             ),
           ),
@@ -230,6 +249,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
               spanRange: spanRange.trim(),
               garlandNumber: garlandNum,
               notes: null,
+              customName: customNameForSave,
             }).unwrap(),
           ),
         );
@@ -245,7 +265,7 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
         }, 500);
       }
 
-      handleClearDraft();
+      handleClearAll();
       const poleCount = mode === 'pole' ? parsePoleList(poleNumber, poleStart, poleEnd).length : 0;
       if (mode === 'pole' && poleCount > 1) {
         toast.success(`Дефект добавлен на ${poleCount} опор`);
@@ -258,15 +278,16 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
       logger.error('AddDefect failed', err);
       const status = (err as { status?: number })?.status;
       if (status === 409) {
-        toast.warning('Такой дефект уже добавлен на эту опору');
+        toast.warning('Такой дефект уже добавлен на это место');
       } else {
         toast.error('Ошибка при добавлении дефекта');
       }
     }
   }, [
-    handleClearDraft, createDefect, dateFound, inspector, isValid,
+    handleClearAll, createDefect, dateFound, inspector, isValid,
     insulatorCount, garlandNumber, poleNumber, poleStart, poleEnd,
     selectedDefectId, selectedPhaseIds, sheetId, spanRange, mode, phases,
+    needsCustomName, customNameTrimmed,
   ]);
 
   const isMultiPole = mode === 'pole' && poleNumber.includes(',');
@@ -359,9 +380,27 @@ export const AddDefectBar = memo(({ sheetId, poleStart, poleEnd, sheetDate, shee
         defectTypes={defectTypes}
         selectedDefect={selectedDefect}
         selectedElement={selectedElement}
+        customValue={customName}
         onSelect={handlePickDefect}
         onClear={clearDefectSelection}
       />
+
+      {needsCustomName && (
+        <div className={cls.customField}>
+          <FormField label='Свой дефект' htmlFor='add-custom-name'>
+            <Input
+              id='add-custom-name'
+              name='customName'
+              value={customName}
+              onChange={setCustomName}
+              autofocus
+              placeholder='Опишите дефект линейной арматуры'
+              maxLength={200}
+              invalid={customName.trim().length === 0}
+            />
+          </FormField>
+        </div>
+      )}
 
       {phases.length > 0 && (
         <div className={cls.smallField}>

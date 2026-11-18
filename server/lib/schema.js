@@ -11,7 +11,16 @@
 
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const { query, execute, queryOne, allDbKeys, MAIN_DB, MULTI_DB } = require('./fbDb');
+const {
+  query, execute, queryOne, allDbKeys,
+  MAIN_DB, MULTI_DB, FILIAL_DB_IDS,
+} = require('./fbDb');
+
+/** Новый элемент и вид дефекта «Линейная арматура» (свободное описание). */
+const CUSTOM_ELEMENT_ID   = 31;
+const CUSTOM_ELEMENT_NAME = 'Линейная арматура';
+const CUSTOM_DEFECT_ID    = 136;
+const CUSTOM_DEFECT_NAME  = 'Свой дефект';
 
 async function columnExists(table, column, dbKey) {
   const rows = await query(
@@ -21,6 +30,48 @@ async function columnExists(table, column, dbKey) {
     dbKey,
   );
   return Number(rows[0]?.cnt ?? 0) > 0;
+}
+
+/** Базы, в которых есть справочники линий и дефектов (без отдельной базы пользователей). */
+function filialDbKeys() {
+  return MULTI_DB ? FILIAL_DB_IDS.map(String) : [MAIN_DB];
+}
+
+/**
+ * Свободное описание дефекта для «Линейной арматуры».
+ * Nullable-поле, поэтому существующие записи не меняются.
+ */
+async function ensureCustomDefectName(dbKey) {
+  if (await columnExists('DEFECT_RECORDS', 'CUSTOM_NAME', dbKey)) return;
+  console.log(`[schema] (${dbKey === 'main' ? 'основная' : 'филиал ' + dbKey}) Добавляю поле DEFECT_RECORDS.CUSTOM_NAME`);
+  await execute('ALTER TABLE DEFECT_RECORDS ADD CUSTOM_NAME VARCHAR(500)', [], dbKey);
+}
+
+/**
+ * Справочные записи «Линейная арматура» → «Свой дефект».
+ * ID фиксированы: клиент получает справочники из seed-файлов и присылает эти ID.
+ */
+async function ensureCustomDefectReference(dbKey) {
+  let element = await queryOne(
+    'SELECT ID FROM ELEMENTS WHERE ID = ?', [CUSTOM_ELEMENT_ID], dbKey,
+  );
+  if (!element) {
+    await execute(
+      'INSERT INTO ELEMENTS (ID, NAME) VALUES (?, ?)',
+      [CUSTOM_ELEMENT_ID, CUSTOM_ELEMENT_NAME], dbKey,
+    );
+    element = { id: CUSTOM_ELEMENT_ID };
+  }
+
+  const defect = await queryOne(
+    'SELECT ID FROM DEFECT_TYPES WHERE ID = ?', [CUSTOM_DEFECT_ID], dbKey,
+  );
+  if (!defect) {
+    await execute(
+      'INSERT INTO DEFECT_TYPES (ID, NAME, SEVERITY, ELEMENT_ID) VALUES (?, ?, ?, ?)',
+      [CUSTOM_DEFECT_ID, CUSTOM_DEFECT_NAME, 'medium', element.id], dbKey,
+    );
+  }
 }
 
 /** Проверяет и дополняет структуру каждой базы (основной и баз филиалов). */
@@ -33,6 +84,11 @@ async function ensureSchema() {
       await execute('UPDATE USERS SET MUST_CHANGE_PASSWORD = 1', [], dbKey);
       console.log(`[schema] (${name}) Всем пользователям назначена смена пароля при следующем входе`);
     }
+  }
+
+  for (const dbKey of filialDbKeys()) {
+    await ensureCustomDefectName(dbKey);
+    await ensureCustomDefectReference(dbKey);
   }
 }
 

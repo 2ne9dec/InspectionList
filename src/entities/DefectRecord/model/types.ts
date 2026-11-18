@@ -15,6 +15,8 @@ export interface DefectRecord {
   insulatorCount?: number | null;
   spanRange?: string | null;
   garlandNumber?: number | null;
+  /** Свободное описание дефекта (вид «Линейная арматура»). */
+  customName?: string | null;
   createdAt?: string | null;
   masterConclusion?: string | null;
   resolutionDeadline?: string | null;
@@ -39,6 +41,8 @@ export interface EditDefectParams {
   insulatorCount: number | null;
   dateFound: string;
   inspectorFind: string;
+  /** Свободное описание дефекта (вид «Линейная арматура»). */
+  customName?: string | null;
 }
 
 export interface CreateDefectParams {
@@ -52,6 +56,8 @@ export interface CreateDefectParams {
   insulatorCount?: number | null;
   spanRange?: string | null;
   garlandNumber?: number | null;
+  /** Свободное описание дефекта (вид «Линейная арматура»). */
+  customName?: string | null;
 }
 
 export interface FixDefectParams {

@@ -113,7 +113,7 @@ router.post('/sync/batch', requirePermission('defects.create'), async (req, res)
                DATE_FIXED=CAST(? AS DATE), INSPECTOR_FIX=?,
                INSULATOR_COUNT=?, SPAN_RANGE=?, NOTES=?, STATUS=?,
                MASTER_CONCLUSION=?, RESOLUTION_DEADLINE=CAST(? AS DATE),
-               MASTER_NAME=?, FIX_WORK_VOLUME=?
+               MASTER_NAME=?, FIX_WORK_VOLUME=?, CUSTOM_NAME=?
            WHERE ID=?`,
           [Number(defect.sheetId), Number(lineId),
            defect.poleNumber, defect.defectId,
@@ -126,6 +126,7 @@ router.post('/sync/batch', requirePermission('defects.create'), async (req, res)
            defect.masterConclusion ?? null,
            defect.resolutionDeadline ?? null,
            defect.masterName ?? null, defect.fixWorkVolume ?? null,
+           defect.customName ?? null,
            Number(defect.id)],
         );
       } else {
@@ -134,11 +135,11 @@ router.post('/sync/batch', requirePermission('defects.create'), async (req, res)
              (ID, SHEET_ID, LINE_ID, POLE_NUMBER, DEFECT_ID, PHASE_ID, ELEMENT_ID,
               DATE_FOUND, INSPECTOR_FIND, IS_FIXED, DATE_FIXED, INSPECTOR_FIX,
               INSULATOR_COUNT, SPAN_RANGE, NOTES, STATUS,
-              MASTER_CONCLUSION, RESOLUTION_DEADLINE, MASTER_NAME, FIX_WORK_VOLUME)
+              MASTER_CONCLUSION, RESOLUTION_DEADLINE, MASTER_NAME, FIX_WORK_VOLUME, CUSTOM_NAME)
            VALUES (?,?,?,?,?,?,?,
                    CAST(? AS DATE),?,?,CAST(? AS DATE),?,
                    ?,?,?,?,
-                   ?,CAST(? AS DATE),?,?)`,
+                   ?,CAST(? AS DATE),?,?,?)`,
           [Number(defect.id), Number(defect.sheetId), Number(lineId),
            defect.poleNumber, defect.defectId,
            defect.phaseId   ?? null, defect.elementId ?? null,
@@ -149,7 +150,8 @@ router.post('/sync/batch', requirePermission('defects.create'), async (req, res)
            defect.notes ?? null, defect.status ?? null,
            defect.masterConclusion ?? null,
            defect.resolutionDeadline ?? null,
-           defect.masterName ?? null, defect.fixWorkVolume ?? null],
+           defect.masterName ?? null, defect.fixWorkVolume ?? null,
+           defect.customName ?? null],
         );
       }
 
@@ -227,7 +229,7 @@ router.get('/sync/pull', async (req, res) => {
   const defectsParams = filialId ? [filialId] : [];
 
   const rawDefects = rawSheets.length === 0 ? [] : await query(
-    `SELECT dr.ID, dr.SHEET_ID, dr.POLE_NUMBER, dr.DEFECT_ID, dr.PHASE_ID, dr.ELEMENT_ID, dr.DATE_FOUND, dr.INSPECTOR_FIND, dr.IS_FIXED, dr.DATE_FIXED, dr.INSPECTOR_FIX, dr.INSULATOR_COUNT, dr.SPAN_RANGE, dr.NOTES, dr.STATUS, dr.MASTER_CONCLUSION, dr.RESOLUTION_DEADLINE, dr.MASTER_NAME, dr.FIX_WORK_VOLUME FROM DEFECT_RECORDS dr ${defectsWhere}`,
+    `SELECT dr.ID, dr.SHEET_ID, dr.POLE_NUMBER, dr.DEFECT_ID, dr.PHASE_ID, dr.ELEMENT_ID, dr.DATE_FOUND, dr.INSPECTOR_FIND, dr.IS_FIXED, dr.DATE_FIXED, dr.INSPECTOR_FIX, dr.INSULATOR_COUNT, dr.SPAN_RANGE, dr.NOTES, dr.STATUS, dr.MASTER_CONCLUSION, dr.RESOLUTION_DEADLINE, dr.MASTER_NAME, dr.FIX_WORK_VOLUME, dr.CUSTOM_NAME FROM DEFECT_RECORDS dr ${defectsWhere}`,
     defectsParams,
   );
 
@@ -262,6 +264,7 @@ router.get('/sync/pull', async (req, res) => {
     resolutionDeadline: fmt(d.resolution_deadline),
     masterName:         d.master_name         != null ? d.master_name         : null,
     fixWorkVolume:      d.fix_work_volume     != null ? d.fix_work_volume     : null,
+    customName:         d.custom_name         != null ? d.custom_name         : null,
   }));
 
   res.setHeader('Cache-Control', 'no-store');

@@ -163,7 +163,9 @@ export function useJournalFilters() {
         const location   = [
           d.spanRange  ? `Пр. ${d.spanRange}`  : d.poleNumber ? `Оп. ${d.poleNumber}` : null,
           phase?.name  ?? null,
-          element && defectType ? `${element.name}: ${defectType.name}` : defectType?.name ?? null,
+          element && defectType
+            ? `${element.name}: ${d.customName?.trim() || defectType.name}`
+            : d.customName?.trim() || defectType?.name || null,
         ].filter(Boolean).join(' / ');
         const filialName = filialNameMap.get(sheet.filialId) ?? '—';
         return { d, line, voltage, filialName, location };

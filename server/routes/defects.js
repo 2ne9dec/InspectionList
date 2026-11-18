@@ -25,6 +25,7 @@ const PATCH_ALLOWED = new Set([
   'isFixed', 'dateFixed', 'inspectorFix', 'inspectorFind', 'notes', 'status',
   'masterConclusion', 'resolutionDeadline', 'masterName', 'fixWorkVolume',
   'poleNumber', 'spanRange', 'defectId', 'phaseId', 'insulatorCount', 'dateFound',
+  'customName',
 ]);
 
 /** Поля, задаваемые при внесении дефекта: исправляются (право defects.edit), пока дефект не устранён. */
@@ -48,9 +49,28 @@ const PATCH_COLS = {
   phaseId:            'PHASE_ID',
   insulatorCount:     'INSULATOR_COUNT',
   dateFound:          'DATE_FOUND',
+  customName:         'CUSTOM_NAME',
 };
 
 const DATE_PATCH_COLS = new Set(['dateFixed', 'resolutionDeadline', 'dateFound']);
+
+/**
+ * Пролёты в едином виде: "47-48" (без пробелов, с обычным дефисом).
+ * Нужно и для поиска дубликатов, и для группировки на клиенте.
+ */
+function normalizeSpan(raw) {
+  if (raw == null) return null;
+  const t = String(raw).trim().replace(/[\u2013\u2014]/g, '-').replace(/\s*-\s*/g, '-');
+  return t || null;
+}
+
+/** Свободное описание дефекта (вид «Линейная арматура»). */
+function normalizeCustomName(raw) {
+  if (raw == null) return null;
+  const t = String(raw).trim().replace(/\s+/g, ' ');
+  // 200 символов с запасом помещаются в VARCHAR(500) Firebird (UTF-8, до 2 байт/символ)
+  return t ? t.slice(0, 200) : null;
+}
 
 /**
  * Проверка и приведение исправляемых полей дефекта. Возвращает { values } или { error }.
@@ -64,8 +84,8 @@ async function validateCoreFields(body, cur, id) {
     v.poleNumber = n;
   }
   if ('spanRange' in body) {
-    const t = body.spanRange == null ? '' : String(body.spanRange).trim();
-    if (t && !/^\d+(\s*[-–]\s*\d+)?$/.test(t)) return { error: 'Неверно указаны пролёты (пример: 5 или 3-7)' };
+    const t = normalizeSpan(body.spanRange) ?? '';
+    if (t && !/^\d+(-\d+)?$/.test(t)) return { error: 'Неверно указаны пролёты (пример: 5 или 3-7)' };
     v.spanRange = t || null;
   }
   if ('defectId' in body) {
@@ -104,13 +124,18 @@ async function validateCoreFields(body, cur, id) {
   // Дубликат: такой же активный дефект на том же месте в листке
   const defectId = v.defectId ?? Number(cur.defect_id);
   const phaseId  = 'phaseId' in v ? v.phaseId : (cur.phase_id ?? null);
+  const customName = 'customName' in body
+    ? normalizeCustomName(body.customName)
+    : (cur.custom_name ?? null);
   const dup = await queryOne(
     `SELECT ID FROM DEFECT_RECORDS
      WHERE SHEET_ID = ? AND ID != ? AND POLE_NUMBER = ? AND DEFECT_ID = ?
        AND (PHASE_ID = ? OR (PHASE_ID IS NULL AND ? IS NULL))
        AND (SPAN_RANGE = ? OR (SPAN_RANGE IS NULL AND ? IS NULL))
+       AND (CUSTOM_NAME = ? OR (CUSTOM_NAME IS NULL AND ? IS NULL))
        AND IS_FIXED = 0 AND (STATUS IS NULL OR STATUS != 'rejected')`,
-    [cur.sheet_id, id, pole, defectId, phaseId, phaseId, span ?? null, span ?? null],
+    [cur.sheet_id, id, pole, defectId, phaseId, phaseId, span ?? null, span ?? null,
+     customName, customName],
   );
   if (dup) return { error: 'Такой дефект уже есть на этом месте в листке', status: 409 };
   return { values: v };
@@ -141,6 +166,7 @@ function toDefect(r) {
     resolutionDeadline: r.resolution_deadline ?? null,
     masterName:         r.master_name         ?? null,
     fixWorkVolume:      r.fix_work_volume     ?? null,
+    customName:         r.custom_name         ?? null,
   };
 }
 
@@ -152,7 +178,7 @@ const SELECT_DEFECT = `
          INSPECTOR_FIX, INSULATOR_COUNT, SPAN_RANGE, NOTES, STATUS,
          MASTER_CONCLUSION,
          CAST(RESOLUTION_DEADLINE AS VARCHAR(10)) AS RESOLUTION_DEADLINE,
-         MASTER_NAME, FIX_WORK_VOLUME
+         MASTER_NAME, FIX_WORK_VOLUME, CUSTOM_NAME
   FROM DEFECT_RECORDS`;
 
 // ── GET /defectCounts — количество дефектов по листам ─────────────────────────────────────────────────────────
@@ -214,15 +240,26 @@ router.post('/defectRecords', requirePermission('defects.create'), async (req, r
     if (!canAccessLine(req, sheet.line_id) || !canAccessFilial(req, sheet.filial_id))
       return res.status(403).json({ error: 'Доступ запрещён' });
 
-    // Дедупликация: sheetId + poleNumber + defectId + phaseId
+    const spanRange  = normalizeSpan(body.spanRange);
+    if (spanRange && !/^\d+(-\d+)?$/.test(spanRange))
+      return res.status(400).json({ error: 'Неверно указаны пролёты (пример: 5 или 3-7)' });
+    // Для пролётов опора не используется — это защищает от ложных совпадений с дефектами на опорах
+    const poleNumber = spanRange ? 0 : Number(body.poleNumber);
+    const phaseId    = body.phaseId ? Number(body.phaseId) : null;
+    const customName = normalizeCustomName(body.customName);
+
+    // Дедупликация: листок + место (опора/пролёты) + вид дефекта + фаза + свой текст.
+    // SPAN_RANGE обязательно сравниваем: у всех пролётных дефектов POLE_NUMBER = 0,
+    // иначе дефект, добавленный в одном пролёте, блокировал бы добавление в другом.
     const dup = await queryOne(
       `SELECT ID FROM DEFECT_RECORDS
        WHERE SHEET_ID = ? AND POLE_NUMBER = ? AND DEFECT_ID = ?
          AND (PHASE_ID = ? OR (PHASE_ID IS NULL AND ? IS NULL))
+         AND (SPAN_RANGE = ? OR (SPAN_RANGE IS NULL AND ? IS NULL))
+         AND (CUSTOM_NAME = ? OR (CUSTOM_NAME IS NULL AND ? IS NULL))
          AND IS_FIXED = 0 AND (STATUS IS NULL OR STATUS != 'rejected')`,
-      [sheetId, Number(body.poleNumber), Number(body.defectId),
-       body.phaseId ? Number(body.phaseId) : null,
-       body.phaseId ? Number(body.phaseId) : null],
+      [sheetId, poleNumber, Number(body.defectId),
+       phaseId, phaseId, spanRange, spanRange, customName, customName],
     );
     if (dup) {
       return res.status(409).json({
@@ -237,13 +274,13 @@ router.post('/defectRecords', requirePermission('defects.create'), async (req, r
       `INSERT INTO DEFECT_RECORDS
          (ID, SHEET_ID, LINE_ID, POLE_NUMBER, DEFECT_ID, PHASE_ID, ELEMENT_ID,
           DATE_FOUND, INSPECTOR_FIND, IS_FIXED, DATE_FIXED, INSPECTOR_FIX,
-          INSULATOR_COUNT, SPAN_RANGE, NOTES, STATUS)
+          INSULATOR_COUNT, SPAN_RANGE, NOTES, STATUS, CUSTOM_NAME)
        VALUES (?,?,?,?,?,?,?,
                CAST(? AS DATE),?,?,CAST(? AS DATE),?,
-               ?,?,?,?)`,
+               ?,?,?,?,?)`,
       [id, sheetId, sheet.line_id,
-       Number(body.poleNumber), Number(body.defectId),
-       body.phaseId   ? Number(body.phaseId)   : null,
+       poleNumber, Number(body.defectId),
+       phaseId,
        body.elementId ? Number(body.elementId) : null,
        body.dateFound    ?? null,
        body.inspectorFind ?? null,
@@ -251,9 +288,10 @@ router.post('/defectRecords', requirePermission('defects.create'), async (req, r
        body.dateFixed    ?? null,
        body.inspectorFix ?? null,
        body.insulatorCount != null ? Number(body.insulatorCount) : null,
-       body.spanRange ?? null,
+       spanRange,
        body.notes     ?? null,
-       body.status    ?? null],
+       body.status    ?? null,
+       customName],
     );
 
     const row = await queryOne(SELECT_DEFECT + ' WHERE ID = ?', [id]);
@@ -279,19 +317,22 @@ function requiredForDefectPatch(body) {
   if (has('isFixed')) need.add('defects.fix');
   if (['masterConclusion', 'resolutionDeadline', 'masterName', 'fixWorkVolume'].some(has)) need.add('journal.conclusion');
   if (!has('isFixed') && ['dateFixed', 'inspectorFix'].some(has)) need.add('journal.conclusion');
-  if (['notes', 'inspectorFind', 'status', ...CORE_FIELDS].some(has)) need.add('defects.edit');
+  if (['notes', 'inspectorFind', 'status', 'customName', ...CORE_FIELDS].some(has)) need.add('defects.edit');
   return [...need];
 }
 
 router.patch('/defectRecords/:id', async (req, res) => {
   try {
-    const id = Number(req.params.id);
-    const missing = requiredForDefectPatch(req.body ?? {}).find((k) => !hasPermission(req.role, k, req.filialId));
+    const id   = Number(req.params.id);
+    const body = { ...(req.body ?? {}) };
+    if ('customName' in body) body.customName = normalizeCustomName(body.customName);
+    const missing = requiredForDefectPatch(body).find((k) => !hasPermission(req.role, k, req.filialId));
     if (missing) return res.status(403).json({ error: 'Недостаточно прав для этого действия', permission: missing });
 
     // Проверяем доступ через линию дефекта
     const existing = await queryOne(
-      `SELECT d.ID, d.LINE_ID, d.SHEET_ID, d.POLE_NUMBER, d.SPAN_RANGE, d.DEFECT_ID, d.PHASE_ID, d.IS_FIXED, s.FILIAL_ID
+      `SELECT d.ID, d.LINE_ID, d.SHEET_ID, d.POLE_NUMBER, d.SPAN_RANGE, d.DEFECT_ID,
+              d.PHASE_ID, d.CUSTOM_NAME, d.IS_FIXED, s.FILIAL_ID
        FROM DEFECT_RECORDS d LEFT JOIN INSPECTION_SHEETS s ON s.ID = d.SHEET_ID WHERE d.ID = ?`, [id],
     );
     if (!existing) return res.status(404).json({ error: 'Not found' });
@@ -300,10 +341,10 @@ router.patch('/defectRecords/:id', async (req, res) => {
 
     // Исправление ошибочно внесённого дефекта: только пока он не устранён
     let core = {};
-    if (CORE_FIELDS.some((k) => k in (req.body ?? {}))) {
+    if (CORE_FIELDS.some((k) => k in body)) {
       if (existing.is_fixed === 1)
         return res.status(400).json({ error: 'Устранённый дефект изменить нельзя' });
-      const checked = await validateCoreFields(req.body, existing, id);
+      const checked = await validateCoreFields(body, existing, id);
       if (checked.error) return res.status(checked.status ?? 400).json({ error: checked.error });
       core = checked.values;
     }
@@ -312,9 +353,9 @@ router.patch('/defectRecords/:id', async (req, res) => {
     const params = [];
 
     for (const [jsKey, col] of Object.entries(PATCH_COLS)) {
-      if (!(jsKey in req.body)) continue;
+      if (!(jsKey in body)) continue;
       if (!PATCH_ALLOWED.has(jsKey)) continue;
-      const val = jsKey in core ? core[jsKey] : req.body[jsKey];
+      const val = jsKey in core ? core[jsKey] : body[jsKey];
 
       if (DATE_PATCH_COLS.has(jsKey)) {
         sets.push(`${col} = CAST(? AS DATE)`);

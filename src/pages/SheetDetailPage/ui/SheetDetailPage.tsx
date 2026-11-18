@@ -97,7 +97,7 @@ const OfflineDefectRow = memo(({
     <tr style={{ borderBottom: '1px solid var(--color-border)', fontSize: 'var(--font-size-s)' }}>
       <td style={{ padding: '6px 8px', color: 'var(--color-text-muted)' }}>{index}</td>
       <td style={{ padding: '6px 8px' }}>{loc}</td>
-      <td style={{ padding: '6px 8px' }}>{dt?.name ?? '—'}</td>
+      <td style={{ padding: '6px 8px' }}>{defect.customName?.trim() || dt?.name || '—'}</td>
       <td style={{ padding: '6px 8px', color: 'var(--color-text-secondary)' }}>
         {phase?.name ?? '—'}
       </td>

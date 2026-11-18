@@ -157,7 +157,7 @@ function buildJournalSheet(
     const locationLabel  = d.spanRange ? `Пролёт ${d.spanRange}` : `Оп. ${d.poleNumber}`;
     const phasePart      = phase ? ` / ${phase.name}` : '';
     const elPart         = el ? el.name : '';
-    const defPart        = dt ? dt.name : '—';
+    const defPart        = d.customName?.trim() || (dt ? dt.name : '—');
     const insulatorPart  = d.insulatorCount != null ? ` (${d.insulatorCount} шт.)` : '';
     set('C', `${locationLabel}${phasePart}\n${elPart}: ${defPart}${insulatorPart}`);
 
@@ -207,8 +207,12 @@ function buildStatsSheet(
   for (const d of defects) {
     const dt  = defectTypes.find((t) => t.id === d.defectId);
     const el  = elements.find((e) => dt && e.id === dt.elementId);
-    const key = `${dt?.elementId ?? 0}_${d.defectId}`;
-    if (!statMap.has(key)) statMap.set(key, { elem: el?.name ?? '—', defect: dt?.name ?? '—', active: 0, fixed: 0 });
+    const defectName = d.customName?.trim() || dt?.name || '—';
+    // Свои дефекты «Линейной арматуры» считаем отдельно по введённому тексту
+    const key = d.customName?.trim()
+      ? `${dt?.elementId ?? 0}_custom_${defectName}`
+      : `${dt?.elementId ?? 0}_${d.defectId}`;
+    if (!statMap.has(key)) statMap.set(key, { elem: el?.name ?? '—', defect: defectName, active: 0, fixed: 0 });
     const row = statMap.get(key)!;
     if (!d.isFixed) row.active++; else row.fixed++;
   }

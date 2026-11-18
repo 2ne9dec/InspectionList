@@ -42,6 +42,7 @@ export const EditDefectModal = memo(({ defect, poleStart, poleEnd, onClose, onSa
   const [insulators, setInsulators] = useState<number | ''>('');
   const [dateFound, setDateFound] = useState('');
   const [inspector, setInspector] = useState('');
+  const [customName, setCustomName] = useState('');
   const [error,     setError]     = useState('');
 
   useEffect(() => {
@@ -55,6 +56,7 @@ export const EditDefectModal = memo(({ defect, poleStart, poleEnd, onClose, onSa
     setInsulators(defect.insulatorCount ?? '');
     setDateFound(defect.dateFound ?? '');
     setInspector(defect.inspectorFind ?? '');
+    setCustomName(defect.customName ?? '');
   }, [defect]);
 
   const selectedDefect  = useMemo(() => defectTypes.find((d) => d.id === defectId), [defectTypes, defectId]);
@@ -71,9 +73,14 @@ export const EditDefectModal = memo(({ defect, poleStart, poleEnd, onClose, onSa
   const poleOk    = mode === 'pole' && Number.isInteger(poleNum) && poleNum >= poleStart && poleNum <= poleEnd;
   const spanOk    = mode === 'span' && isSpanValid(span, poleStart, poleEnd);
   const locationInvalid = mode === 'pole' ? !!pole.trim() && !poleOk : !!span.trim() && !spanOk;
-  const isValid   = (poleOk || spanOk) && defectId != null && !!dateFound && inspector.trim().length > 0;
+  const needsCustomName = !!selectedDefect?.custom;
+  const isValid   = (poleOk || spanOk) && defectId != null && !!dateFound
+    && inspector.trim().length > 0 && (!needsCustomName || customName.trim().length > 0);
 
-  const handlePick = useCallback((d: DefectType) => setDefectId(d.id), []);
+  const handlePick = useCallback((d: DefectType) => {
+    setDefectId(d.id);
+    if (!d.custom) setCustomName('');
+  }, []);
 
   const handleSave = useCallback(async () => {
     if (!defect || !isValid || defectId == null) return;
@@ -88,6 +95,7 @@ export const EditDefectModal = memo(({ defect, poleStart, poleEnd, onClose, onSa
         insulatorCount: insulators === '' ? null : insulators,
         dateFound,
         inspectorFind:  inspector.trim(),
+        customName:     needsCustomName ? customName.trim() : null,
       }).unwrap();
       toast.success('Дефект исправлен');
       onSaved?.(saved);
@@ -96,7 +104,7 @@ export const EditDefectModal = memo(({ defect, poleStart, poleEnd, onClose, onSa
       const msg = (e as { data?: { error?: string } })?.data?.error;
       setError(msg ?? 'Не удалось сохранить изменения');
     }
-  }, [dateFound, defect, defectId, editDefect, insulators, inspector, isValid, mode, onClose, onSaved, phaseId, poleNum, span]);
+  }, [customName, dateFound, defect, defectId, editDefect, insulators, inspector, isValid, mode, needsCustomName, onClose, onSaved, phaseId, poleNum, span]);
 
   return (
     <Modal
@@ -144,10 +152,24 @@ export const EditDefectModal = memo(({ defect, poleStart, poleEnd, onClose, onSa
             defectTypes={defectTypes}
             selectedDefect={selectedDefect}
             selectedElement={selectedElement}
+            customValue={customName}
             onSelect={handlePick}
             onClear={() => setDefectId(null)}
           />
         </FormField>
+
+        {needsCustomName && (
+          <FormField label='Свой дефект' htmlFor='edit-custom-name'>
+            <Input
+              id='edit-custom-name'
+              value={customName}
+              onChange={setCustomName}
+              placeholder='Опишите дефект линейной арматуры'
+              maxLength={200}
+              invalid={customName.trim().length === 0}
+            />
+          </FormField>
+        )}
 
         <div className={cls.row}>
           <FormField label='Фаза' htmlFor='edit-phase' optional>

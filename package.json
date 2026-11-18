@@ -6,6 +6,7 @@
     "start": "concurrently \"vite\" \"yarn server\"",
     "start:prod": "concurrently \"vite preview\" \"node ./server/index.js\"",
     "server": "node ./server/index.js",
+    "db:migrate": "node ./server/scripts/apply-schema.js",
     "build": "tsc && vite build",
     "deploy": "yarn build && npx cap sync",
     "lint:ts": "eslint \"src/**/*.{ts,tsx}\"",

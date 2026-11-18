@@ -46,6 +46,8 @@ export interface DefectType {
   name: string;
   elementId: number;
   severity: Severity;
+  /** Дефект вводится свободным текстом (например, «Линейная арматура»). */
+  custom?: boolean;
 }
 
 export interface Phase {

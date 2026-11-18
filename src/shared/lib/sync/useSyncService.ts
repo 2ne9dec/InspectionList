@@ -46,9 +46,24 @@ export function useSyncService(inited: boolean) {
         if (window.location.pathname === `/sheet/${sheet.localId}`) {
           navigate(getRouteSheetDetail(String(created.id)));
         }
-      } catch {
-        // Всё ещё нет сети — прекращаем, попробуем позже
-        break;
+      } catch (err) {
+        // 409 — листок на эту линию и дату уже есть на сервере (создан в другой сессии
+        // или другим пользователем). Не оставляем «вечный» офлайн-листок в списке:
+        // привязываем его дефекты к существующему листку и убираем локальную копию.
+        const e = err as { status?: number; data?: { existing?: { id?: number } } };
+        const existingId = e?.status === 409 ? e.data?.existing?.id : undefined;
+        if (existingId == null) {
+          // Всё ещё нет сети — прекращаем, попробуем позже
+          break;
+        }
+        serverId = existingId;
+        markSyncedSheet(sheet.localId, existingId);
+        removePendingSheet(sheet.localId);
+        synced = true;
+
+        if (window.location.pathname === `/sheet/${sheet.localId}`) {
+          navigate(getRouteSheetDetail(String(existingId)), { replace: true });
+        }
       }
       // Синхронизируем дефекты этого листка
       if (serverId !== null) {
@@ -67,8 +82,11 @@ export function useSyncService(inited: boolean) {
               spanRange:      defect.spanRange ?? null,
               garlandNumber:  defect.garlandNumber ?? null,
               notes:          defect.notes ?? null,
+              customName:     defect.customName ?? null,
             }).unwrap();
-          } catch {
+          } catch (err) {
+            // 409 — такой дефект уже есть на сервере: пропускаем его и продолжаем
+            if ((err as { status?: number })?.status === 409) continue;
             allDefectsSynced = false;
             break;
           }

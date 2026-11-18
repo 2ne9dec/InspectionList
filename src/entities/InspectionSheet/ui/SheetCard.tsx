@@ -11,6 +11,11 @@ export interface SheetCardProps {
   onOpen: (id: number) => void;
   /** Не передан — пункт «Удалить» скрыт (режим только просмотра). */
   onDelete?: (id: number) => void;
+  /**
+   * Удаление серверных листков разрешено (право sheets.delete).
+   * Офлайн-листки (status='pending') можно удалять всегда — это локальная запись.
+   */
+  canDeleteServer?: boolean;
   /** Не передан — пункт «Копировать» скрыт (режим только просмотра). */
   onClone?: (id: number) => void;
   onEdit?: (id: number) => void;
@@ -32,7 +37,7 @@ const OfflineIcon = () => (
     strokeWidth="1.8"
     strokeLinecap="round"
     strokeLinejoin="round"
-    style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4, flexShrink: 0 }}
+    style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: 4, flexShrink: 0 }}
     aria-label="Офлайн, ждёт синхронизации"
   >
     <path d="M5 12.55a11 11 0 0 1 14.08 0" opacity="0.5" />
@@ -52,7 +57,11 @@ const OfflineIcon = () => (
 );
 
 export const SheetCard = memo((props: SheetCardProps) => {
-  const { sheet, index, onOpen, onDelete, onClone, onEdit, showFilial = true, selected, onSelect, disabledForMerge } = props;
+  const {
+    sheet, index, onOpen, onDelete, onClone, onEdit,
+    showFilial = true, selected, onSelect, disabledForMerge,
+    canDeleteServer = true,
+  } = props;
 
   const handleRowClick = useCallback(() => onOpen(sheet.id), [onOpen, sheet.id]);
   const stopRowClick   = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
@@ -80,8 +89,8 @@ export const SheetCard = memo((props: SheetCardProps) => {
         </td>
       )}
       <td className={cls.cell}>
+        {index}
         {sheet.status === 'pending' && <OfflineIcon />}
-        {sheet.status !== 'pending' && index}
       </td>
       {showFilial && <td className={cls.cell}>{sheet.filialName}</td>}
       <td className={cls.cell}>{sheet.voltageName}</td>
@@ -126,19 +135,19 @@ export const SheetCard = memo((props: SheetCardProps) => {
                 onClick={() => { close(); onOpen(sheet.id); }}>
                 Открыть
               </button>
-              {onEdit && (
+              {onEdit && sheet.status !== 'pending' && (
                 <button type="button" role="menuitem" className={cls.menuItem}
                   onClick={() => { close(); handleEdit(); }}>
                   Редактировать
                 </button>
               )}
-              {onClone && (
+              {onClone && sheet.status !== 'pending' && (
                 <button type="button" role="menuitem" className={cls.menuItem}
                   onClick={() => { close(); handleClone(); }}>
                   Копировать
                 </button>
               )}
-              {onDelete && (
+              {onDelete && (sheet.status === 'pending' || canDeleteServer) && (
                 <button type="button" role="menuitem"
                   className={`${cls.menuItem} ${cls.menuItemDanger}`}
                   onClick={() => { close(); handleDelete(); }}>

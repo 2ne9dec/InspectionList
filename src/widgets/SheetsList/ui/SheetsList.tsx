@@ -6,6 +6,7 @@ import { getRouteSheetDetail } from '@/shared/const/router';
 import { toast } from '@/shared/lib/toast';
 import { logger } from '@/shared/lib/logger';
 import { removePendingSheet } from '@/shared/lib/offline/pendingSheets';
+import { removePendingDefectsForSheet } from '@/shared/lib/offline/pendingDefects';
 import { useSheetsList } from '../model/useSheetsList';
 import { useSheetMerge } from '../model/useSheetMerge';
 import { useSheetEdit } from '../model/useSheetEdit';
@@ -88,7 +89,11 @@ export const SheetsList = memo(() => {
         description: 'Листок не был синхронизирован с сервером.',
         variant: 'danger',
       });
-      if (ok) removePendingSheet(id);
+      if (ok) {
+        removePendingSheet(id);
+        removePendingDefectsForSheet(id);
+        toast.success('Офлайн-листок удалён');
+      }
       return;
     }
     // Серверный листок
@@ -160,7 +165,8 @@ export const SheetsList = memo(() => {
               sortDir={sortDir}
               onSort={toggleSort}
               onOpen={handleOpen}
-              onDelete={can('sheets.delete') ? handleDelete : undefined}
+              onDelete={handleDelete}
+              canDeleteServer={can('sheets.delete')}
               onClone={can('sheets.create') ? handleClone : undefined}
               onEdit={can('sheets.edit') ? handleEdit : undefined}
               selectedIds={merge.selectedIds}

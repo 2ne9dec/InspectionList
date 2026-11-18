@@ -766,5 +766,12 @@
     "name": "Загрязнение от выбросов промышленными предприятиями",
     "severity": "medium",
     "elementId": 30
+  },
+  {
+    "id": 136,
+    "name": "Свой дефект",
+    "severity": "medium",
+    "elementId": 31,
+    "custom": true
   }
 ]

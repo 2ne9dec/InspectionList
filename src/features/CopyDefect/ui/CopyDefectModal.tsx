@@ -72,7 +72,10 @@ export const CopyDefectModal = memo((props: CopyDefectModalProps) => {
       for (const pole of targetPoles) {
         const newDefects = defectsToCopy.filter((d) => {
           const exists = allDefects.some(
-            (ex) => ex.poleNumber === pole && ex.defectId === d.defectId && ex.phaseId === d.phaseId,
+            (ex) => ex.poleNumber === pole
+              && ex.defectId === d.defectId
+              && ex.phaseId === d.phaseId
+              && (ex.customName ?? null) === (d.customName ?? null),
           );
           if (exists) { skipped += 1; return false; }
           return true;
@@ -88,6 +91,9 @@ export const CopyDefectModal = memo((props: CopyDefectModalProps) => {
                 phaseId: d.phaseId,
                 dateFound: d.dateFound,
                 inspectorFind: d.inspectorFind,
+                insulatorCount: d.insulatorCount ?? null,
+                garlandNumber: d.garlandNumber ?? null,
+                customName: d.customName ?? null,
               }).unwrap(),
             ),
           );

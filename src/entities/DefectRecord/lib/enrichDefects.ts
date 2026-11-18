@@ -20,10 +20,12 @@ export function enrichDefects(
     const dt = dtById.get(d.defectId);
     const el = dt ? elById.get(dt.elementId) : undefined;
     const phase = d.phaseId !== null ? phById.get(d.phaseId) : undefined;
+    // Для «Линейной арматуры» пользователь вписывает дефект сам — показываем его текст
+    const customName = d.customName?.trim();
     return {
       ...d,
       elementName: el?.name ?? '\u2014',
-      defectName: dt?.name ?? '\u2014',
+      defectName: customName || dt?.name || '\u2014',
       phaseName: phase?.name ?? null,
       severity: (dt?.severity ?? 'low') as Severity,
     };

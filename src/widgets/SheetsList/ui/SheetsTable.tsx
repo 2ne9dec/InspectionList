@@ -13,6 +13,8 @@ export interface SheetsTableProps {
   onSort: (key: SheetSortKey) => void;
   onOpen: (id: number) => void;
   onDelete?: (id: number) => void;
+  /** Удаление серверных листков (право sheets.delete). Офлайн-листки удаляются всегда. */
+  canDeleteServer?: boolean;
   onClone?: (id: number) => void;
   onEdit?: (id: number) => void;
   selectedIds?: ReadonlySet<number>;
@@ -22,7 +24,7 @@ export interface SheetsTableProps {
 }
 
 export const SheetsTable = memo((props: SheetsTableProps) => {
-  const { sheets, showFilial, sortKey, sortDir, onSort, onOpen, onDelete, onClone, onEdit, selectedIds, onSelect, mergeLineId } = props;
+  const { sheets, showFilial, sortKey, sortDir, onSort, onOpen, onDelete, canDeleteServer, onClone, onEdit, selectedIds, onSelect, mergeLineId } = props;
   return (
     <table className={cls.table}>
       <thead>
@@ -47,6 +49,7 @@ export const SheetsTable = memo((props: SheetsTableProps) => {
             index={idx + 1}
             onOpen={onOpen}
             onDelete={onDelete}
+            canDeleteServer={canDeleteServer}
             onClone={onClone}
             onEdit={onEdit}
             showFilial={showFilial}

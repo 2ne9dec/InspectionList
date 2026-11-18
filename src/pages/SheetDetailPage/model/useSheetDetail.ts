@@ -44,7 +44,7 @@ export function useSheetDetail(sheetId: number) {
       return {
         ...d,
         elementName: el?.name ?? '—',
-        defectName:  dt?.name ?? '—',
+        defectName:  d.customName?.trim() || dt?.name || '—',
         phaseName:   ph?.name ?? null,
         severity:    (dt?.severity ?? 'low') as DefectRecordFull['severity'],
       };
