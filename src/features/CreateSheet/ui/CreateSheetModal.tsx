@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -7,7 +7,7 @@ import {
   useGetLinesQuery,
   useGetVoltagesQuery,
 } from '@/entities/InspectionLine';
-import { getUserFilialId } from '@/entities/User';
+import { getUserEffectiveFilialId } from '@/entities/User';
 import { getRouteSheetDetail } from '@/shared/const/router';
 import { Button, FormField, Input, Modal, SelectMenu } from '@/shared/ui';
 import { addPendingSheet } from '@/shared/lib/offline/pendingSheets';
@@ -30,7 +30,8 @@ export const CreateSheetModal = memo(() => {
   const lineId      = useSelector(selectCreateSheetLineId);
   const createdBy   = useSelector(selectCreateSheetCreatedBy);
   const createdDate = useSelector(selectCreateSheetCreatedDate);
-  const userFilialId = useSelector(getUserFilialId);
+  // Свой филиал или выбранный в переключателе (главный администратор / наблюдатель РУП)
+  const effectiveFilialId = useSelector(getUserEffectiveFilialId);
 
   const { closeModal, setVoltageId, setLineId, setCreatedBy, setCreatedDate } =
     createSheetActions.useActions();
@@ -39,13 +40,24 @@ export const CreateSheetModal = memo(() => {
   const { data: voltages = [], isFetching: voltagesFetching } = useGetVoltagesQuery();
   const { data: lines    = [] } = useGetLinesQuery();
   const { data: voltageFilter = {} } = useGetFilialVoltageFilterQuery();
-  const effectiveFilialId = userFilialId;
 
   const filteredVoltages = useMemo(() => {
-    if (!effectiveFilialId) return voltages;
+    // Без выбранного филиала не показываем напряжения всех филиалов сразу —
+    // иначе в списке появляются дубли «35 кВ», «110 кВ» и т.д.
+    if (!effectiveFilialId) return [];
     const allowed = voltageFilter[String(effectiveFilialId)];
     return voltages.filter((v) => v.filialId === effectiveFilialId && (!allowed || allowed.includes(v.id)));
   }, [voltages, effectiveFilialId, voltageFilter]);
+
+  // При смене филиала сбрасываем выбранные напряжение и линию:
+  // они принадлежат базе прежнего филиала. На первом рендере не трогаем.
+  const prevFilialRef = useRef(effectiveFilialId);
+  useEffect(() => {
+    if (prevFilialRef.current === effectiveFilialId) return;
+    prevFilialRef.current = effectiveFilialId;
+    setVoltageId(0);
+    setLineId(0);
+  }, [effectiveFilialId, setVoltageId, setLineId]);
 
   const filteredLines = useMemo(
     () => (voltageId ? lines.filter((l) => l.voltageId === voltageId) : []),
@@ -57,7 +69,8 @@ export const CreateSheetModal = memo(() => {
     [lines, lineId],
   );
 
-  const isValid = !!voltageId && !!lineId && createdBy.trim().length > 0 && !!createdDate;
+  const isValid = !!effectiveFilialId && !!voltageId && !!lineId
+    && createdBy.trim().length > 0 && !!createdDate;
 
   const voltageOptions = useMemo(
     () => [
@@ -98,7 +111,7 @@ export const CreateSheetModal = memo(() => {
     return result;
   }, [filteredLines]);
 
-  const userFilialName = filials.find((f) => f.id === userFilialId)?.name ?? '';
+  const userFilialName = filials.find((f) => f.id === effectiveFilialId)?.name ?? '';
 
   const handleSubmit = useCallback(() => {
     const sheetFilialId = effectiveFilialId ?? selectedLine?.filialId ?? null;
@@ -138,15 +151,26 @@ export const CreateSheetModal = memo(() => {
       }
     >
       <div className={cls.fields}>
-        <div className={cls.filialBadge}>{userFilialName}</div>
+        {userFilialName && <div className={cls.filialBadge}>{userFilialName}</div>}
+        {!effectiveFilialId && (
+          <div className={cls.info}>
+            Сначала выберите филиал в переключателе в шапке.
+          </div>
+        )}
 
         <FormField label='Напряжение' htmlFor='cs-voltage' required>
           <SelectMenu
             options={voltageOptions}
             value={String(voltageId ?? '')}
             onChange={(v) => setVoltageId(v === '' ? 0 : Number(v))}
-            placeholder={voltagesFetching && voltages.length === 0 ? 'Загрузка...' : '— выберите напряжение —'}
-            disabled={voltagesFetching && voltages.length === 0}
+            placeholder={
+              !effectiveFilialId
+                ? '— сначала выберите филиал —'
+                : voltagesFetching && voltages.length === 0
+                  ? 'Загрузка...'
+                  : '— выберите напряжение —'
+            }
+            disabled={!effectiveFilialId || (voltagesFetching && voltages.length === 0)}
           />
         </FormField>
 
