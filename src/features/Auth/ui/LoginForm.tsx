@@ -48,62 +48,47 @@ export const LoginForm = memo(() => {
         <span className={cls.brandLine}>Листки</span><span className={cls.brandVision}>осмотра</span>
         <svg className={cls.brandIcon} viewBox="0 0 60 82" overflow="visible">
           {/* Центральная мачта */}
-          <line className={`${cls.draw} ${cls.d1}`}
-            x1="30" y1="78" x2="30" y2="6"
-            stroke="#38bdf8" strokeWidth="2.2" strokeLinecap="round"/>
+          <line className={`${cls.draw} ${cls.brandSteel} ${cls.sw22} ${cls.d1}`}
+            x1="30" y1="78" x2="30" y2="6" />
           {/* Навершие Т */}
-          <line className={`${cls.draw} ${cls.d1}`}
-            x1="22" y1="7" x2="38" y2="7"
-            stroke="#38bdf8" strokeWidth="1.8" strokeLinecap="round"/>
+          <line className={`${cls.draw} ${cls.brandSteel} ${cls.sw18} ${cls.d1}`}
+            x1="22" y1="7" x2="38" y2="7" />
           {/* Перекладина верхняя */}
-          <line className={`${cls.draw} ${cls.d2}`}
-            x1="8" y1="26" x2="52" y2="26"
-            stroke="#38bdf8" strokeWidth="1.8" strokeLinecap="round"/>
+          <line className={`${cls.draw} ${cls.brandSteel} ${cls.sw18} ${cls.d2}`}
+            x1="8" y1="26" x2="52" y2="26" />
           {/* Перекладина нижняя */}
-          <line className={`${cls.draw} ${cls.d2}`}
-            x1="13" y1="40" x2="47" y2="40"
-            stroke="#38bdf8" strokeWidth="1.6" strokeLinecap="round"/>
+          <line className={`${cls.draw} ${cls.brandSteel} ${cls.sw16} ${cls.d2}`}
+            x1="13" y1="40" x2="47" y2="40" />
           {/* Подкосы к верхней */}
-          <line className={`${cls.draw} ${cls.d3}`}
-            x1="30" y1="20" x2="8" y2="26"
-            stroke="#7dd3fc" strokeWidth="1.2" strokeLinecap="round"/>
-          <line className={`${cls.draw} ${cls.d3}`}
-            x1="30" y1="20" x2="52" y2="26"
-            stroke="#7dd3fc" strokeWidth="1.2" strokeLinecap="round"/>
+          <line className={`${cls.draw} ${cls.brandSteelLight} ${cls.sw12} ${cls.d3}`}
+            x1="30" y1="20" x2="8" y2="26" />
+          <line className={`${cls.draw} ${cls.brandSteelLight} ${cls.sw12} ${cls.d3}`}
+            x1="30" y1="20" x2="52" y2="26" />
           {/* Подкосы к нижней */}
-          <line className={`${cls.draw} ${cls.d3}`}
-            x1="30" y1="34" x2="13" y2="40"
-            stroke="#7dd3fc" strokeWidth="1" strokeLinecap="round"/>
-          <line className={`${cls.draw} ${cls.d3}`}
-            x1="30" y1="34" x2="47" y2="40"
-            stroke="#7dd3fc" strokeWidth="1" strokeLinecap="round"/>
+          <line className={`${cls.draw} ${cls.brandSteelLight} ${cls.sw10} ${cls.d3}`}
+            x1="30" y1="34" x2="13" y2="40" />
+          <line className={`${cls.draw} ${cls.brandSteelLight} ${cls.sw10} ${cls.d3}`}
+            x1="30" y1="34" x2="47" y2="40" />
           {/* Ноги */}
-          <line className={`${cls.draw} ${cls.d4}`}
-            x1="30" y1="54" x2="14" y2="78"
-            stroke="#38bdf8" strokeWidth="1.6" strokeLinecap="round"/>
-          <line className={`${cls.draw} ${cls.d4}`}
-            x1="30" y1="54" x2="46" y2="78"
-            stroke="#38bdf8" strokeWidth="1.6" strokeLinecap="round"/>
+          <line className={`${cls.draw} ${cls.brandSteel} ${cls.sw16} ${cls.d4}`}
+            x1="30" y1="54" x2="14" y2="78" />
+          <line className={`${cls.draw} ${cls.brandSteel} ${cls.sw16} ${cls.d4}`}
+            x1="30" y1="54" x2="46" y2="78" />
           {/* Основание */}
-          <line className={`${cls.draw} ${cls.d4}`}
-            x1="14" y1="78" x2="46" y2="78"
-            stroke="#38bdf8" strokeWidth="2" strokeLinecap="round"/>
+          <line className={`${cls.draw} ${cls.brandSteel} ${cls.sw20} ${cls.d4}`}
+            x1="14" y1="78" x2="46" y2="78" />
           {/* Провода */}
-          <path className={`${cls.draw} ${cls.d5}`}
-            d="M8,26 Q-4,34 -10,32"
-            stroke="#f59e0b" strokeWidth="1.4" fill="none" strokeLinecap="round"/>
-          <path className={`${cls.draw} ${cls.d5}`}
-            d="M52,26 Q64,34 70,32"
-            stroke="#f59e0b" strokeWidth="1.4" fill="none" strokeLinecap="round"/>
-          <path className={`${cls.draw} ${cls.d5}`}
-            d="M13,40 Q-1,47 -8,45"
-            stroke="#f59e0b" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
-          <path className={`${cls.draw} ${cls.d5}`}
-            d="M47,40 Q61,47 68,45"
-            stroke="#f59e0b" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+          <path className={`${cls.draw} ${cls.brandWire} ${cls.sw14} ${cls.d5}`}
+            d="M8,26 Q-4,34 -10,32" />
+          <path className={`${cls.draw} ${cls.brandWire} ${cls.sw14} ${cls.d5}`}
+            d="M52,26 Q64,34 70,32" />
+          <path className={`${cls.draw} ${cls.brandWire} ${cls.sw12} ${cls.d5}`}
+            d="M13,40 Q-1,47 -8,45" />
+          <path className={`${cls.draw} ${cls.brandWire} ${cls.sw12} ${cls.d5}`}
+            d="M47,40 Q61,47 68,45" />
           {/* Маяк-огонёк на вершине */}
-          <circle className={cls.pulse}
-            cx="30" cy="6" r="2.8" fill="#f59e0b"/>
+          <circle className={`${cls.pulse} ${cls.brandBeacon}`}
+            cx="30" cy="6" r="2.8" />
         </svg>
       </div>
       {error && (

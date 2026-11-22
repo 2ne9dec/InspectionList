@@ -4,17 +4,17 @@
   gap: var(--space-1);
   border-radius: var(--radii-full);
   font-weight: var(--font-weight-semibold);
-  line-height: 1;
+  line-height: var(--line-height-none);
   white-space: nowrap;
 }
 
 // ── Sizes ───────────────────────────────────────────────────────────────────
 .size_s {
-  padding: 2px 8px;
+  padding: var(--space-0-5) var(--space-2);
   font-size: var(--font-size-xs);
 }
 .size_m {
-  padding: 4px 10px;
+  padding: var(--space-1) var(--space-2-5);
   font-size: var(--font-size-s);
 }
 
@@ -24,7 +24,7 @@
   color: var(--color-text-secondary);
 }
 .success {
-  background: var(--color-severity-low);
+  background: var(--color-success);
   color: var(--color-text-on-accent);
 }
 .danger {
@@ -32,7 +32,7 @@
   color: var(--color-text-on-accent);
 }
 .warning {
-  background: var(--color-severity-medium);
+  background: var(--color-warning);
   color: var(--color-text-on-accent);
 }
 .info {

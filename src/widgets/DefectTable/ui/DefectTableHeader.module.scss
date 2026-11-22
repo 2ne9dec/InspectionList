@@ -6,7 +6,7 @@
   letter-spacing: var(--letter-spacing-wide);
   color: var(--color-text-secondary);
   background: var(--color-bg-surface-2);
-  border-bottom: 2px solid var(--color-border);
+  border-bottom: var(--border-width-strong) solid var(--color-border);
   white-space: nowrap;
   text-align: left;
   position: sticky;
@@ -15,4 +15,9 @@
   isolation: isolate;
 }
 
-.expandCol { width: 32px; }
+.colIndex   { width: var(--table-col-index); }
+.colDate    { width: var(--table-col-date); }
+.colPerson  { width: var(--table-col-person); }
+.colNote    { width: var(--table-col-note); }
+.colCount   { width: var(--table-col-count); }
+.colActions { width: var(--table-col-actions); }

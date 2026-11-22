@@ -1,9 +1,9 @@
 .groupRow {
   cursor: pointer;
-  background: var(--bg-secondary);
-  transition: background 0.12s;
+  background: var(--color-row-group);
+  transition: background var(--duration-fast);
 
-  &:hover { background: var(--bg-row-hover); }
+  &:hover { background: var(--color-row-hover); }
 }
 
 .open {
@@ -13,11 +13,11 @@
 }
 
 .cell {
-  padding: 9px var(--space-2);
+  padding: var(--space-2-25) var(--space-2);
   font-size: var(--font-size-m);
   color: var(--color-text-primary);
   vertical-align: middle;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width) solid var(--color-border);
 }
 
 .expandIcon {
@@ -47,7 +47,7 @@
 .chipList {
   display: flex;
   flex-wrap: nowrap;
-  gap: 5px;
+  gap: var(--space-1-25);
   align-items: center;
 }
 
@@ -55,20 +55,20 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  padding: 2px 9px;
-  border: 1px solid var(--color-border);
+  padding: var(--space-0-5) var(--space-2-25);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radii-full);
   font-size: var(--font-size-s);
   color: var(--color-text-primary);
-  background: var(--bg-primary);
+  background: var(--color-bg-surface);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .chipDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+  width: var(--space-1-5);
+  height: var(--space-1-5);
+  border-radius: var(--radii-circle);
   background: var(--color-accent);
   flex-shrink: 0;
 }
@@ -76,22 +76,22 @@
 .chipMore {
   display: inline-flex;
   align-items: center;
-  padding: 2px 9px;
+  padding: var(--space-0-5) var(--space-2-25);
   background: var(--color-accent-muted);
   color: var(--color-accent);
   border-radius: var(--radii-full);
   font-size: var(--font-size-s);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .badge {
   display: inline-block;
-  padding: 2px var(--space-2);
+  padding: var(--space-0-5) var(--space-2);
   border-radius: var(--radii-full);
   font-size: var(--font-size-s);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   background: var(--color-accent-muted);
   color: var(--color-accent);
   white-space: nowrap;
@@ -103,101 +103,3 @@
   white-space: nowrap;
 }
 
-.btnFix {
-  padding: var(--space-1) var(--space-3);
-  background: var(--severity-low);
-  color: var(--color-text-on-accent);
-  border: none;
-  border-radius: var(--radii-xs);
-  font-size: var(--font-size-xs);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.15s;
-
-  &:hover { opacity: 0.82; }
-}
-
-.btnCopy {
-  padding: var(--space-1) var(--space-3);
-  background: var(--color-accent);
-  color: var(--color-text-on-accent);
-  border: none;
-  border-radius: var(--radii-xs);
-  font-size: var(--font-size-xs);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.15s;
-
-  &:hover { opacity: 0.82; }
-}
-
-// ── Sub-rows (дефекты внутри раскрытой опоры) ───────────────────────────────
-.subRow {
-  background: var(--bg-primary);
-  border-left: 3px solid var(--color-accent);
-  transition: background 0.12s;
-
-  &:hover { background: var(--bg-row-hover); }
-}
-
-.subCell {
-  padding: 7px var(--space-2);
-  font-size: var(--font-size-s);
-  color: var(--color-text-primary);
-  vertical-align: middle;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.subIdx {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  background: var(--bg-secondary);
-  border-radius: 50%;
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-}
-
-.subActions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-.phaseTag {
-  display: inline-block;
-  margin-left: var(--space-2);
-  padding: 1px 7px;
-  background: var(--color-accent-muted);
-  color: var(--color-accent);
-  border-radius: var(--radii-s);
-  font-size: var(--font-size-s);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.subCellNote {
-  padding: 7px var(--space-2);
-  font-size: var(--font-size-s);
-  color: var(--color-text-primary);
-  vertical-align: middle;
-  border-bottom: 1px solid var(--color-border);
-  max-width: 200px;
-  overflow: hidden;
-}
-
-.noteCell {
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 180px;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-s);
-}
-
-.noteCellEmpty {
-  color: var(--color-text-muted);
-}

@@ -2,24 +2,23 @@
 
 .bar {
   padding: var(--space-3) var(--space-4);
-  background: var(--color-bg-surface-2);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+  border-bottom: var(--border-width) solid var(--color-border);
   flex-shrink: 0;
   position: relative;
   z-index: var(--z-dropdown);
 }
 
-.dateField      { width: clamp(140px, 13vw, 175px); }
-.inspectorField { width: clamp(130px, 13vw, 175px); }
+.dateField      { width: clamp(var(--layout-140), 13vw, var(--layout-175)); }
+.inspectorField { width: clamp(var(--layout-130), 13vw, var(--layout-175)); }
 .locationField  { width: max-content; }
-.phaseField     { width: clamp(120px, 12vw, 170px); }
-.smallField     { width: 90px; }
-.customField    { width: clamp(220px, 24vw, 340px); }
+.smallField     { width: var(--layout-90); }
+.customField    { width: clamp(var(--layout-220), 24vw, var(--layout-340)); }
 
 .stepWrap {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--space-0-5);
 }
 .stepInput {
   flex: none;
@@ -27,15 +26,23 @@
   min-width: 0;
   text-align: center;
   &::-webkit-outer-spin-button,
-  &::-webkit-inner-spin-button { appearance: none; margin: 0; }
+  &::-webkit-inner-spin-button {
+    /* stylelint-disable-next-line property-no-vendor-prefix */
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+  }
+
+  /* stylelint-disable-next-line property-no-vendor-prefix */
+  -webkit-appearance: textfield;
   appearance: textfield;
 }
 .stepBtn {
-  width: 28px;
+  width: var(--control-height-s);
   height: var(--control-height-m);
   flex-shrink: 0;
   background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radii);
   color: var(--color-text-primary);
   font-size: var(--font-size-m);
@@ -53,7 +60,7 @@
 .quickChips {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--space-1);
   align-items: center;
   flex-basis: 100%;
 }
@@ -63,15 +70,21 @@
   white-space: nowrap;
 }
 .chip {
-  padding: 3px var(--space-2);
-  border: 1px solid var(--color-border);
+  padding: var(--space-0-75) var(--space-2);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radii-full);
   font-size: var(--font-size-xs);
   cursor: pointer;
-  background: var(--color-bg-secondary);
+  display: inline-block;
+  max-width: var(--layout-320);
+  overflow: hidden;
+  background: var(--color-bg-surface-2);
   color: var(--color-text-primary);
   white-space: nowrap;
-  transition: all .12s;
+  text-align: left;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  transition: var(--transition-ui);
   &:hover { border-color: var(--color-accent); }
 }
 .chipActive {
@@ -80,16 +93,15 @@
   border-color: var(--color-accent);
 }
 
-/* Tablet (< 768px) */
+/* Tablet */
 @include m.down(tablet) {
-  .dateField      { width: 130px; }
-  .inspectorField { width: 160px; }
-  .phaseField     { width: 90px; }
-  .smallField     { width: 90px; }
-  .customField    { width: clamp(200px, 30vw, 340px); }
+  .dateField      { width: var(--layout-130); }
+  .inspectorField { width: var(--layout-160); }
+  .smallField     { width: var(--layout-90); }
+  .customField    { width: clamp(var(--layout-200), 30vw, var(--layout-340)); }
 }
 
-/* Phone (< 480px) — 6-column CSS Grid, obhodit HStack */
+/* Phone (< var(--layout-480)) — 6-column CSS Grid, obhodit HStack */
 @include m.down(phone) {
   .bar {
     display: grid !important;
@@ -139,14 +151,14 @@
   }
 
   .stepBtn {
-    width: 36px;
+    width: var(--layout-36);
     height: var(--control-height-m);
   }
   .stepInput {
     width: calc(7ch + 1rem);
   }
   .chip {
-    padding: 5px var(--space-3);
+    padding: var(--space-1-25) var(--space-3);
     font-size: var(--font-size-xs);
   }
 }
@@ -156,44 +168,9 @@
   gap: var(--space-1);
 }
 
-.modeToggle {
-  display: flex;
-  flex-direction: row;
-  height: var(--control-height-m);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radii);
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.modeSegment {
-  padding: 0 var(--space-3);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  background: var(--color-bg-surface);
-  color: var(--color-text-secondary);
-  border: none;
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-  &:first-child { border-right: 1px solid var(--color-border); }
-  &:hover:not(.modeSegmentActive) { background: var(--color-bg-surface-2); color: var(--color-accent); }
-}
-
-.modeSegmentActive {
-  background: var(--color-accent);
-  color: var(--color-text-on-accent);
-}
-
-.notesField {
-  flex: 1;
-  min-width: 120px;
-  max-width: 220px;
-}
-
 .fieldError {
   display: block;
-  margin-top: 2px;
+  margin-top: var(--space-0-5);
   font-size: var(--font-size-xs);
   color: var(--color-error);
 }

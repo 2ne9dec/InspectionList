@@ -1,11 +1,11 @@
 import { memo, useMemo } from 'react';
 import type { NavigateFunction } from 'react-router-dom';
 import type { DefectRecord } from '@/entities/DefectRecord';
-import type { DefectType, Element, Severity } from '@/entities/InspectionLine';
-import { SEVERITY_LABELS } from '@/entities/InspectionLine';
+import type { DefectType, Element } from '@/entities/InspectionLine';
 import { getRouteSheetDetail } from '@/shared/const/router';
 import { formatDate } from '@/shared/lib/helpers/formatDate';
 import cls from './GlobalDefectSearch.module.scss';
+import { TableRow, TableTd } from '@/shared/ui';
 
 interface SheetDefectRowsProps {
   sheetId: number;
@@ -36,27 +36,21 @@ export const SheetDefectRows = memo((props: SheetDefectRowsProps) => {
       {matches.map((d: DefectRecord) => {
         const dt = defectTypes.find((t: DefectType) => t.id === d.defectId);
         const el = elements.find((e: Element) => e.id === dt?.elementId);
-        const sev = (dt?.severity ?? 'low') as Severity;
         return (
-          <tr key={d.id} className={cls.row} onClick={() => navigate(getRouteSheetDetail(String(sheetId)))}>
-            <td className={cls.cell}>{filialName}</td>
-            <td className={cls.cell}>{voltageName}</td>
-            <td className={cls.cell}>{lineName}</td>
-            <td className={cls.cell}>{d.poleNumber}</td>
-            <td className={cls.cell}>{el?.name ?? '—'}</td>
-            <td className={cls.cell}>{d.customName?.trim() || dt?.name || '—'}</td>
-            <td className={cls.cell}>
-              <span className={cls.badge} data-severity={sev}>
-                {SEVERITY_LABELS[sev]}
-              </span>
-            </td>
-            <td className={cls.cell}>{formatDate(d.dateFound)}</td>
-            <td className={cls.cell}>
+          <TableRow key={d.id} className={cls.row} onClick={() => navigate(getRouteSheetDetail(String(sheetId)))}>
+            <TableTd className={cls.cell}>{filialName}</TableTd>
+            <TableTd className={cls.cell}>{voltageName}</TableTd>
+            <TableTd className={cls.cell}>{lineName}</TableTd>
+            <TableTd className={cls.cell}>{d.poleNumber}</TableTd>
+            <TableTd className={cls.cell}>{el?.name ?? '—'}</TableTd>
+            <TableTd className={cls.cell}>{d.customName?.trim() || dt?.name || '—'}</TableTd>
+            <TableTd className={cls.cell}>{formatDate(d.dateFound)}</TableTd>
+            <TableTd className={cls.cell}>
               <span className={d.isFixed ? cls.fixed : cls.active}>
                 {d.isFixed ? 'Устранено' : 'Активен'}
               </span>
-            </td>
-          </tr>
+            </TableTd>
+          </TableRow>
         );
       })}
     </>

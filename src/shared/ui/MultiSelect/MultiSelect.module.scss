@@ -10,7 +10,7 @@
   height: var(--control-height-m);
   padding: 0 var(--space-7) 0 var(--space-3);
   background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radii);
   cursor: pointer;
   font-family: var(--font-family-main);
@@ -22,13 +22,13 @@
   &:focus-visible {
     outline: none;
     border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px var(--color-accent-muted);
+    box-shadow: var(--shadow-focus);
   }
 }
 
 .triggerOpen {
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px var(--color-accent-muted);
+  box-shadow: var(--shadow-focus);
 }
 
 .triggerLabel {
@@ -47,21 +47,21 @@
   right: var(--space-3);
   pointer-events: none;
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--font-size-2xs);
 }
 
 /* Портальный дропдаун — position: fixed, вырывается из overflow: hidden */
 .dropdown {
   position: fixed;
   background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radii);
   box-shadow: var(--shadow-m);
   z-index: var(--z-popover);
   padding: var(--space-1) 0;
-  max-height: 260px;
+  max-height: var(--layout-260);
   overflow-y: auto;
-  min-width: 120px;
+  min-width: var(--layout-120);
 }
 
 .option {
@@ -80,8 +80,8 @@
 }
 
 .checkbox {
-  width: 15px;
-  height: 15px;
+  width: var(--layout-15);
+  height: var(--layout-15);
   flex-shrink: 0;
   cursor: pointer;
   accent-color: var(--color-accent);

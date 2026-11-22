@@ -65,7 +65,7 @@ async function tableExists() {
 /** Создаёт таблицу прав (если её нет), заполняет значениями по умолчанию и загружает в память. */
 async function initPermissions() {
   if (!(await tableExists())) {
-    console.log('[permissions] Создаю таблицу ROLE_PERMISSIONS с правами по умолчанию');
+    console.log('[permissions] ROLE_PERMISSIONS table created with defaults');
     await execute(
       `CREATE TABLE ROLE_PERMISSIONS (
          ROLE       VARCHAR(50) NOT NULL,

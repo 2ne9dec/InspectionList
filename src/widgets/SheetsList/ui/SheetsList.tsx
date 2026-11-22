@@ -1,19 +1,17 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '@/entities/User';
-import { ConfirmModal, EmptyState, Loader, Button, Modal, Input, FormField, VStack } from '@/shared/ui';
-import { getRouteSheetDetail } from '@/shared/const/router';
-import { toast } from '@/shared/lib/toast';
-import { logger } from '@/shared/lib/logger';
-import { removePendingSheet } from '@/shared/lib/offline/pendingSheets';
-import { removePendingDefectsForSheet } from '@/shared/lib/offline/pendingDefects';
+import { ConfirmModal, EmptyState, Loader } from '@/shared/ui';
+import { useInfiniteScroll } from '@/shared/lib/hooks';
 import { useSheetsList } from '../model/useSheetsList';
 import { useSheetMerge } from '../model/useSheetMerge';
 import { useSheetEdit } from '../model/useSheetEdit';
 import { useSheetClone } from '../model/useSheetClone';
-import { DateRangeFilter } from './DateRangeFilter';
+import { useSheetActions } from '../model/useSheetActions';
 import { SheetsTable } from './SheetsTable';
+import { SheetsListFilterBar } from './SheetsListFilterBar';
 import { CloneSheetModal } from './CloneSheetModal';
+import { EditSheetModal } from './EditSheetModal';
 import { MergeSheetModal } from './MergeSheetModal';
 import cls from './SheetsList.module.scss';
 
@@ -42,15 +40,20 @@ export const SheetsList = memo(() => {
     useSheetsList({ dateFrom, dateTo, statusFilter: 'all' });
 
   // ── Infinite scroll ─────────────────────────────────────────────────────────────────────────────
-  const [displayCount, setDisplayCount] = useState(INITIAL_SHEETS);
   const tableWrapperRef = useRef<HTMLDivElement>(null);
   const sentinelRef     = useRef<HTMLDivElement>(null);
 
   const filtersKey = [hasSearch, dateFrom, dateTo, sortKey, sortDir].join('|');
-  useEffect(() => { setDisplayCount(INITIAL_SHEETS); }, [filtersKey]); // eslint-disable-line
+  const { visibleCount: displayCount, hasMore } = useInfiniteScroll({
+    total: sheets.length,
+    initial: INITIAL_SHEETS,
+    step: LOAD_MORE_SHEETS,
+    rootRef: tableWrapperRef,
+    sentinelRef,
+    resetKey: filtersKey,
+  });
 
   const visibleSheets = sheets.slice(0, displayCount);
-  const hasMore = displayCount < sheets.length;
 
   const firstSheetId = sheets[0]?.id;
   useEffect(() => {
@@ -59,70 +62,26 @@ export const SheetsList = memo(() => {
     }
   }, [firstSheetId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    const wrapper  = tableWrapperRef.current;
-    if (!sentinel || !wrapper || !hasMore) return;
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) setDisplayCount((p) => p + LOAD_MORE_SHEETS); },
-      { root: wrapper, threshold: 0 },
-    );
-    obs.observe(sentinel);
-    return () => obs.disconnect();
-  }, [hasMore]);
-
   // ── Операции с листками ───────────────────────────────────────────────────────────────────────────
   const merge = useSheetMerge(sheets);
   const edit  = useSheetEdit(sheets);
   const clone = useSheetClone(sheets);
 
-  const handleOpen = useCallback(
-    (id: number) => navigate(getRouteSheetDetail(String(id))),
-    [navigate],
+  const deleteSheetById = useCallback(
+    (id: number) => deleteSheet(id).unwrap(),
+    [deleteSheet],
   );
 
-  const handleDelete = useCallback(async (id: number) => {
-    // Офлайн-листок — удаляем только из localStorage
-    if (id < 0) {
-      const ok = await merge.confirm({
-        title: 'Удалить офлайн-листок?',
-        description: 'Листок не был синхронизирован с сервером.',
-        variant: 'danger',
-      });
-      if (ok) {
-        removePendingSheet(id);
-        removePendingDefectsForSheet(id);
-        toast.success('Офлайн-листок удалён');
-      }
-      return;
-    }
-    // Серверный листок
-    const ok = await merge.confirm({
-      title: 'Удалить листок осмотра?',
-      description: 'Все дефекты будут удалены. Это действие необратимо.',
-      variant: 'danger',
-    });
-    if (!ok) return;
-    try {
-      await deleteSheet(id).unwrap();
-      merge.removeFromSelection(id);
-      toast.success('Листок осмотра удалён');
-    } catch (e) {
-      logger.error('Delete sheet failed', e);
-      toast.error('Ошибка при удалении листка осмотра');
-    }
-  }, [merge, deleteSheet]);
-
-  // Клонирование / редактирование недоступно для офлайн-листков
-  const handleClone = useCallback((id: number) => {
-    if (id < 0) return;
-    clone.handleOpenClone(id);
-  }, [clone]);
-
-  const handleEdit = useCallback((id: number) => {
-    if (id < 0) return;
-    edit.handleOpenEdit(id);
-  }, [edit]);
+  const { handleOpen, handleDelete, handleClone, handleEdit } = useSheetActions({
+    navigate,
+    canCreate: can('sheets.create'),
+    canEdit: can('sheets.edit'),
+    canDelete: can('sheets.delete'),
+    deleteSheet: deleteSheetById,
+    merge,
+    clone,
+    edit,
+  });
 
   const handleDateRangeChange = useCallback(
     ({ from, to }: { from: string; to: string }) => { setDateFrom(from); setDateTo(to); },
@@ -131,19 +90,14 @@ export const SheetsList = memo(() => {
 
   return (
     <div className={cls.wrapper}>
-      <div className={cls.filterBar}>
-        <DateRangeFilter dateFrom={dateFrom} dateTo={dateTo} onChange={handleDateRangeChange} />
-        {merge.selectedIds.size >= 2 && (
-          <Button variant='primary' size='s' onClick={merge.handleOpenMerge} className={cls.mergeBtn}>
-            Объединить {merge.selectedIds.size} листка
-          </Button>
-        )}
-        {merge.selectedIds.size === 1 && (
-          <span className={`${cls.filterHint} ${cls.mergeHint}`}>
-            Выберите ещё листок линии «{merge.mergeLineName}» для объединения
-          </span>
-        )}
-      </div>
+      <SheetsListFilterBar
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onDateRangeChange={handleDateRangeChange}
+        mergeCount={merge.selectedIds.size}
+        mergeLineName={merge.mergeLineName}
+        onOpenMerge={merge.handleOpenMerge}
+      />
 
       <div className={cls.tableWrapper} ref={tableWrapperRef}>
         {isLoading ? (
@@ -178,28 +132,17 @@ export const SheetsList = memo(() => {
         )}
       </div>
 
-      {/* Редактирование листка */}
       {edit.editTargetId !== null && (
-        <Modal
+        <EditSheetModal
           isOpen
-          title="Редактировать листок"
+          date={edit.editDate}
+          createdBy={edit.editBy}
+          updating={edit.updating}
+          onDateChange={edit.setEditDate}
+          onCreatedByChange={edit.setEditBy}
           onClose={edit.handleCloseEdit}
-          footer={
-            <>
-              <Button variant="ghost" size="s" onClick={edit.handleCloseEdit}>Отмена</Button>
-              <Button variant="primary" size="s" loading={edit.updating} onClick={edit.handleSaveEdit}>Сохранить</Button>
-            </>
-          }
-        >
-          <VStack gap='3'>
-            <FormField label="Дата осмотра" htmlFor="edit-date">
-              <Input id="edit-date" type="date" value={edit.editDate} onChange={edit.setEditDate} />
-            </FormField>
-            <FormField label="Осматривал" htmlFor="edit-by">
-              <Input id="edit-by" value={edit.editBy} onChange={edit.setEditBy} placeholder="Фамилия И.О." />
-            </FormField>
-          </VStack>
-        </Modal>
+          onSave={edit.handleSaveEdit}
+        />
       )}
 
       <CloneSheetModal

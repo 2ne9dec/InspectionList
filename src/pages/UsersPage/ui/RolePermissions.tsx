@@ -1,7 +1,7 @@
 import { Fragment, memo, useCallback, useEffect, useMemo, useState } from 'react';
 import type { Permission, PermissionInfo, UserRole } from '@/entities/User';
 import { getRoleLabel, useGetRolePermissionsQuery, useSaveRolePermissionsMutation } from '@/entities/User';
-import { Button, Loader } from '@/shared/ui';
+import { Button, Checkbox, Loader, Table, TableBody, TableHead, TableRow, TableTd, TableTh } from '@/shared/ui';
 import { toast } from '@/shared/lib/toast';
 import cls from './UsersPage.module.scss';
 
@@ -75,46 +75,45 @@ export const RolePermissions = memo(() => {
         Удаление листков — только главный администратор.
       </div>
       <div className={cls.tableWrap}>
-        <table className={cls.table}>
-          <thead>
-            <tr>
-              <th>Действие</th>
+        <Table className={cls.table}>
+          <TableHead>
+            <TableRow>
+              <TableTh>Действие</TableTh>
               {columns.map((r) => (
-                <th key={r} className={cls.roleCol}>
+                <TableTh key={r} className={cls.roleCol}>
                   {getRoleLabel(r, r === 'admin' ? null : 1)}
-                </th>
+                </TableTh>
               ))}
-            </tr>
-          </thead>
-          <tbody>
+            </TableRow>
+          </TableHead>
+          <TableBody>
             {groups.map(([group, perms]) => (
               <Fragment key={group}>
-                <tr className={cls.groupRow}><td colSpan={columns.length + 1}>{group}</td></tr>
+                <TableRow className={cls.groupRow}><TableTd colSpan={columns.length + 1}>{group}</TableTd></TableRow>
                 {perms.map((p) => (
-                  <tr key={p.key}>
-                    <td>{p.label}</td>
+                  <TableRow key={p.key}>
+                    <TableTd>{p.label}</TableTd>
                     {columns.map((role) => {
                       const observerLocked = role === 'observer' && !observerAllowed.has(p.key);
                       const fixed = role === 'admin' || observerLocked;
                       const checked = role === 'admin' ? true : observerLocked ? false : !!matrix[role]?.has(p.key);
                       return (
-                        <td key={role} className={cls.roleCol}>
-                          <input
-                            type='checkbox'
+                        <TableTd key={role} className={cls.roleCol}>
+                          <Checkbox
                             checked={checked}
                             disabled={fixed}
                             onChange={() => toggle(role, p.key)}
                             aria-label={`${p.label}: ${role}`}
                           />
-                        </td>
+                        </TableTd>
                       );
                     })}
-                  </tr>
+                  </TableRow>
                 ))}
               </Fragment>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
       <div className={cls.rolesActions}>
         <Button variant='primary' size='s' disabled={changed.length === 0} loading={saving}

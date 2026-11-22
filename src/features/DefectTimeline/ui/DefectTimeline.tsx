@@ -1,6 +1,7 @@
 import { memo, useEffect, useMemo, useState } from 'react';
 import type { DefectRecordFull } from '@/entities/DefectRecord';
 import { formatDate } from '@/shared/lib/helpers';
+import { Button } from '@/shared/ui';
 import { IconClose } from '@/shared/ui/Icons';
 import cls from './DefectTimeline.module.scss';
 
@@ -98,7 +99,15 @@ export const DefectTimeline = memo(({ defects, onClose }: DefectTimelineProps) =
 
         <div className={cls.header}>
           <span className={cls.title}>Лента событий дефектов</span>
-          <button className={cls.closeBtn} onClick={onClose} aria-label="Закрыть"><IconClose size={15} /></button>
+          <Button
+            variant='ghost'
+            size='m'
+            square
+            onClick={onClose}
+            aria-label='Закрыть'
+          >
+            <IconClose size={15} />
+          </Button>
         </div>
 
         <div className={cls.scroll}>

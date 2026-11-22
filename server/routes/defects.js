@@ -167,6 +167,7 @@ function toDefect(r) {
     masterName:         r.master_name         ?? null,
     fixWorkVolume:      r.fix_work_volume     ?? null,
     customName:         r.custom_name         ?? null,
+    sapCode:            r.sap_code            ?? null,
   };
 }
 
@@ -178,8 +179,18 @@ const SELECT_DEFECT = `
          INSPECTOR_FIX, INSULATOR_COUNT, SPAN_RANGE, NOTES, STATUS,
          MASTER_CONCLUSION,
          CAST(RESOLUTION_DEADLINE AS VARCHAR(10)) AS RESOLUTION_DEADLINE,
-         MASTER_NAME, FIX_WORK_VOLUME, CUSTOM_NAME
+         MASTER_NAME, FIX_WORK_VOLUME, CUSTOM_NAME, SAP_CODE
   FROM DEFECT_RECORDS`;
+
+/**
+ * SAP-код опоры = SAP-код линии. Заполняем только для Жлобинских ЭС,
+ * в остальных филиалах поле остаётся пустым.
+ */
+async function sapCodeForLine(lineId, filialId) {
+  if (Number(filialId) !== 2 || !lineId) return null;
+  const line = await queryOne('SELECT SAP_CODE FROM LINES WHERE ID = ?', [Number(lineId)]);
+  return line?.sap_code ?? null;
+}
 
 // ── GET /defectCounts — количество дефектов по листам ─────────────────────────────────────────────────────────
 router.get('/defectCounts', async (req, res) => {
@@ -270,14 +281,15 @@ router.post('/defectRecords', requirePermission('defects.create'), async (req, r
     }
 
     const id = await nextId('defects');
+    const sapCode = await sapCodeForLine(sheet.line_id, sheet.filial_id);
     await execute(
       `INSERT INTO DEFECT_RECORDS
          (ID, SHEET_ID, LINE_ID, POLE_NUMBER, DEFECT_ID, PHASE_ID, ELEMENT_ID,
           DATE_FOUND, INSPECTOR_FIND, IS_FIXED, DATE_FIXED, INSPECTOR_FIX,
-          INSULATOR_COUNT, SPAN_RANGE, NOTES, STATUS, CUSTOM_NAME)
+          INSULATOR_COUNT, SPAN_RANGE, NOTES, STATUS, CUSTOM_NAME, SAP_CODE)
        VALUES (?,?,?,?,?,?,?,
                CAST(? AS DATE),?,?,CAST(? AS DATE),?,
-               ?,?,?,?,?)`,
+               ?,?,?,?,?,?)`,
       [id, sheetId, sheet.line_id,
        poleNumber, Number(body.defectId),
        phaseId,
@@ -291,7 +303,8 @@ router.post('/defectRecords', requirePermission('defects.create'), async (req, r
        spanRange,
        body.notes     ?? null,
        body.status    ?? null,
-       customName],
+       customName,
+       sapCode],
     );
 
     const row = await queryOne(SELECT_DEFECT + ' WHERE ID = ?', [id]);
@@ -371,6 +384,12 @@ router.patch('/defectRecords/:id', async (req, res) => {
 
     if (sets.length === 0)
       return res.status(400).json({ error: 'Нет разрешённых полей' });
+
+    if (Number(existing.filial_id) === 2) {
+      const sapCode = await sapCodeForLine(existing.line_id, existing.filial_id);
+      sets.push('SAP_CODE = ?');
+      params.push(sapCode);
+    }
 
     params.push(id);
     await execute(`UPDATE DEFECT_RECORDS SET ${sets.join(', ')} WHERE ID = ?`, params);
@@ -493,3 +512,7 @@ router.get('/poleDefectStatus', async (req, res) => {
 });
 
 module.exports = router;
+// Чистые хелперы — экспортируем для юнит-тестов, не меняя экспорт middleware.
+module.exports.normalizeSpan = normalizeSpan;
+module.exports.normalizeCustomName = normalizeCustomName;
+module.exports.requiredForDefectPatch = requiredForDefectPatch;

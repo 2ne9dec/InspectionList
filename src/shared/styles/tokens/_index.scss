@@ -4,7 +4,6 @@
 // ============================================================================
 
 @forward 'breakpoints';
-@use 'colors';
 @use 'typography';
 @use 'sizes';
 @use 'spacing';
@@ -12,5 +11,4 @@
 @use 'shadows';
 @use 'transitions';
 @use 'z-index';
-@use 'severity';
 @use 'responsive-tokens';

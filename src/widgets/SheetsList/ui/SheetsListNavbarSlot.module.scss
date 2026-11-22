@@ -1,0 +1,83 @@
+@use 'shared/styles/mixins' as m;
+
+.slot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.search,
+.defectSearch {
+  flex: 1;
+  min-width: 0;
+}
+
+.search       { max-width: clamp(var(--layout-160), 22vw, var(--layout-300)); }
+.defectSearch { max-width: clamp(var(--layout-160), 18vw, var(--layout-260)); }
+
+/* Стиль кнопки фильтра дефектов — идентичен журналу (.defectFilterBtn в JournalPage.module.scss) */
+.defectFilterBtn {
+  width: 100%;
+  height: var(--control-height-s);
+  padding: 0 var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radii);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-s);
+  transition: border-color var(--duration-base);
+  white-space: nowrap;
+  overflow: hidden;
+  text-align: left;
+
+  &:hover { border-color: var(--color-accent); }
+}
+
+.defectFilterBtnActive {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent);
+}
+
+.defectFilterLabel {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.defectFilterChevron {
+  flex-shrink: 0;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+  line-height: var(--line-height-none);
+}
+
+.defectFilterClear {
+  flex-shrink: 0;
+  font-size: var(--font-size-body-lg);
+  line-height: var(--line-height-none);
+  color: var(--color-text-secondary);
+  padding: 0 var(--space-0-5);
+  cursor: pointer;
+
+  &:hover { color: var(--color-error); }
+}
+
+@include m.down(tablet) {
+  .title { display: none; }
+  .defectSearch { display: none; }
+  .search { max-width: var(--layout-160); }
+}

@@ -10,5 +10,5 @@ export type { FloatingPosition } from './useFloatingPosition';
 export { useModal } from './useModal';
 export { useOutsideClick } from './useOutsideClick';
 export { useTheme } from './useTheme';
-export { useAppSelector } from './useAppSelector';
 export { useIsMobile } from './useIsMobile/useIsMobile';
+export { useInfiniteScroll } from './useInfiniteScroll';

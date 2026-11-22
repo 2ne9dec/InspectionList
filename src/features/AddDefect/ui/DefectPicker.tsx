@@ -1,6 +1,6 @@
 import { memo, useCallback, useImperativeHandle, useRef, useState, forwardRef } from 'react';
 import type { DefectType, Element } from '@/entities/InspectionLine';
-import { SEVERITY_LABELS } from '@/entities/InspectionLine';
+import { IconChevron, IconClose } from '@/shared/ui/Icons';
 import { DefectTreePopup } from './DefectTreePopup';
 import cls from './DefectPicker.module.scss';
 
@@ -53,7 +53,6 @@ export const DefectPicker = memo(forwardRef<DefectPickerHandle, DefectPickerProp
       >
         {selectedDefect ? (
           <>
-            <span className={cls.dot} data-severity={selectedDefect.severity} />
             <span className={cls.text}>
               {selectedDefect.custom
                 ? (selectedElement?.name ?? '') + ' → '
@@ -62,14 +61,13 @@ export const DefectPicker = memo(forwardRef<DefectPickerHandle, DefectPickerProp
                   ? selectedDefect.name
                   : (selectedElement?.name ?? '') + ' → ' + selectedDefect.name}
             </span>
-            <span className={cls.sev} data-severity={selectedDefect.severity}>
-              {SEVERITY_LABELS[selectedDefect.severity]}
-            </span>
           </>
         ) : (
           <span className={cls.placeholder}>Элемент / Дефект...</span>
         )}
-        <span className={cls.arrow} aria-hidden>{open ? '▲' : '▼'}</span>
+        <span className={cls.arrow} aria-hidden>
+          <IconChevron size={10} open={open} />
+        </span>
       </button>
 
       {selectedDefect && (
@@ -79,17 +77,7 @@ export const DefectPicker = memo(forwardRef<DefectPickerHandle, DefectPickerProp
           onClick={onClear}
           aria-label="Сбросить выбор дефекта"
         >
-          <svg
-            width="10" height="10"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          >
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
+          <IconClose size={10} />
         </button>
       )}
 

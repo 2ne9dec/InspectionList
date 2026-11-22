@@ -1,8 +1,7 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import type { StateSchema } from '@/app/providers/StoreProvider';
+import type { CopyDefectSchema } from '../model/copyDefectSlice';
 import {
-  useCreateDefectMutation,
   useGetDefectsBySheetQuery,
   enrichDefects,
   getLocationKey,
@@ -10,15 +9,17 @@ import {
   locationKeyType,
 } from '@/entities/DefectRecord';
 import { useGetDefectTypesQuery, useGetElementsQuery, useGetPhasesQuery } from '@/entities/InspectionLine';
-import { Button, EmptyState, FormField, Input, Modal, SeverityDot } from '@/shared/ui';
-import { SEVERITY_LABELS } from '@/shared/const/severity';
-import { toast } from '@/shared/lib/toast';
-import { logger } from '@/shared/lib/logger';
+import { Button, FormField, Input, Modal } from '@/shared/ui';
 import { copyDefectActions } from '../model/copyDefectSlice';
 import { parseTargetPoles } from '../lib/parseTargetPoles';
-import cls from './CopyDefectModal.module.scss';
+import { useCopyDefect } from '../model/useCopyDefect';
+import { CopyDefectList } from './CopyDefectList';
 
-const selectCopyDefect = (state: StateSchema) => state.copyDefect;
+interface CopyDefectRootState {
+  copyDefect?: CopyDefectSchema;
+}
+
+const selectCopyDefect = (state: CopyDefectRootState) => state.copyDefect;
 
 interface CopyDefectModalProps {
   sheetId: number;
@@ -37,7 +38,6 @@ export const CopyDefectModal = memo((props: CopyDefectModalProps) => {
   const { data: defectTypes = [] } = useGetDefectTypesQuery();
   const { data: elements = [] } = useGetElementsQuery();
   const { data: phases = [] } = useGetPhasesQuery();
-  const [createDefect, { isLoading }] = useCreateDefectMutation();
 
   const sourceDefects = useMemo(() => {
     const sourceKey = copy?.sourceKey;
@@ -61,60 +61,15 @@ export const CopyDefectModal = memo((props: CopyDefectModalProps) => {
   const allSelected = allIds.length > 0 && allIds.every((id) => selectedSet.has(id));
   const isValid = targetPoles.length > 0 && selectedSet.size > 0;
 
-  const handleCopy = useCallback(async () => {
-    if (!isValid || !copy) return;
-    const defectsToCopy = sourceDefects.filter((d) => selectedIds.includes(d.id));
-
-    let created = 0;
-    let skipped = 0;
-
-    try {
-      for (const pole of targetPoles) {
-        const newDefects = defectsToCopy.filter((d) => {
-          const exists = allDefects.some(
-            (ex) => ex.poleNumber === pole
-              && ex.defectId === d.defectId
-              && ex.phaseId === d.phaseId
-              && (ex.customName ?? null) === (d.customName ?? null),
-          );
-          if (exists) { skipped += 1; return false; }
-          return true;
-        });
-
-        if (newDefects.length > 0) {
-          await Promise.all(
-            newDefects.map((d) =>
-              createDefect({
-                sheetId,
-                poleNumber: pole,
-                defectId: d.defectId,
-                phaseId: d.phaseId,
-                dateFound: d.dateFound,
-                inspectorFind: d.inspectorFind,
-                insulatorCount: d.insulatorCount ?? null,
-                garlandNumber: d.garlandNumber ?? null,
-                customName: d.customName ?? null,
-              }).unwrap(),
-            ),
-          );
-          created += newDefects.length;
-        }
-      }
-
-      closeModal();
-
-      if (created > 0 && skipped > 0) {
-        toast.success(`Скопировано: ${created} деф. Пропущено (уже есть): ${skipped}`);
-      } else if (created > 0) {
-        toast.success(`Скопировано: ${created} деф. × ${targetPoles.length} оп.`);
-      } else {
-        toast.info('Все выбранные дефекты уже есть на целевых опорах — ничего не добавлено');
-      }
-    } catch (err) {
-      logger.error('CopyDefect failed', err);
-      toast.error('Ошибка при копировании дефектов');
-    }
-  }, [allDefects, closeModal, copy, createDefect, isValid, selectedIds, sheetId, sourceDefects, targetPoles]);
+  const { handleCopy, isLoading } = useCopyDefect({
+    sheetId,
+    sourceDefects,
+    allDefects,
+    selectedIds,
+    targetPoles,
+    enabled: isValid,
+    onDone: closeModal,
+  });
 
   const isOpen = !!copy?.isOpen;
   const hasInput = !!copy?.targetPolesInput;
@@ -147,37 +102,16 @@ export const CopyDefectModal = memo((props: CopyDefectModalProps) => {
         </>
       }
     >
-      <div className={cls.section}>
-        <div className={cls.sectionHeader}>
-          <p className={cls.sectionTitle}>Выберите дефекты для копирования:</p>
-          <button
-            type='button'
-            className={cls.selectLink}
-            onClick={() => (allSelected ? clearDefectSelection() : selectAllDefects(allIds))}
-          >
-            {allSelected ? 'Снять все' : 'Выбрать все'}
-          </button>
-        </div>
-
-        {enriched.length === 0 ? (
-          <EmptyState compact title={`Нет активных дефектов на ${locationPrefix} ${locationLabel}`} />
-        ) : (
-          <div className={cls.defectList}>
-            {enriched.map((d) => (
-              <label key={d.id} className={cls.defectCheckRow}>
-                <input type='checkbox' checked={selectedSet.has(d.id)} onChange={() => toggleDefectId(d.id)} />
-                <SeverityDot severity={d.severity} />
-                <span className={cls.elementLabel}>{d.elementName}</span>
-                <span className={cls.defectLabel}>{d.defectName}</span>
-                {d.phaseName && (
-                  <span className={cls.phaseTag}>{d.phaseName}</span>
-                )}
-                <span className={cls.sevLabel}>{SEVERITY_LABELS[d.severity]}</span>
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
+      <CopyDefectList
+        defects={enriched}
+        selectedSet={selectedSet}
+        allSelected={allSelected}
+        locationLabel={locationLabel}
+        locationPrefix={locationPrefix}
+        onToggle={toggleDefectId}
+        onSelectAll={() => selectAllDefects(allIds)}
+        onClear={clearDefectSelection}
+      />
 
       <FormField
         label='Целевые опоры (через запятую или диапазон: 12, 15, 18-20)'

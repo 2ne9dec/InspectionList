@@ -6,7 +6,7 @@
   top: 0;
   z-index: var(--z-sticky);
   background: var(--color-bg-surface-2);
-  border-bottom: 2px solid var(--color-border);
+  border-bottom: var(--border-width-strong) solid var(--color-border);
   cursor: pointer;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
@@ -34,7 +34,7 @@
 }
 
 .arrow {
-  font-size: 10px;
+  font-size: var(--font-size-2xs);
 }
 
 .arrowInactive {

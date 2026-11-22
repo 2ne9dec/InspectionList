@@ -2,14 +2,14 @@ import { Suspense, memo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import { Navbar } from '@/widgets/Navbar';
-import { SheetsListNavbarSlot } from '@/pages/SheetsListPage';
+import { SheetsListNavbarSlot } from '@/widgets/SheetsList';
 import ForcePasswordChangePage from '@/pages/ForcePasswordChangePage';
 import { getRouteSheets } from '@/shared/const/router';
 import { getUserAuthData, getUserInited, getUserMustChangePassword, userActions } from '@/entities/User';
 import { useAppDispatch, useTheme } from '@/shared/lib/hooks';
 import { classNames } from '@/shared/lib/classNames/classNames';
 import { Toaster } from '@/shared/ui/Toaster';
-import { useSyncService } from '@/shared/lib/sync/useSyncService';
+import { useSyncService } from './providers/SyncProvider';
 import { AppRouter } from './providers/router';
 
 const NavbarWithSlot = memo(() => {

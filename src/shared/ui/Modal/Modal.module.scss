@@ -23,7 +23,7 @@
   width: 100%;
   max-height: calc(100vh - var(--navbar-height) - var(--space-4));
   background: var(--color-surface-modal);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radii-l);
   box-shadow: var(--shadow-xl);
   overflow: hidden;
@@ -54,7 +54,7 @@
   justify-content: space-between;
   gap: var(--space-3);
   padding: var(--space-2);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width) solid var(--color-border);
 }
 
 .title {
@@ -67,8 +67,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: var(--control-height-s);
+  height: var(--control-height-s);
   border-radius: var(--radii-s);
   color: var(--color-text-secondary);
   background: transparent;
@@ -94,17 +94,17 @@
   flex-wrap: wrap;
   gap: var(--space-2);
   padding: var(--space-4) var(--space-5);
-  border-top: 1px solid var(--color-border);
+  border-top: var(--border-width) solid var(--color-border);
 }
 
 // ── Sizes ───────────────────────────────────────────────────────────────────
-.size_s .content  { max-width: 420px; }
-.size_m .content  { max-width: 520px; }
-.size_l .content  { max-width: 760px; }
-.size_xl .content { max-width: 1080px; }
+.size_s .content  { max-width: var(--modal-width-s); }
+.size_m .content  { max-width: var(--modal-width-m); }
+.size_l .content  { max-width: var(--modal-width-l); }
+.size_xl .content { max-width: var(--modal-width-xl); }
 
 // На маленьких экранах модалка занимает почти весь экран
 @include m.down(tablet) {
   .Modal { padding: var(--space-2); }
-  .content { max-height: 95dvh; }
+  .content { max-height: 95vh; max-height: 95dvh; }
 }

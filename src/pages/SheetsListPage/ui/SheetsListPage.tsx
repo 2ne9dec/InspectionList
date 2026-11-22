@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { useSelector } from 'react-redux';
-import { DynamicModuleLoader, ReducersList } from '@/shared/lib/components/DynamicModuleLoader/DynamicModuleLoader';
+import { DynamicModuleLoader } from '@/app/providers/StoreProvider';
+import type { ReducersList } from '@/app/providers/StoreProvider';
 import { SheetsList } from '@/widgets/SheetsList';
 import { GlobalDefectSearch } from '@/widgets/GlobalDefectSearch';
 import { CreateSheetModal, createSheetReducer, selectCreateSheetSelectedDefectTypeIds } from '@/features/CreateSheet';

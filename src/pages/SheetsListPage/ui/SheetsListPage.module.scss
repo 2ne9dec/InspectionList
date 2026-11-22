@@ -1,3 +1,5 @@
+@use 'shared/styles/mixins' as m;
+
 .page {
   display: flex;
   flex-direction: column;
@@ -8,7 +10,7 @@
 
 
 /* ── Адаптивная вёрстка ──────────────────────────────────────────────────── */
-@media (max-width: 720px) {
+@include m.down(tabletSm) {
   .page {
     height: auto;
     min-height: calc(100vh - var(--navbar-height));

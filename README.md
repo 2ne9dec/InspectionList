@@ -286,7 +286,20 @@ yarn start
 - `yarn start:prod`: vite preview + сервер
 - `yarn deploy`: сборка + cap sync
 - `yarn lint:ts`, `yarn lint:scss`
-- `yarn check:all`: типы и линтеры
+- `yarn check:all`: типы, линтеры и проверка UI-хардкода (тесты не запускает)
+- `yarn check:hardcode`: только проверка хардкода
+- `yarn test:all`: все тесты — фронтенд + сервер
+- `yarn test:frontend`: только фронтенд (Vitest + jsdom)
+- `yarn test:server`: только сервер (Vitest, Node)
+- `yarn test:watch`: фронтенд в watch-режиме
+
+Тесты лежат рядом с кодом: `Button.tsx` → `Button.test.tsx`. Общие помощники — в `tests/`, запуск — в `vitest.config.ts` и `vitest.server.config.ts`.
+
+### UI-токены и иконки
+
+- Цвета, типографика, отступы, радиусы, тени, z-index и анимации — только через `src/shared/styles/tokens`. Сырые hex/rgb/px допустимы только в `tokens`, `themes` и `print`.
+- Общие иконки — `lucide-react` через `src/shared/ui/Icons`. Доменные (опора ЛЭП, офлайн-статус) — локальные SVG-компоненты. Не используем `<img>`, PNG и внешние URL для иконок.
+- `yarn check:all` падает, если в компонентах появляется новый хардкод цвета или типографики.
 
 ## Структура
 

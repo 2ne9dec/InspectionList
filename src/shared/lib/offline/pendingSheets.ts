@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import type { CreateSheetParams } from '@/entities/InspectionSheet';
 
 /**
  * Хранилище листков, созданных в офлайн-режиме (без сети).
  * Листки сохраняются в localStorage и синхронизируются с сервером
  * при появлении сети или нажатии кнопки «Обновить».
+ *
+ * Тип параметров локальный (без импорта entities), чтобы shared не зависел
+ * от верхних слоёв FSD. Структурно совместим с CreateSheetParams.
  */
 
 const STORAGE_KEY = 'pending_sheets_v1';
@@ -12,7 +14,15 @@ const STORAGE_KEY = 'pending_sheets_v1';
 /** Имя кастомного события — уведомляет подписчиков об изменении очереди. */
 const CHANGED_EVENT = 'pendingSheetsChanged';
 
-export interface PendingSheet extends CreateSheetParams {
+export interface PendingSheetParams {
+  filialId: number;
+  voltageId: number;
+  lineId: number;
+  createdDate: string;
+  createdBy: string;
+}
+
+export interface PendingSheet extends PendingSheetParams {
   /** Отрицательный временной штамп — уникальный локальный ID. */
   localId: number;
   /** ISO-строка момента создания (для отображения). */
@@ -30,7 +40,7 @@ export function getPendingSheets(): PendingSheet[] {
 }
 
 /** Добавляет листок в очередь, возвращает созданный объект. */
-export function addPendingSheet(params: CreateSheetParams): PendingSheet {
+export function addPendingSheet(params: PendingSheetParams): PendingSheet {
   const sheet: PendingSheet = {
     ...params,
     localId:   -Date.now(),

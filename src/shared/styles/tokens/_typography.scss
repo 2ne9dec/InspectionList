@@ -11,27 +11,45 @@
   --font-family-mono: ui-monospace, 'SF Mono', menlo, consolas, monospace;
 
   // Размеры (desktop baseline; перебиваются медиа-запросами в responsive-tokens)
-  --font-size-2xs: 10px;  // значки, бейджи, индикаторы
-  --font-size-xs:  12px;
-  --font-size-s:   13px;
-  --font-size-m:   15px;
-  --font-size-l:   17px;
-  --font-size-xl:  21px;
-  --font-size-2xl: 28px;
+  --font-size-4xs:      8px;
+  --font-size-3xs:      9px;
+  --font-size-2xs:      10px;  // значки, бейджи, индикаторы
+  --font-size-caption:  11px;
+  --font-size-xs:       12px;
+  --font-size-s:        13px;
+  --font-size-m:        15px;
+  --font-size-body-lg:  16px;
+  --font-size-l:        17px;
+  --font-size-subtitle: 18px;
+  --font-size-xl:       21px;
+  --font-size-title:    24px;
+  --font-size-2xl:      28px;
+  --font-size-3xl:      32px;
+  --font-size-4xl:      48px;
+  --font-size-display:  96px;
 
   // Веса
+  --font-weight-light:    300;
   --font-weight-regular:  400;
   --font-weight-medium:   500;
   --font-weight-semibold: 600;
   --font-weight-bold:     700;
+  --font-weight-black:    900;
 
   // Line-heights — относительные
+  --line-height-none:     1;
   --line-height-tight:    1.2;
+  --line-height-snug:     1.3;
+  --line-height-compact:  1.35;
+  --line-height-copy:     1.4;
   --line-height-base:     1.5;
   --line-height-relaxed:  1.7;
 
   // Letter-spacing
-  --letter-spacing-tight:  -0.01em;
-  --letter-spacing-normal: 0;
-  --letter-spacing-wide:   0.04em;
+  --letter-spacing-tightest: -0.03em;
+  --letter-spacing-tight:    -0.01em;
+  --letter-spacing-caps:     0.02em;
+  --letter-spacing-wide:     0.04em;
+  --letter-spacing-label:    0.05em;
+  --letter-spacing-wider:    0.07em;
 }

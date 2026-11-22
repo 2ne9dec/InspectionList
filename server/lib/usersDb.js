@@ -127,11 +127,11 @@ async function migrateFromFilialDbs() {
 async function ensureUsersDb() {
   if (!USERS_DB_PATH) return;
   const created = await attachOrCreate();
-  if (created) console.log(`[users] Создана база пользователей: ${USERS_DB_PATH}`);
+  if (created) console.log(`[users] users database created: ${USERS_DB_PATH}`);
   if (!(await relationExists('USERS', MAIN_DB))) {
     await createTables();
     const moved = await migrateFromFilialDbs();
-    console.log(`[users] Перенесено пользователей из баз филиалов: ${moved}. Таблицы USERS в базах филиалов больше не используются.`);
+    console.log(`[users] moved users from filial databases: ${moved}. USERS now lives in the users database.`);
   }
   // Роль «Пользователь» (viewer) упразднена: такие учётные записи становятся «Электромонтёр СЛ»
   await execute("UPDATE USERS SET ROLE = 'electrician' WHERE ROLE = 'viewer'", [], MAIN_DB);

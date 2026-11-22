@@ -1,120 +1,44 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo } from 'react';
 import { useSelector } from 'react-redux';
-import type { StateSchema } from '@/app/providers/StoreProvider';
-import {
-  useGetDefectsBySheetQuery,
-  useFixDefectMutation,
-  getLocationKey,
-  formatLocationLabel,
-  locationKeyType,
-  enrichDefects,
-} from '@/entities/DefectRecord';
-import { useGetDefectTypesQuery, useGetElementsQuery, useGetPhasesQuery } from '@/entities/InspectionLine';
-import { Button, EmptyState, FormField, Input, Modal } from '@/shared/ui';
-import { toast } from '@/shared/lib/toast';
-import { logger } from '@/shared/lib/logger';
+import type { FixDefectSchema } from '../model/fixDefectSlice';
+import { formatLocationLabel, locationKeyType } from '@/entities/DefectRecord';
+import { Button, Checkbox, EmptyState, FormField, Input, Modal } from '@/shared/ui';
 import { fixDefectActions } from '../model/fixDefectSlice';
+import { useFixDefectSubmit } from '../model/useFixDefectSubmit';
+import { useFixDefectGroups } from '../model/useFixDefectGroups';
 import cls from './FixDefectModal.module.scss';
 
-const selectFixDefect = (state: StateSchema) => state.fixDefect;
+interface FixDefectRootState {
+  fixDefect?: FixDefectSchema;
+}
+
+const selectFixDefect = (state: FixDefectRootState) => state.fixDefect;
 
 interface FixDefectModalProps {
   sheetId: number;
-}
-
-interface DefectGroup {
-  key: string;
-  elementName: string;
-  defectName: string;
-  ids: number[];
-  phases: string[];
-  insulatorCount: number | null | undefined;
 }
 
 export const FixDefectModal = memo(({ sheetId }: FixDefectModalProps) => {
   const fix = useSelector(selectFixDefect);
   const { closeModal, selectAll, clearAll, setDateFixed, setInspectorFix } = fixDefectActions.useActions();
 
-  const { data: allDefects = [] } = useGetDefectsBySheetQuery(sheetId);
-  const { data: defectTypes = [] } = useGetDefectTypesQuery();
-  const { data: elements = [] } = useGetElementsQuery();
-  const { data: phases = [] } = useGetPhasesQuery();
-  const [fixDefect, { isLoading }] = useFixDefectMutation();
+  const {
+    enriched,
+    groups,
+    allIds,
+    selectedSet,
+    allSelected,
+    selectedCount,
+    isValid,
+    handleGroupToggle,
+  } = useFixDefectGroups({ sheetId, fix, selectAll });
 
-  // Сортируем: элемент → дефект → фаза (алфавитно)
-  const enriched = useMemo(() => {
-    const targetKey = fix?.targetKey;
-    if (!targetKey) return [];
-    const filtered = allDefects.filter((d) => getLocationKey(d) === targetKey && !d.isFixed);
-    const list = enrichDefects(filtered, defectTypes, elements, phases);
-    return [...list].sort((a, b) => {
-      const elCmp = (a.elementName ?? '').localeCompare(b.elementName ?? '');
-      if (elCmp !== 0) return elCmp;
-      const defCmp = (a.defectName ?? '').localeCompare(b.defectName ?? '');
-      if (defCmp !== 0) return defCmp;
-      return (a.phaseName ?? '').localeCompare(b.phaseName ?? '');
-    });
-  }, [allDefects, defectTypes, elements, phases, fix?.targetKey]);
-
-  // Группируем по elementName + defectName
-  const groups = useMemo<DefectGroup[]>(() => {
-    const result: DefectGroup[] = [];
-    for (const d of enriched) {
-      const key = `${d.elementName}||${d.defectName}`;
-      const last = result[result.length - 1];
-      if (last && last.key === key) {
-        last.ids.push(d.id);
-        if (d.phaseName) last.phases.push(d.phaseName);
-        if (d.insulatorCount != null && d.insulatorCount > 0) {
-          last.insulatorCount = (last.insulatorCount ?? 0) + d.insulatorCount;
-        }
-      } else {
-        result.push({
-          key,
-          elementName: d.elementName,
-          defectName: d.defectName,
-          ids: [d.id],
-          phases: d.phaseName ? [d.phaseName] : [],
-          insulatorCount: d.insulatorCount,
-        });
-      }
-    }
-    return result;
-  }, [enriched]);
-
-  const allIds = useMemo(() => enriched.map((d) => d.id), [enriched]);
-  const selectedSet = useMemo(() => new Set(fix?.selectedIds ?? []), [fix?.selectedIds]);
-  const allSelected = allIds.length > 0 && allIds.every((id) => selectedSet.has(id));
-  const selectedCount = selectedSet.size;
-
-  const isValid = selectedCount > 0 && !!fix?.inspectorFix.trim() && !!fix?.dateFixed;
-
-  const handleGroupToggle = useCallback((groupIds: number[]) => {
-    const allGroupSelected = groupIds.every((id) => selectedSet.has(id));
-    const next = new Set(selectedSet);
-    if (allGroupSelected) {
-      groupIds.forEach((id) => next.delete(id));
-    } else {
-      groupIds.forEach((id) => next.add(id));
-    }
-    selectAll([...next]);
-  }, [selectedSet, selectAll]);
-
-  const handleFix = useCallback(async () => {
-    if (!isValid || !fix) return;
-    try {
-      await Promise.all(
-        fix.selectedIds.map((id) =>
-          fixDefect({ id, dateFixed: fix.dateFixed, inspectorFix: fix.inspectorFix.trim(), isFixed: true }).unwrap(),
-        ),
-      );
-      closeModal();
-      toast.success(selectedCount === 1 ? 'Дефект отмечен как устранённый' : `Дефектов устранено: ${selectedCount}`);
-    } catch (err) {
-      logger.error('FixDefect failed', err);
-      toast.error('Ошибка при устранении дефектов');
-    }
-  }, [closeModal, fix, fixDefect, isValid, selectedCount]);
+  const { handleFix, isLoading } = useFixDefectSubmit({
+    fix,
+    isValid,
+    selectedCount,
+    onDone: closeModal,
+  });
 
   const isOpen = !!fix?.isOpen;
   const targetKey = fix?.targetKey ?? '';
@@ -147,8 +71,7 @@ export const FixDefectModal = memo(({ sheetId }: FixDefectModalProps) => {
         <>
           <div className={cls.selectAll}>
             <label className={cls.checkRow}>
-              <input
-                type='checkbox'
+              <Checkbox
                 checked={allSelected}
                 onChange={() => (allSelected ? clearAll() : selectAll(allIds))}
               />
@@ -161,8 +84,7 @@ export const FixDefectModal = memo(({ sheetId }: FixDefectModalProps) => {
               const groupAllSelected = g.ids.every((id) => selectedSet.has(id));
               return (
                 <label key={g.key} className={cls.checkRow}>
-                  <input
-                    type='checkbox'
+                  <Checkbox
                     checked={groupAllSelected}
                     onChange={() => handleGroupToggle(g.ids)}
                   />
@@ -196,6 +118,7 @@ export const FixDefectModal = memo(({ sheetId }: FixDefectModalProps) => {
                 id='fix-inspector'
                 name='inspectorFix'
                 value={fix?.inspectorFix ?? ''}
+                title={fix?.inspectorFix || undefined}
                 placeholder='Петров П.П.'
                 onChange={setInspectorFix}
               />

@@ -1,0 +1,29 @@
+.control {
+  display: inline-flex;
+  height: var(--control-height-m);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radii);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.segment {
+  padding: 0 var(--space-3);
+  font-family: var(--font-family-main);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  border: 0;
+  cursor: pointer;
+  transition: var(--transition-ui);
+  white-space: nowrap;
+
+  & + & { border-left: var(--border-width) solid var(--color-border); }
+  &:hover:not(.active) { background: var(--color-bg-surface-2); color: var(--color-accent); }
+}
+
+.active {
+  background: var(--color-accent);
+  color: var(--color-text-on-accent);
+}

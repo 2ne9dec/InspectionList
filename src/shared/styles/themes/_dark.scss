@@ -48,6 +48,7 @@ body[data-theme='dark'] {
   --color-row-alt:      rgb(255 255 255 / 2%);
   --color-row-hover:    rgb(59 130 246 / 8%);
   --color-row-selected: rgb(59 130 246 / 18%);
+  --color-row-group:    var(--color-bg-surface-2);
 
   // ── Состояния ───────────────────────────────────────────────────────────
   --color-error:          #f87171;  // red-400
@@ -66,11 +67,6 @@ body[data-theme='dark'] {
   --color-status-done:    #4ade80;   // green-400
 
   // ── Карта / FAB-кнопки ──────────────────────────────────────────────────
-  --map-fab-bg:           rgb(24 24 27 / 92%);   // zinc-900 с прозрачностью
-  --map-fab-bg-hover:     rgb(39 39 42 / 98%);   // zinc-800
-  --map-fab-border:       rgb(255 255 255 / 12%);
-  --map-fab-border-hover: rgb(255 255 255 / 20%);
-  --map-fab-text:         #fafafa;
 
   // ── «Кинозал» PhotoGallery lightbox (намеренно всегда тёмный) ──────────
   --color-cinema-bg:         #09090b;
@@ -86,7 +82,6 @@ body[data-theme='dark'] {
 
   // ── Тени (глубже для тёмной темы) ───────────────────────────────────────
   --shadow-xs: 0 1px 2px  rgb(0 0 0 / 30%);
-  --shadow-s:  0 2px 6px  rgb(0 0 0 / 36%);
   --shadow-m:  0 6px 16px rgb(0 0 0 / 42%);
   --shadow-l:  0 12px 32px rgb(0 0 0 / 52%);
   --shadow-xl: 0 20px 50px rgb(0 0 0 / 62%);
@@ -94,45 +89,10 @@ body[data-theme='dark'] {
   // ── Canvas annotation colors ────────────────────────────────────────────
   // Canvas API не умеет читать var(--…), поэтому эти переменные резолвятся
   // через getCanvasTheme() из shared/lib/canvasTheme.ts один раз за кадр.
-  --canvas-label-bg:       #27272a;              // zinc-800 — контраст на любом фото
-  --canvas-label-text:     #fafafa;              // чистый белый текст
-  --canvas-handle-fill:    #fafafa;              // белые ручки resize
-  --canvas-handle-stroke:  var(--color-accent);  // акцентная обводка ручек
-  --canvas-drawing-stroke: rgba(255,255,255,.9); // пунктир нового bbox
-  --canvas-polygon-line:   #f59e0b;              // amber — виден на любом фото
-  --canvas-polygon-fill:   rgba(245,158,11,.12); // полупрозрачная заливка полигона
-  --canvas-dot-rim:        rgba(255,255,255,.8); // ободок центральной точки
 
   // ── Legacy aliases (обратная совместимость) ─────────────────────────────
-  --colors-bg:                var(--color-bg-page);
-  --colors-bg-inverted:       var(--color-bg-inverse);
-  --colors-primary:           var(--color-text-primary);
-  --colors-primary-inverted:  var(--color-text-inverse);
-  --colors-secondary:         var(--color-text-secondary);
-  --colors-error-light:       var(--color-error);
-  --colors-error-dark:        #ef4444;
-  --bg-primary:               var(--color-bg-surface);
-  --bg-secondary:             var(--color-bg-surface-2);
-  --bg-row-alt:               var(--color-row-alt);
-  --bg-row-hover:             var(--color-row-hover);
-  --color-border-tertiary:    var(--color-border-subtle);
-  --navbar-bg:                var(--color-surface-navbar);
-  --navbar-border:            var(--color-border);
-  --scrollbar-track:          var(--color-scrollbar-track);
-  --scrollbar-thumb:          var(--color-scrollbar-thumb);
-  --card-bg:                  var(--color-surface-card);
-  --colors-overlay:           var(--color-surface-overlay);
-  --btn-bg:                   var(--color-accent);
-  --btn-bg-hover:             var(--color-accent-hover);
-  --btn-color:                var(--color-text-on-accent);
-  --btn-border:               rgb(255 255 255 / 18%);
 
   // ── Короткие алиасы ─────────────────────────────────────────────────────
-  --color-bg:            var(--color-bg-page);
-  --color-bg-secondary:  var(--color-bg-surface-2);
-  --border:              var(--color-border);
-  --text-primary:        var(--color-text-primary);
-  --text-secondary:      var(--color-text-secondary);
 
   // ── Выделение текста ────────────────────────────────────────────────────
   --color-selection-bg:   rgb(59 130 246 / 35%);

@@ -1,7 +1,7 @@
 import { memo, useCallback, useState } from 'react';
 import { useAppDispatch } from '@/shared/lib/hooks';
 import { STORAGE_KEYS } from '@/shared/const/storageKeys';
-import { useChangePasswordMutation, userActions, getUserAuthData } from '@/entities/User';
+import { getUserAuthData, saveOfflineCredentials, useChangePasswordMutation, userActions } from '@/entities/User';
 import { useSelector } from 'react-redux';
 import { Button, FormField, PasswordInput, VStack } from '@/shared/ui';
 import { toast } from '@/shared/lib/toast';
@@ -43,6 +43,7 @@ export const ChangePasswordForm = memo(({ forced, onDone, onCancel, onLogout }: 
       const { token, ...user } = res;
       if (token) sessionStorage.setItem(STORAGE_KEYS.TOKEN, token);
       sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+      try { await saveOfflineCredentials(user, newPass, token); } catch { /* офлайн-вход обновится позже */ }
       dispatch(userActions.setAuthData(user));
       toast.success('Пароль изменён');
       setOldPass(''); setNewPass(''); setRepeat('');

@@ -1,18 +1,11 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { useEditDefectMutation } from '@/entities/DefectRecord';
+import { memo } from 'react';
 import type { DefectRecord, DefectRecordFull } from '@/entities/DefectRecord';
-import { useGetDefectTypesQuery, useGetElementsQuery, useGetPhasesQuery } from '@/entities/InspectionLine';
-import type { DefectType } from '@/entities/InspectionLine';
-import { Button, FormField, Input, Modal, Select } from '@/shared/ui';
-import type { SelectOption } from '@/shared/ui';
-import { toast } from '@/shared/lib/toast';
-import { capitalizeFirst } from '@/shared/lib/helpers';
-import { isSpanValid } from '../lib/location';
+import { Button, FormField, Input, Modal } from '@/shared/ui';
+import { useEditDefectForm } from '../model/useEditDefectForm';
 import { DefectPicker } from './DefectPicker';
+import { EditDefectAttributes } from './EditDefectAttributes';
+import { EditDefectLocationField } from './EditDefectLocationField';
 import cls from './EditDefectModal.module.scss';
-
-const INSULATOR_OPTIONS: SelectOption<number>[] =
-  Array.from({ length: 24 }, (_, i) => ({ value: i + 1, label: String(i + 1) }));
 
 interface EditDefectModalProps {
   /** Исправляемый дефект; null — окно закрыто. */
@@ -28,83 +21,40 @@ interface EditDefectModalProps {
  * фаза, число изоляторов, дата и кто обнаружил. Доступно с правом «Редактировать дефекты»,
  * пока дефект не устранён (проверяется и на сервере).
  */
-export const EditDefectModal = memo(({ defect, poleStart, poleEnd, onClose, onSaved }: EditDefectModalProps) => {
-  const { data: elements    = [] } = useGetElementsQuery();
-  const { data: defectTypes = [] } = useGetDefectTypesQuery();
-  const { data: phases      = [] } = useGetPhasesQuery();
-  const [editDefect, { isLoading }] = useEditDefectMutation();
+export const EditDefectModal = memo((props: EditDefectModalProps) => {
+  const { defect, poleStart, poleEnd, onClose, onSaved } = props;
 
-  const [mode,      setMode]      = useState<'pole' | 'span'>('pole');
-  const [pole,      setPole]      = useState('');
-  const [span,      setSpan]      = useState('');
-  const [defectId,  setDefectId]  = useState<number | null>(null);
-  const [phaseId,   setPhaseId]   = useState<number | ''>('');
-  const [insulators, setInsulators] = useState<number | ''>('');
-  const [dateFound, setDateFound] = useState('');
-  const [inspector, setInspector] = useState('');
-  const [customName, setCustomName] = useState('');
-  const [error,     setError]     = useState('');
-
-  useEffect(() => {
-    if (!defect) return;
-    setError('');
-    setMode(defect.spanRange ? 'span' : 'pole');
-    setPole(defect.spanRange ? '' : String(defect.poleNumber));
-    setSpan(defect.spanRange ?? '');
-    setDefectId(defect.defectId);
-    setPhaseId(defect.phaseId ?? '');
-    setInsulators(defect.insulatorCount ?? '');
-    setDateFound(defect.dateFound ?? '');
-    setInspector(defect.inspectorFind ?? '');
-    setCustomName(defect.customName ?? '');
-  }, [defect]);
-
-  const selectedDefect  = useMemo(() => defectTypes.find((d) => d.id === defectId), [defectTypes, defectId]);
-  const selectedElement = useMemo(
-    () => elements.find((e) => selectedDefect && e.id === selectedDefect.elementId),
-    [elements, selectedDefect],
-  );
-  const phaseOptions = useMemo<SelectOption<number>[]>(
-    () => phases.map((p) => ({ value: p.id, label: capitalizeFirst(p.name) })),
-    [phases],
-  );
-
-  const poleNum   = Number(pole.trim());
-  const poleOk    = mode === 'pole' && Number.isInteger(poleNum) && poleNum >= poleStart && poleNum <= poleEnd;
-  const spanOk    = mode === 'span' && isSpanValid(span, poleStart, poleEnd);
-  const locationInvalid = mode === 'pole' ? !!pole.trim() && !poleOk : !!span.trim() && !spanOk;
-  const needsCustomName = !!selectedDefect?.custom;
-  const isValid   = (poleOk || spanOk) && defectId != null && !!dateFound
-    && inspector.trim().length > 0 && (!needsCustomName || customName.trim().length > 0);
-
-  const handlePick = useCallback((d: DefectType) => {
-    setDefectId(d.id);
-    if (!d.custom) setCustomName('');
-  }, []);
-
-  const handleSave = useCallback(async () => {
-    if (!defect || !isValid || defectId == null) return;
-    setError('');
-    try {
-      const saved = await editDefect({
-        id:             defect.id,
-        poleNumber:     mode === 'pole' ? poleNum : 0,
-        spanRange:      mode === 'span' ? span.trim() : null,
-        defectId,
-        phaseId:        phaseId === '' ? null : phaseId,
-        insulatorCount: insulators === '' ? null : insulators,
-        dateFound,
-        inspectorFind:  inspector.trim(),
-        customName:     needsCustomName ? customName.trim() : null,
-      }).unwrap();
-      toast.success('Дефект исправлен');
-      onSaved?.(saved);
-      onClose();
-    } catch (e: unknown) {
-      const msg = (e as { data?: { error?: string } })?.data?.error;
-      setError(msg ?? 'Не удалось сохранить изменения');
-    }
-  }, [customName, dateFound, defect, defectId, editDefect, insulators, inspector, isValid, mode, needsCustomName, onClose, onSaved, phaseId, poleNum, span]);
+  const {
+    elements,
+    defectTypes,
+    selectedDefect,
+    selectedElement,
+    phaseOptions,
+    mode,
+    setMode,
+    pole,
+    setPole,
+    span,
+    setSpan,
+    setDefectId,
+    phaseId,
+    setPhaseId,
+    insulators,
+    setInsulators,
+    dateFound,
+    setDateFound,
+    inspector,
+    setInspector,
+    customName,
+    setCustomName,
+    error,
+    locationInvalid,
+    needsCustomName,
+    isValid,
+    handlePick,
+    handleSave,
+    isLoading,
+  } = useEditDefectForm({ defect, poleStart, poleEnd, onClose, onSaved });
 
   return (
     <Modal
@@ -122,29 +72,17 @@ export const EditDefectModal = memo(({ defect, poleStart, poleEnd, onClose, onSa
       <div className={cls.form}>
         {error && <div className={cls.error} role='alert'>{error}</div>}
 
-        <FormField
-          label='Опора / Пролёт'
-          htmlFor='edit-location'
-          error={locationInvalid
-            ? (mode === 'pole' ? `Опора от ${poleStart} до ${poleEnd}` : `Пролёты от ${poleStart} до ${poleEnd}, например 3-7`)
-            : undefined}
-        >
-          <div className={cls.locationRow}>
-            <div className={cls.modeToggle}>
-              <button type='button' className={mode === 'pole' ? cls.modeActive : cls.mode} onClick={() => setMode('pole')}>Опора</button>
-              <button type='button' className={mode === 'span' ? cls.modeActive : cls.mode} onClick={() => setMode('span')}>Пролёты</button>
-            </div>
-            <Input
-              id='edit-location'
-              inputMode='tel'
-              autoComplete='off'
-              placeholder={`${poleStart}–${poleEnd}`}
-              value={mode === 'pole' ? pole : span}
-              onChange={mode === 'pole' ? setPole : setSpan}
-              invalid={locationInvalid}
-            />
-          </div>
-        </FormField>
+        <EditDefectLocationField
+          mode={mode}
+          setMode={setMode}
+          pole={pole}
+          setPole={setPole}
+          span={span}
+          setSpan={setSpan}
+          poleStart={poleStart}
+          poleEnd={poleEnd}
+          locationInvalid={locationInvalid}
+        />
 
         <FormField label='Элемент / дефект'>
           <DefectPicker
@@ -171,26 +109,13 @@ export const EditDefectModal = memo(({ defect, poleStart, poleEnd, onClose, onSa
           </FormField>
         )}
 
-        <div className={cls.row}>
-          <FormField label='Фаза' htmlFor='edit-phase' optional>
-            <Select<number>
-              id='edit-phase'
-              options={phaseOptions}
-              value={phaseId}
-              placeholder='—'
-              onChange={setPhaseId}
-            />
-          </FormField>
-          <FormField label='Изоляторов, шт.' htmlFor='edit-insulators' optional>
-            <Select<number>
-              id='edit-insulators'
-              options={INSULATOR_OPTIONS}
-              value={insulators}
-              placeholder='—'
-              onChange={setInsulators}
-            />
-          </FormField>
-        </div>
+        <EditDefectAttributes
+          phaseOptions={phaseOptions}
+          phaseId={phaseId}
+          setPhaseId={setPhaseId}
+          insulators={insulators}
+          setInsulators={setInsulators}
+        />
 
         <div className={cls.row}>
           <FormField label='Дата обнаружения' htmlFor='edit-date'>
@@ -201,6 +126,7 @@ export const EditDefectModal = memo(({ defect, poleStart, poleEnd, onClose, onSa
               id='edit-inspector'
               autoComplete='off'
               value={inspector}
+              title={inspector || undefined}
               onChange={setInspector}
               placeholder='Фамилия И.О.'
             />

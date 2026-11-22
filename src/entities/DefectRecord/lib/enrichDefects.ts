@@ -1,9 +1,8 @@
 import type { DefectRecord, DefectRecordFull } from '../model/types';
 import type { DefectType, Element, Phase } from '@/entities/InspectionLine';
-import type { Severity } from '@/shared/const/severity';
 
 /**
- * Обогащает записи дефектов именами элемента, вида дефекта, фазы и severity.
+ * Обогащает записи дефектов именами элемента, вида дефекта и фазы.
  * Использует Map для O(n) вместо O(n²) при большом числе записей.
  */
 export function enrichDefects(
@@ -27,7 +26,6 @@ export function enrichDefects(
       elementName: el?.name ?? '\u2014',
       defectName: customName || dt?.name || '\u2014',
       phaseName: phase?.name ?? null,
-      severity: (dt?.severity ?? 'low') as Severity,
     };
   });
 }

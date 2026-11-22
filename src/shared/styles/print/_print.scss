@@ -1,0 +1,123 @@
+// ============================================================================
+// Print styles — печать листка осмотра.
+// Все «бумажные» цвета и размеры собраны здесь, чтобы компоненты не знали
+// о печатной теме. Это единственное место, где допустимы print-значения.
+// ============================================================================
+
+:root {
+  --print-bg:              #fff;
+  --print-bg-subtle:       #f8f8f8;
+  --print-bg-header:       #f0f0f0;
+  --print-text:            #000;
+  --print-text-strong:     #222;
+  --print-text-muted:      #666;
+  --print-border:          #ccc;
+  --print-font-size-base:  9pt;
+  --print-font-size-small: 8pt;
+  --print-font-size-meta:  11pt;
+}
+
+@media print {
+  /* Скрываем всё навигационное и интерактивное */
+  nav,
+  .navbar,
+  [class*="Navbar"],
+  [class*="addDefect"],
+  [class*="AddDefect"],
+  [class*="infoBar"] button,
+  [class*="fixModal"],
+  [class*="DefectSidebar"],
+  [class*="OfflineBanner"],
+  [class*="Toaster"],
+  [class*="priorityList"],
+  button[title*="Печать"],
+  button[title*="Приоритеты"],
+  button[title*="Экспорт"],
+  button[title*="Excel"],
+  button[title*="Word"] {
+    display: none !important;
+  }
+
+  html,
+  body,
+  .app,
+  .content-page {
+    background: var(--print-bg) !important;
+    color: var(--print-text) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .content-page--with-navbar {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  /* Шапка листка осмотра */
+  [class*="infoBar"] {
+    border: var(--border-width) solid var(--print-border) !important;
+    border-radius: 0 !important;
+    padding: var(--space-2) var(--space-3) !important;
+    background: var(--print-bg-subtle) !important;
+    color: var(--print-text) !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: var(--space-1) !important;
+    margin-bottom: var(--space-3) !important;
+    page-break-after: avoid !important;
+  }
+
+  [class*="lineName"],
+  [class*="metaItem"],
+  [class*="metaSep"] {
+    color: var(--print-text-strong) !important;
+    font-size: var(--print-font-size-meta) !important;
+  }
+
+  /* Таблица дефектов */
+  [class*="tableWrapper"],
+  [class*="body"] {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: var(--print-font-size-base) !important;
+    page-break-inside: auto !important;
+  }
+
+  thead { display: table-header-group !important; }
+  tfoot { display: table-footer-group !important; }
+
+  th,
+  td {
+    border: var(--border-width) solid var(--print-border) !important;
+    padding: var(--space-1) var(--space-1-5) !important;
+    color: var(--print-text) !important;
+    background: var(--print-bg) !important;
+  }
+
+  th {
+    background: var(--print-bg-header) !important;
+    font-weight: var(--font-weight-bold) !important;
+    font-size: var(--print-font-size-small) !important;
+    text-transform: uppercase !important;
+    letter-spacing: var(--letter-spacing-label) !important;
+  }
+
+  tr { page-break-inside: avoid !important; }
+
+  /* Колонтитул с инфо */
+  @page {
+    margin: 15mm 12mm;
+
+    @bottom-center {
+      content: "Листок осмотра ВЛ · " counter(page) " / " counter(pages);
+      font-size: var(--print-font-size-small);
+      color: var(--print-text-muted);
+    }
+  }
+}

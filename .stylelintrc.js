@@ -5,6 +5,17 @@ module.exports = {
     'dist/**',
     'build/**',
     'public/**',
+    '**/*.html',
+    'index.html',
+    '**/*.md',
+    'README.md',
+    '**/*.ts',
+    '**/*.tsx',
+    '**/*.js',
+    '**/*.jsx',
+    '**/*.json',
+    '**/*.yml',
+    '**/*.yaml',
   ],
   rules: {
     'no-empty-source': null,
@@ -34,5 +45,59 @@ module.exports = {
     'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses: ['global', 'local'] }],
     // Разрешаем значения вроде "actionBtn" в composes
     'value-keyword-case': null,
+
+    // ── Запрет хардкода в компонентах ────────────────────────────────────
+    // Цвета — только через токены/темы/print.
+    'color-no-hex': true,
+    'declaration-property-value-disallowed-list': {
+      'color': ['/rgba?\\(/'],
+      'background': ['/rgba?\\(/'],
+      'background-color': ['/rgba?\\(/'],
+      'border': ['/rgba?\\(/'],
+      'border-color': ['/rgba?\\(/'],
+      'border-top': ['/rgba?\\(/'],
+      'border-right': ['/rgba?\\(/'],
+      'border-bottom': ['/rgba?\\(/'],
+      'border-left': ['/rgba?\\(/'],
+      'fill': ['/rgba?\\(/'],
+      'stroke': ['/rgba?\\(/'],
+      'box-shadow': ['/rgba?\\(/'],
+      'z-index': ['/^\\d+$/'],
+    },
+    // Типографика и отступы — только через токены.
+    'declaration-property-unit-disallowed-list': {
+      'font-size': ['px', 'rem', 'em'],
+      'line-height': ['px', 'rem', 'em'],
+      'letter-spacing': ['px', 'rem'],
+      'gap': ['px', 'rem'],
+      'row-gap': ['px', 'rem'],
+      'column-gap': ['px', 'rem'],
+      'padding': ['px', 'rem'],
+      'padding-top': ['px', 'rem'],
+      'padding-right': ['px', 'rem'],
+      'padding-bottom': ['px', 'rem'],
+      'padding-left': ['px', 'rem'],
+      'margin': ['px', 'rem'],
+      'margin-top': ['px', 'rem'],
+      'margin-right': ['px', 'rem'],
+      'margin-bottom': ['px', 'rem'],
+      'margin-left': ['px', 'rem'],
+      'border-radius': ['px', 'rem'],
+    },
   },
+  overrides: [
+    {
+      // В слое токенов, тем и печати сырые значения — это норма.
+      files: [
+        'src/shared/styles/tokens/**/*.scss',
+        'src/shared/styles/themes/**/*.scss',
+        'src/shared/styles/print/**/*.scss',
+      ],
+      rules: {
+        'color-no-hex': null,
+        'declaration-property-value-disallowed-list': null,
+        'declaration-property-unit-disallowed-list': null,
+      },
+    },
+  ],
 };

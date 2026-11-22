@@ -31,8 +31,7 @@ export const QuickDefectChips = memo(({
             onClick={() => onSelect(dt)}
             title={`${el?.name ?? ''}: ${dt.name}`}
           >
-            {el ? `${el.name.slice(0, 6)}…` : ''}{' '}
-            {dt.name.slice(0, 14)}{dt.name.length > 14 ? '…' : ''}
+            {el ? `${el.name}: ` : ''}{dt.name}
           </button>
         );
       })}

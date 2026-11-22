@@ -1,6 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import type { ThunkConfig } from '@/app/providers/StoreProvider';
-import { userActions } from '@/entities/User';
+import { authenticateOffline, hasOfflineCredentials, saveOfflineCredentials, userActions } from '@/entities/User';
 import type { User } from '@/entities/User';
 import { getApiUrl } from '@/shared/lib/api/apiUrl';
 import { STORAGE_KEYS } from '@/shared/const/storageKeys';
@@ -8,6 +7,15 @@ import { rtkApi } from '@/shared/api/rtkApi';
 
 const USER_KEY  = STORAGE_KEYS.USER;
 const TOKEN_KEY = STORAGE_KEYS.TOKEN;
+
+interface LoginThunkState {
+  user?: { authData?: User };
+}
+
+interface LoginThunkConfig {
+  rejectValue: string;
+  state: LoginThunkState;
+}
 
 // Офлайн-таблица пользователей (SHA-256 хэши, lazy-migrate к bcrypt на сервере).
 // Используется только когда сервер недоступен (Capacitor offline-режим).
@@ -27,18 +35,23 @@ async function sha256(str: string): Promise<string> {
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-export const loginByUsername = createAsyncThunk<User, { username: string; password: string; filialId?: string }, ThunkConfig<string>>(
+export const loginByUsername = createAsyncThunk<User, { username: string; password: string; filialId?: string }, LoginThunkConfig>(
   'auth/loginByUsername',
   async ({ username, password, filialId }, { dispatch, rejectWithValue }) => {
     // ── 1. Пытаемся войти через сервер (JWT) ────────────────────────────────
-    try {
+    const hasNetwork = typeof navigator === 'undefined' || navigator.onLine;
+    let authTimeoutId: ReturnType<typeof setTimeout> | undefined;
+    if (hasNetwork) try {
+      // AbortSignal.timeout поддерживается не во всех WebView — делаем вручную.
+      const controller = new AbortController();
+      authTimeoutId = setTimeout(() => controller.abort(), 4000);
       const res = await fetch(`${getApiUrl()}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         // filialId — филиал со страницы входа ('rup' — РУП); без него входит только администратор системы
         body: JSON.stringify({ username: username.trim().toLowerCase(), password, filialId }),
-        // Таймаут 8 сек — если сервер недоступен, переходим в офлайн
-        signal: AbortSignal.timeout(8000),
+        // Таймаут 4 сек — если сервер недоступен, переходим в офлайн
+        signal: controller.signal,
       });
 
       if (res.ok) {
@@ -46,6 +59,8 @@ export const loginByUsername = createAsyncThunk<User, { username: string; passwo
         if (data.token) sessionStorage.setItem(TOKEN_KEY, data.token);
         const { token: _t, ...user } = data;
         sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+        // Запоминаем вход для работы без сети. Пароль не хранится — только соль и хеш.
+        try { await saveOfflineCredentials(user, password, data.token); } catch { /* не блокируем вход */ }
         dispatch(rtkApi.util.resetApiState());
         dispatch(userActions.setAuthData(user));
         return user;
@@ -56,16 +71,39 @@ export const loginByUsername = createAsyncThunk<User, { username: string; passwo
       return rejectWithValue(err.error ?? 'Ошибка авторизации');
     } catch {
       // Сервер недоступен — переходим в офлайн-режим
+    } finally {
+      if (authTimeoutId) clearTimeout(authTimeoutId);
     }
 
     // ── 2. Офлайн-режим: проверяем SHA-256 из встроенной таблицы ────────────
     // Сюда попадаем, только если сервер не ответил: говорим об этом прямо,
     // иначе «пользователь не найден» выглядит как ошибка в логине
-    const found = OFFLINE_USERS.find((u) => u.username === username.trim().toLowerCase());
-    if (!found) return rejectWithValue(`Сервер недоступен (${getApiUrl() || window.location.origin}). Проверьте, что сервер запущен и есть связь с сетью`);
+    // Сначала проверяем реального пользователя, который уже входил на этом устройстве.
+    const cached = await authenticateOffline(username, password, filialId);
+    if (cached) {
+      if (cached.user.mustChangePassword) {
+        return rejectWithValue('Сначала смените пароль при доступном сервере.');
+      }
+      if (cached.token) sessionStorage.setItem(TOKEN_KEY, cached.token);
+      sessionStorage.setItem(USER_KEY, JSON.stringify(cached.user));
+      dispatch(rtkApi.util.resetApiState());
+      dispatch(userActions.setAuthData(cached.user));
+      return cached.user;
+    }
 
-    const hash = await sha256(password);
-    if (hash !== found.password) return rejectWithValue('Сервер недоступен, вход без сети: неверный пароль');
+    const found = OFFLINE_USERS.find((u) => u.username === username.trim().toLowerCase());
+    if (!found) {
+      return rejectWithValue(
+        hasOfflineCredentials()
+          ? `Сервер недоступен. Для «${username.trim()}» нет сохранённого входа на этом устройстве.`
+          : 'Сервер недоступен. Первый вход должен быть выполнен при доступном сервере — после этого вход будет работать без сети.',
+      );
+    }
+
+    let hash: string | null = null;
+    try { hash = await sha256(password); } catch { hash = null; }
+    if (!hash) return rejectWithValue('Сервер недоступен. Офлайн-вход недоступен в этом браузере.');
+    if (hash !== found.password) return rejectWithValue('Сервер недоступен: неверный пароль');
 
     const { password: _omit, ...user } = found;
     sessionStorage.setItem(USER_KEY, JSON.stringify(user));

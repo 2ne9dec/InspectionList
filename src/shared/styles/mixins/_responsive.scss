@@ -56,6 +56,11 @@
 }
 
 // Только этот брейкпоинт (от текущего до следующего)
+// Планшет/тачскрин: узкий экран ИЛИ грубый указатель.
+@mixin touch-or-narrow {
+  @media (max-width: 767px), (pointer: coarse) { @content; }
+}
+
 @mixin only($name) {
   $next: _next($name);
   @if not $next {

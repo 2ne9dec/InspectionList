@@ -1,6 +1,7 @@
 export type { User, UserSchema, UserRole, UserProfile } from './model/types';
 export type { Permission, PermissionInfo, RolePermissionsData } from './model/permissions';
 export { usePermissions, useCan } from './model/useCan';
+export { authenticateOffline, hasOfflineCredentials, saveOfflineCredentials, getOfflineUsernames } from './model/offlineAuth';
 export { useGetMyPermissionsQuery, useGetRolePermissionsQuery, useSaveRolePermissionsMutation } from './api/permissionsApi';
 export { userReducer, userActions } from './model/userSlice';
 export {

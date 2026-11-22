@@ -1,5 +1,3 @@
-import type { Severity } from '@/shared/const/severity';
-
 export interface DefectRecord {
   id: number;
   sheetId: number;
@@ -22,13 +20,14 @@ export interface DefectRecord {
   resolutionDeadline?: string | null;
   masterName?: string | null;
   fixWorkVolume?: string | null;
+  /** SAP-код опоры (код линии из LineVision). Только для Жлобинских ЭС. */
+  sapCode?: string | null;
 }
 
 export interface DefectRecordFull extends DefectRecord {
   elementName: string;
   defectName: string;
   phaseName: string | null;
-  severity: Severity;
 }
 
 /** Исправление ошибочно внесённого дефекта (пока он не устранён). */

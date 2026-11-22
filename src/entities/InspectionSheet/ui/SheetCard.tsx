@@ -1,8 +1,8 @@
 import { memo, useCallback } from 'react';
 import { formatDate } from '@/shared/lib/helpers/formatDate';
-import { Badge, Dropdown } from '@/shared/ui';
+import { Badge, Button, Checkbox, Dropdown, TableRow, TableTd } from '@/shared/ui';
 import type { InspectionSheetFull } from '../model/types';
-import { IconTrash } from '@/shared/ui/Icons';
+import { IconOffline, IconTrash } from '@/shared/ui/Icons';
 import cls from './SheetCard.module.scss';
 
 export interface SheetCardProps {
@@ -22,48 +22,25 @@ export interface SheetCardProps {
   showFilial?: boolean;
   selected?: boolean;
   onSelect?: (id: number, checked: boolean) => void;
+  /** Старт выделения протяжкой (mousedown на строке). */
+  onSelectStart?: (id: number, e: React.MouseEvent) => void;
+  /** Не открывать листок после протяжки. */
+  suppressOpen?: () => boolean;
   /** Недоступен для выбора слияния (другая линия) */
   disabledForMerge?: boolean;
 }
 
-/** Иконка офлайн-статуса: WiFi с перечёркиванием. */
-const OfflineIcon = () => (
-  <svg
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="var(--color-warning)"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: 4, flexShrink: 0 }}
-    aria-label="Офлайн, ждёт синхронизации"
-  >
-    <path d="M5 12.55a11 11 0 0 1 14.08 0" opacity="0.5" />
-    <path d="M1.42 9a16 16 0 0 1 21.16 0" opacity="0.3" />
-    <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
-    <circle
-      cx="12" cy="20" r="1.5"
-      fill="var(--color-warning)"
-      stroke="none"
-    />
-    <line
-      x1="2" y1="2" x2="22" y2="22"
-      stroke="var(--color-error)"
-      strokeWidth="2"
-    />
-  </svg>
-);
-
 export const SheetCard = memo((props: SheetCardProps) => {
   const {
     sheet, index, onOpen, onDelete, onClone, onEdit,
-    showFilial = true, selected, onSelect, disabledForMerge,
+    showFilial = true, selected, onSelect, onSelectStart, suppressOpen, disabledForMerge,
     canDeleteServer = true,
   } = props;
 
-  const handleRowClick = useCallback(() => onOpen(sheet.id), [onOpen, sheet.id]);
+  const handleRowClick = useCallback(() => {
+    if (suppressOpen?.()) return;
+    onOpen(sheet.id);
+  }, [onOpen, sheet.id, suppressOpen]);
   const stopRowClick   = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
   const handleDelete   = useCallback(() => onDelete?.(sheet.id), [onDelete, sheet.id]);
   const handleClone    = useCallback(() => onClone?.(sheet.id), [onClone, sheet.id]);
@@ -73,60 +50,85 @@ export const SheetCard = memo((props: SheetCardProps) => {
     onSelect?.(sheet.id, e.target.checked);
   }, [onSelect, sheet.id]);
 
+  const handleRowMouseDown = useCallback((e: React.MouseEvent) => {
+    if (!onSelectStart || e.button !== 0) return;
+    const target = e.target as HTMLElement;
+    // Кнопки/ссылки в строке не должны запускать выделение.
+    if (target.closest('button, a')) return;
+    onSelectStart(sheet.id, e);
+  }, [onSelectStart, sheet.id]);
+
   const total = sheet.activeCount + sheet.fixedCount;
   const fixedPct = total > 0 ? Math.round(sheet.fixedCount / total * 100) : 0;
 
   return (
-    <tr className={`${cls.row} ${disabledForMerge ? cls.rowDisabled : ''}`} onClick={handleRowClick}>
+    <TableRow
+      className={`${cls.row} ${disabledForMerge ? cls.rowDisabled : ''}`}
+      data-sheet-id={onSelect ? sheet.id : undefined}
+      data-sheet-disabled={disabledForMerge ? '1' : undefined}
+      onClick={handleRowClick}
+      onMouseDown={onSelectStart ? handleRowMouseDown : undefined}
+    >
       {onSelect && (
-        <td className={cls.cellCheck} onClick={stopRowClick}>
-          <input
-            type="checkbox"
-            checked={!!selected}
-            onChange={handleCheck}
-            disabled={disabledForMerge}
-          />
-        </td>
+        <TableTd className={cls.cellCheck} onClick={stopRowClick}>
+          <span className={cls.checkWrap}>
+            <Checkbox
+              checked={!!selected}
+              onChange={handleCheck}
+              disabled={disabledForMerge}
+            />
+          </span>
+        </TableTd>
       )}
-      <td className={cls.cell}>
+      <TableTd className={cls.cell}>
         {index}
-        {sheet.status === 'pending' && <OfflineIcon />}
-      </td>
-      {showFilial && <td className={cls.cell}>{sheet.filialName}</td>}
-      <td className={cls.cell}>{sheet.voltageName}</td>
-      <td className={`${cls.cell} ${cls.lineCell}`}>{sheet.lineName}</td>
-      <td className={cls.cell}>{formatDate(sheet.createdDate)}</td>
-      <td className={cls.cell}>{sheet.createdBy}</td>
-      <td className={cls.cell}>
+        {sheet.status === 'pending' && (
+          <span className={cls.offlineIcon} title="Ожидает синхронизации">
+            <IconOffline />
+          </span>
+        )}
+      </TableTd>
+      {showFilial && <TableTd className={cls.cell}>{sheet.filialName}</TableTd>}
+      <TableTd className={cls.cell}>{sheet.voltageName}</TableTd>
+      <TableTd className={`${cls.cell} ${cls.lineCell}`}>{sheet.lineName}</TableTd>
+      <TableTd className={cls.cell}>{formatDate(sheet.createdDate)}</TableTd>
+      <TableTd className={cls.cell}>{sheet.createdBy}</TableTd>
+      <TableTd className={cls.cell}>
         <Badge variant={sheet.activeCount > 0 ? 'danger' : 'neutral'}>
           {sheet.activeCount}
         </Badge>
-      </td>
-      <td className={cls.cell}>
+      </TableTd>
+      <TableTd className={cls.cell}>
         <div className={cls.fixedCell}>
           <Badge variant={sheet.fixedCount > 0 ? 'success' : 'neutral'}>
             {sheet.fixedCount}
           </Badge>
           {total > 0 && (
             <div className={cls.progressTrack}>
-              <div className={cls.progressBar} style={{ width: `${fixedPct}%` }} />
+              <div
+                className={cls.progressBar}
+                style={{ '--progress-value': `${fixedPct}%` } as React.CSSProperties}
+              />
             </div>
           )}
         </div>
-      </td>
-      <td className={cls.cell} onClick={stopRowClick}>
+      </TableTd>
+      <TableTd className={cls.cell} onClick={stopRowClick}>
         <Dropdown
           placement="bottom-end"
           trigger={({ open, toggle }) => (
-            <button
-              type="button"
+            <Button
+              variant='ghost'
+              size='m'
+              square
               className={cls.menuBtn}
               onClick={toggle}
-              aria-haspopup="menu"
+              aria-haspopup='menu'
               aria-expanded={open}
+              aria-label='Действия с листком'
             >
               &#8942;
-            </button>
+            </Button>
           )}
         >
           {({ close }) => (
@@ -157,8 +159,8 @@ export const SheetCard = memo((props: SheetCardProps) => {
             </>
           )}
         </Dropdown>
-      </td>
-    </tr>
+      </TableTd>
+    </TableRow>
   );
 });
 

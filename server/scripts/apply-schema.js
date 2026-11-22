@@ -20,13 +20,13 @@ const { ensureSchema } = require('../lib/schema');
 
 (async () => {
   try {
-    console.log('[migrate] Проверка подключения к Firebird...');
+    console.log('[migrate] Connecting to Firebird...');
     await testConnection();
     await ensureSchema();
-    console.log('[migrate] Готово. Листки осмотра и дефекты не изменялись.');
+    console.log('[migrate] Done. Inspection sheets and defects were not modified.');
     process.exit(0);
   } catch (err) {
-    console.error('[migrate] Ошибка:', err.message);
+    console.error('[migrate] Error:', err.message);
     process.exit(1);
   }
 })();

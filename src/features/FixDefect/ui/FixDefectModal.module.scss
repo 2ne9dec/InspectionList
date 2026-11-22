@@ -1,7 +1,7 @@
 @use 'shared/styles/mixins' as m;
 
 .selectAll {
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width) solid var(--color-border);
   padding-bottom: var(--space-2);
   margin-bottom: var(--space-2);
 }
@@ -10,7 +10,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  max-height: 260px;
+  max-height: var(--layout-260);
   overflow-y: auto;
   padding-right: var(--space-1);
 }
@@ -31,8 +31,8 @@
   }
 
   input[type='checkbox'] {
-    width: 16px;
-    height: 16px;
+    width: var(--space-4);
+    height: var(--space-4);
     cursor: pointer;
     flex-shrink: 0;
     accent-color: var(--color-accent);
@@ -43,7 +43,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: var(--space-px);
   min-width: 0;
 }
 
@@ -64,25 +64,25 @@
 
 .defectName {
   font-size: var(--font-size-s);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
-  line-height: 1.3;
+  line-height: var(--line-height-snug);
 }
 
 .tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 3px;
+  gap: var(--space-0-75);
 }
 
 .phaseTag {
   display: inline-block;
-  padding: 1px 6px;
+  padding: var(--space-px) var(--space-1-5);
   background: var(--color-accent-muted);
   color: var(--color-accent);
   border-radius: var(--radii-s);
   font-size: var(--font-size-2xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .fields {

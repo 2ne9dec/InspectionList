@@ -6,7 +6,7 @@
   align-items: center;
 }
 
-// Высота кнопки выровнена с Button size="s" (var(--control-height-s) = 28px),
+// Высота кнопки выровнена с Button size="s" (var(--control-height-s) = var(--control-height-s)),
 // чтобы в навбаре кнопки «Фильтр по дате», «Выйти», ThemeSwitcher
 // были одинаковой высоты.
 .btn {
@@ -16,13 +16,13 @@
   height: var(--control-height-s);
   padding: 0 var(--space-3);
   background: var(--color-bg-surface-2);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radii);
   font-size: var(--font-size-s);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-secondary);
   font-family: var(--font-family-main);
-  line-height: 1;
+  line-height: var(--line-height-none);
   cursor: pointer;
   white-space: nowrap;
   transition: var(--transition-border), var(--transition-color);
@@ -46,20 +46,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  width: var(--space-4);
+  height: var(--space-4);
   margin-left: var(--space-1);
   border-radius: var(--radii-full);
+  background: var(--color-accent-muted); // fallback
   background: color-mix(in srgb, var(--color-accent) 20%, transparent);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   color: var(--color-accent);
-  line-height: 1;
+  line-height: var(--line-height-none);
   flex-shrink: 0;
-  transition: background 150ms ease, color 150ms ease;
+  transition: background var(--duration-base) var(--ease-standard), color var(--duration-base) var(--ease-standard);
 
   &:hover {
     background: var(--color-error);
-    color: #fff;
+    color: var(--color-text-on-accent);
   }
 }
 
@@ -69,14 +70,14 @@
   left: 0;
   z-index: var(--z-popover);
   background: var(--color-surface-card);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radii-l);
   box-shadow: var(--shadow-l);
   padding: var(--space-4);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  min-width: 260px;
+  min-width: var(--layout-260);
 }
 
 // Строка быстрых пресетов
@@ -89,7 +90,7 @@
 .preset {
   padding: var(--space-1) var(--space-2);
   background: var(--color-bg-surface-2);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radii);
   font-size: var(--font-size-xs);
   font-family: var(--font-family-main);
@@ -113,7 +114,7 @@
 
 // Разделитель между пресетами и ручным вводом
 .divider {
-  height: 1px;
+  height: var(--space-px);
   background: var(--color-border);
   margin: 0 calc(-1 * var(--space-4));
 }

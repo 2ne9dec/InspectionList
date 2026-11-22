@@ -18,13 +18,13 @@
   width: 100%;
   height: var(--control-height-m);
   background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radii);
   transition: var(--transition-border), var(--transition-shadow);
 
   &:focus-within {
     border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px var(--color-accent-muted);
+    box-shadow: var(--shadow-focus);
   }
 }
 
@@ -36,6 +36,8 @@
   background: transparent;
   border: none;
   outline: none;
+  /* stylelint-disable-next-line property-no-vendor-prefix */
+  -webkit-appearance: none;
   appearance: none;
   font-family: var(--font-family-main);
   font-size: var(--font-size-m);
@@ -49,8 +51,8 @@
   }
 
   option {
-    background: var(--color-bg-surface, #1e293b);
-    color: var(--color-text-primary, #f1f5f9);
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
   }
 }
 
@@ -59,7 +61,7 @@
   right: var(--space-3);
   pointer-events: none;
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--font-size-2xs);
 }
 
 // ── Sizes ───────────────────────────────────────────────────────────────────
@@ -74,6 +76,6 @@
   border-color: var(--color-error);
 
   &:focus-within {
-    box-shadow: 0 0 0 3px var(--color-error-muted);
+    box-shadow: var(--shadow-focus-error);
   }
 }

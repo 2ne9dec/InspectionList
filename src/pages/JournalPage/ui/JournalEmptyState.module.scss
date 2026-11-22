@@ -10,8 +10,8 @@
 }
 
 .icon {
-  font-size: 48px;
-  line-height: 1;
+  font-size: var(--font-size-4xl);
+  line-height: var(--line-height-none);
   opacity: 0.4;
 }
 
@@ -29,25 +29,3 @@
   margin: 0;
 }
 
-.tips {
-  list-style: none;
-  margin: 0;
-  padding: var(--space-4);
-  background: var(--color-surface-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radii);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  max-width: 420px;
-  width: 100%;
-
-  li {
-    font-size: var(--font-size-s);
-    color: var(--color-text-secondary);
-    text-align: left;
-    line-height: var(--line-height-relaxed);
-
-    strong { color: var(--color-text-primary); }
-  }
-}

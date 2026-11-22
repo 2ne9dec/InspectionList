@@ -3,16 +3,17 @@ import { useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
 import type { UserProfile } from '@/entities/User';
 import {
-  DIRECTOR_ASSIGNABLE, ROLE_ORDER, getRoleLabel, getUserAuthData, getUserCanManageUsers, getUserIsGlobalManager, getUserRole,
+  DIRECTOR_ASSIGNABLE, ROLE_ORDER, getUserAuthData, getUserCanManageUsers, getUserIsGlobalManager, getUserRole,
   useDeleteUserMutation, useGetUsersQuery,
 } from '@/entities/User';
 import { useGetFilialsQuery } from '@/entities/InspectionLine';
 import { getRouteSheets } from '@/shared/const/router';
-import { Badge, Button, ConfirmModal, Input, KebabMenu, Loader, Select, useConfirm } from '@/shared/ui';
+import { Button, ConfirmModal, Input, Select, useConfirm } from '@/shared/ui';
 import { toast } from '@/shared/lib/toast';
 import { UserFormModal } from './UserFormModal';
 import { ResetPasswordModal } from './ResetPasswordModal';
 import { RolePermissions } from './RolePermissions';
+import { UsersTable } from './UsersTable';
 import cls from './UsersPage.module.scss';
 
 /**
@@ -135,68 +136,17 @@ const UsersPage = () => {
         )}
       </div>
 
-      <div className={cls.tableWrap}>
-        {isLoading ? (
-          <div className={cls.center}><Loader /></div>
-        ) : (
-          <table className={cls.table}>
-            <thead>
-              <tr>
-                <th>Логин</th>
-                <th>ФИО</th>
-                <th>Роль</th>
-                <th>Филиал</th>
-                <th>Пароль</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {rows.length === 0 ? (
-                <tr><td colSpan={6} className={cls.empty}>Пользователи не найдены</td></tr>
-              ) : rows.map((u) => {
-                const isMe = String(u.id) === String(me?.id) && u.filialId === me?.filialId;
-                return (
-                  // ID уникален только в пределах базы филиала: ключ — филиал + ID
-                  <tr key={`${u.filialId ?? 'rup'}:${u.id}`}>
-                    <td className={cls.mono}>{u.username}{isMe && <span className={cls.me}> (вы)</span>}</td>
-                    <td>{u.displayName}</td>
-                    <td>
-                      <Badge variant={u.role === 'observer' ? 'info' : u.role === 'admin' ? 'warning' : 'neutral'}>
-                        {getRoleLabel(u.role, u.filialId)}
-                      </Badge>
-                    </td>
-                    <td>{u.filialId == null ? (u.role === 'observer' ? 'РУП «Гомельэнерго»' : '—') : (filialName.get(u.filialId) ?? '—')}</td>
-                    <td>
-                      {u.mustChangePassword
-                        ? <Badge variant='warning'>временный</Badge>
-                        : <span className={cls.muted}>задан</span>}
-                    </td>
-                    <td className={cls.actions}>
-                      {isDirector ? (
-                        directorRoles?.includes(u.role) && (
-                          <KebabMenu
-                            ariaLabel='Действия с пользователем'
-                            items={[{ id: 'reset', label: 'Задать временный пароль', onClick: () => setResetUser(u) }]}
-                          />
-                        )
-                      ) : (
-                        <KebabMenu
-                          ariaLabel='Действия с пользователем'
-                          items={[
-                            { id: 'edit',  label: 'Изменить', onClick: () => handleEdit(u) },
-                            { id: 'reset', label: 'Задать временный пароль', onClick: () => setResetUser(u) },
-                            ...(!isMe ? [{ id: 'delete', label: 'Удалить', danger: true, onClick: () => { void handleDelete(u); } }] : []),
-                          ]}
-                        />
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <UsersTable
+        rows={rows}
+        isLoading={isLoading}
+        me={me}
+        isDirector={isDirector}
+        directorRoles={directorRoles}
+        filialName={filialName}
+        onEdit={handleEdit}
+        onReset={setResetUser}
+        onDelete={(u) => { void handleDelete(u); }}
+      />
 
       </>
       )}

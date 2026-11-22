@@ -1,21 +1,23 @@
 import { useCallback, useMemo, useState } from 'react';
-import { useGetDefectsBySheetQuery, useDeleteDefectMutation, useDeleteDefect } from '@/entities/DefectRecord';
+import {
+  useGetDefectsBySheetQuery,
+  useDeleteDefectMutation,
+  useDeleteDefect,
+  enrichDefects,
+  filterDefectRows,
+  groupByPole,
+} from '@/entities/DefectRecord';
 import { useGetDefectTypesQuery, useGetElementsQuery, useGetPhasesQuery } from '@/entities/InspectionLine';
-import type { Severity } from '@/shared/const/severity';
-import { SEVERITY_LABELS } from '@/shared/const/severity';
-import { enrichDefects, groupByPole } from '../lib/enrichDefects';
 import { toast } from '@/shared/lib/toast';
 import { logger } from '@/shared/lib/logger';
 
 export type DefectTab = 'active' | 'fixed';
 export type SortDir = 'asc' | 'desc';
 
-type SeverityCounts = Record<Severity, number>;
-
 /**
  * Бизнес-логика виджета DefectTable:
  *  - данные (RTK Query) + локальное UI-состояние (поиск/фильтры/сортировка/вкладка)
- *  - enrichment + group by pole + статистика по severity
+ *  - enrichment + group by pole
  *  - удаление дефекта с confirm
  *
  * Возвращает все вычисленные данные + UI-сеттеры одним плоским объектом.
@@ -25,7 +27,6 @@ export function useDefectTable(sheetId: number) {
   const [search, setSearch] = useState('');
   const [filterElementId, setFilterElementId] = useState('');
   const [filterDefectTypeId, setFilterDefectTypeId] = useState('');
-  const [filterSeverity, setFilterSeverity] = useState('');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
   const { data: allDefects = [], isLoading } = useGetDefectsBySheetQuery(sheetId);
@@ -54,36 +55,23 @@ export function useDefectTable(sheetId: number) {
   );
 
   // 2. Применяем фильтры/поиск
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return enriched.filter((d) => {
-      if (filterElementId && defectElementMap.get(d.defectId) !== filterElementId) return false;
-      if (filterDefectTypeId && String(d.defectId) !== filterDefectTypeId) return false;
-      if (filterSeverity && d.severity !== filterSeverity) return false;
-      if (q) {
-        return (
-          d.defectName.toLowerCase().includes(q) ||
-          d.elementName.toLowerCase().includes(q) ||
-          String(d.poleNumber).includes(q) ||
-          d.inspectorFind.toLowerCase().includes(q)
-        );
-      }
-      return true;
-    });
-  }, [enriched, filterElementId, filterDefectTypeId, filterSeverity, search, defectElementMap]);
+  const filtered = useMemo(
+    () => filterDefectRows(
+      enriched,
+      {
+        elementId: filterElementId,
+        defectTypeId: filterDefectTypeId,
+        search,
+      },
+      defectElementMap,
+    ),
+    [enriched, filterElementId, filterDefectTypeId, search, defectElementMap],
+  );
 
   // 3. Группируем по опоре
   const groupedByPole = useMemo(() => groupByPole(filtered, sortDir), [filtered, sortDir]);
 
-  // 4. Статистика по severity (только для активной вкладки)
-  const severityStats = useMemo<SeverityCounts | null>(() => {
-    if (tab !== 'active') return null;
-    const counts: SeverityCounts = { critical: 0, high: 0, medium: 0, low: 0, ok: 0 };
-    for (const d of enriched) counts[d.severity as Severity]++;
-    return counts;
-  }, [enriched, tab]);
-
-  // 5. Опции для шапки таблицы
+  // 4. Опции для шапки таблицы
   const elementOptions = useMemo(() => elements.map((e) => ({ id: e.id, name: e.name })), [elements]);
 
   const defectTypeOptions = useMemo(() => {
@@ -91,26 +79,15 @@ export function useDefectTable(sheetId: number) {
     return source.map((t) => ({ id: t.id, name: t.name }));
   }, [defectTypes, filterElementId]);
 
-  // Опции фильтра по severity. id-ы — строковые ключи Severity ('critical'/'medium'/'low').
-  const severityOptions = useMemo(
-    () =>
-      (Object.keys(SEVERITY_LABELS) as Severity[]).map((s) => ({
-        id: s,
-        name: SEVERITY_LABELS[s],
-      })),
-    [],
-  );
-
-  // 6. Счётчики и фильтры для toolbar
+  // 5. Счётчики и фильтры для toolbar
   const activeCount = useMemo(() => allDefects.filter((d) => !d.isFixed).length, [allDefects]);
   const fixedCount = useMemo(() => allDefects.filter((d) => d.isFixed).length, [allDefects]);
-  const hasFilters = !!(filterElementId || filterDefectTypeId || filterSeverity || search);
+  const hasFilters = !!(filterElementId || filterDefectTypeId || search);
 
-  // 7. Команды
+  // 6. Команды
   const clearFilters = useCallback(() => {
     setFilterElementId('');
     setFilterDefectTypeId('');
-    setFilterSeverity('');
     setSearch('');
   }, []);
 
@@ -147,10 +124,8 @@ export function useDefectTable(sheetId: number) {
     // данные
     isLoading,
     groupedByPole,
-    severityStats,
     elementOptions,
     defectTypeOptions,
-    severityOptions,
     activeCount,
     fixedCount,
     hasFilters,
@@ -161,14 +136,12 @@ export function useDefectTable(sheetId: number) {
     setSearch,
     filterElementId,
     filterDefectTypeId,
-    filterSeverity,
     sortDir,
     // команды
     toggleSort,
     clearFilters,
     handleElementChange,
     setFilterDefectTypeId,
-    setFilterSeverity,
     handleDelete,
     handleDeleteAll,
     confirmProps,

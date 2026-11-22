@@ -1,35 +1,54 @@
+/**
+ * Публичный набор иконок.
+ *
+ * Общие UI-иконки — из lucide-react (установленная библиотека, SVG-компоненты,
+ * попадают в бандл и работают офлайн). Доменные иконки (опора ЛЭП, офлайн-статус,
+ * точка, шеврон с поворотом) остаются локальными.
+ *
+ * Не используем <img>, внешние URL и PNG-иконки.
+ */
 export type { IconProps } from './_base';
-export { IconHome }            from './IconHome';
-export { IconSheet }           from './IconSheet';
-export { IconMap }             from './IconMap';
-export { IconUpload }          from './IconUpload';
-export { IconCamera }          from './IconCamera';
-export { IconAI }              from './IconAI';
-export { IconTower }           from './IconTower';
-export { IconTasks }           from './IconTasks';
-export { IconSearch }          from './IconSearch';
-export { IconClose }           from './IconClose';
-export { IconCheck }           from './IconCheck';
-export { IconEdit }            from './IconEdit';
-export { IconTrash }           from './IconTrash';
-export { IconSave }            from './IconSave';
-export { IconLock }            from './IconLock';
-export { IconEye }            from './IconEye';
-export { IconEyeOff }            from './IconEyeOff';
-export { IconChart }           from './IconChart';
-export { IconWarning }         from './IconWarning';
-export { IconPin }             from './IconPin';
-export { IconClipboard }       from './IconClipboard';
-export { IconWrench }          from './IconWrench';
-export { IconGlobe }           from './IconGlobe';
-export { IconDownload }        from './IconDownload';
-export { IconLink }            from './IconLink';
-export { IconPlus }            from './IconPlus';
-export { IconFullscreen }      from './IconFullscreen';
-export { IconExitFullscreen }  from './IconExitFullscreen';
-export { IconUploadProgress }  from './IconUploadProgress';
-export { IconDot }             from './IconDot';
-export { IconLogout }          from './IconLogout';
-export { IconUser }            from './IconUser';
-export { IconCalendar }        from './IconCalendar';
-export { IconChevron }         from './IconChevron';
+
+// ── Общие UI-иконки (lucide-react) ──────────────────────────────────────────
+export {
+  X             as IconClose,
+  TriangleAlert as IconWarning,
+  Trash2         as IconTrash,
+  Save           as IconSave,
+  ListChecks     as IconTasks,
+  Check          as IconCheck,
+  Pencil         as IconEdit,
+  Download       as IconDownload,
+  Eye            as IconEye,
+  EyeOff         as IconEyeOff,
+  Search         as IconSearch,
+  FileText       as IconSheet,
+  LogOut         as IconLogout,
+  ClipboardList  as IconClipboard,
+  User           as IconUser,
+  Home            as IconHome,
+  Map             as IconMap,
+  Upload          as IconUpload,
+  Camera          as IconCamera,
+  Lock            as IconLock,
+  ChartBar        as IconChart,
+  MapPin          as IconPin,
+  Wrench          as IconWrench,
+  Globe           as IconGlobe,
+  Link            as IconLink,
+  Plus            as IconPlus,
+  Maximize        as IconFullscreen,
+  Minimize        as IconExitFullscreen,
+  UploadCloud     as IconUploadProgress,
+  Calendar        as IconCalendar,
+  Moon            as IconMoon,
+  Sun             as IconSun,
+  Settings        as IconSettings,
+} from 'lucide-react';
+
+// ── Доменные иконки ─────────────────────────────────────────────────────────
+export { IconAI }      from './IconAI';
+export { IconChevron } from './IconChevron';
+export { IconDot }     from './IconDot';
+export { IconOffline } from './IconOffline';
+export { IconTower }   from './IconTower';

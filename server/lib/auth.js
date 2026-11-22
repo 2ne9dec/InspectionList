@@ -42,7 +42,7 @@ if (IS_PROD && (!JWT_SECRET || JWT_SECRET.length < 32)) {
   process.exit(1);
 }
 if (!IS_PROD && !process.env.JWT_SECRET) {
-  console.warn('[WARN] JWT_SECRET не задан — используется небезопасный dev-ключ. Задайте JWT_SECRET в .env');
+  console.warn('[WARN] JWT_SECRET is not set - using dev default. Set JWT_SECRET in .env');
 }
 
 // Маршруты, доступные без токена

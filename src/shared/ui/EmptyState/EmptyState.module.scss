@@ -29,7 +29,7 @@
 .description {
   font-size: var(--font-size-m);
   color: var(--color-text-secondary);
-  max-width: 480px;
+  max-width: var(--layout-480);
 }
 
 .action {

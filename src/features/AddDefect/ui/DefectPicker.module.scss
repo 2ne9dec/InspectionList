@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  width: clamp(180px, 18vw, 260px);
+  width: clamp(var(--layout-180), 18vw, var(--layout-260));
   min-width: 0;
 }
 
@@ -18,7 +18,7 @@
   padding: 0 var(--space-3);
   height: var(--control-height-m);
   background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radii);
   cursor: pointer;
   text-align: left;
@@ -36,14 +36,6 @@
   background: var(--color-accent-muted);
 }
 
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--sev);
-  flex-shrink: 0;
-}
-
 .text {
   @include m.text-truncate;
   flex: 1;
@@ -57,15 +49,8 @@
   color: var(--color-text-secondary);
 }
 
-.sev {
-  font-size: var(--font-size-s);
-  font-weight: var(--font-weight-bold);
-  color: var(--sev);
-  flex-shrink: 0;
-}
-
 .arrow {
-  font-size: 9px;
+  font-size: var(--font-size-3xs);
   color: var(--color-text-secondary);
   flex-shrink: 0;
 }
@@ -74,13 +59,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: var(--space-6);
+  height: var(--space-6);
   background: var(--color-error);
   color: var(--color-text-on-accent);
   border: none;
   border-radius: var(--radii-full);
-  font-size: 10px;
+  font-size: var(--font-size-2xs);
   cursor: pointer;
   flex-shrink: 0;
   opacity: 0.85;

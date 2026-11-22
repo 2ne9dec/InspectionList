@@ -1,3 +1,5 @@
+@use 'shared/styles/mixins' as m;
+
 .wrapper {
   display: flex;
   flex-direction: column;
@@ -28,16 +30,9 @@
   pointer-events: none;
 }
 
-.sentinelInner {
-  display: flex;
-  justify-content: center;
-  padding: var(--space-4) 0;
-  opacity: 0.5;
-}
-
 /* Tablet/mobile - gorizontalny skroll */
-@media (max-width: 720px) {
-  .table { min-width: 600px; }
+@include m.down(tabletSm) {
+  .table { min-width: var(--layout-600); }
   .tableWrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -46,7 +41,7 @@
 }
 
 /* Phone - stranica skrollit nativno, tableWrapper ne ogranchivayem vysotu */
-@media (max-width: 479px) {
+@include m.down(phone) {
   .wrapper {
     height: auto;
     min-height: 0;
@@ -56,5 +51,5 @@
     height: auto;
     flex: none;
   }
-  .table { min-width: 520px; }
+  .table { min-width: var(--table-min-width); }
 }

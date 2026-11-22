@@ -1,3 +1,5 @@
+@use 'shared/styles/mixins' as m;
+
 // MasterConclusionModal — стили формы внутри модалки.
 
 .form {
@@ -13,55 +15,24 @@
   margin: 0;
 }
 
-.label {
-  font-size: var(--font-size-s);
-  color: var(--color-text-secondary);
-  font-weight: var(--font-weight-medium);
-}
-
-.input {
-  width: 100%;
-  height: var(--control-height-m);
-  padding: 0 var(--space-3);
-  border-radius: var(--radii);
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-page);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-s);
-  font-family: var(--font-family-main);
-  box-sizing: border-box;
-  transition: var(--transition-border);
-
-  &:focus {
-    outline: none;
-    border-color: var(--color-accent);
-  }
-}
-
 .textarea {
   width: 100%;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radii);
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-page);
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-bg-surface);
   color: var(--color-text-primary);
   font-size: var(--font-size-s);
   font-family: var(--font-family-main);
   box-sizing: border-box;
   transition: var(--transition-border);
   resize: vertical;
-  min-height: 52px;
+  min-height: var(--textarea-min-height-s);
 
   &:focus {
     outline: none;
     border-color: var(--color-accent);
   }
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
 }
 
 .row2 {
@@ -69,13 +40,10 @@
   grid-template-columns: 1fr 1fr;
   gap: var(--space-4);
 
-  @media (max-width: 600px) {
+  @include m.down(phoneWide) {
     grid-template-columns: 1fr;
     gap: var(--space-4);
   }
 }
 
-.dateField {
-  cursor: pointer;
-  &::-webkit-calendar-picker-indicator { cursor: pointer; }
-}
+

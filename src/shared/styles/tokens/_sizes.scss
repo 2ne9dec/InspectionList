@@ -20,4 +20,98 @@
   --control-height-m: 34px;
   --control-height-l: 40px;
   --control-height-xl: 48px;
+
+  // Размеры иконок
+  --icon-size-s:   16px;
+  --icon-size-m:   20px;
+
+  // Границы и скроллбар
+  --border-width:        1px;
+  --border-width-strong: 2px;
+  --scrollbar-size:      8px;
+
+  // Панели и оверлеи
+  --sidebar-width:      340px;
+  --timeline-width:     380px;
+  --popover-width:      360px;
+  --popover-max-height: 340px;
+  --dropdown-max-height: 360px;
+  --auth-card-width:    380px;
+  --form-card-width:    420px;
+  --table-min-width:    520px;
+
+  // Модальные окна
+  --modal-width-s:  420px;
+  --modal-width-m:  520px;
+  --modal-width-l:  760px;
+  --modal-width-xl: 1080px;
+
+  // Колонки таблиц
+  --table-col-index:   48px;
+  --table-col-select:  32px;
+  --table-col-pole:    clamp(130px, 13vw, 170px);
+  --table-col-element: clamp(140px, 14vw, 200px);
+  --table-col-defect:  clamp(180px, 20vw, 320px);
+  --table-col-date:    clamp(90px, 10vw, 120px);
+  --table-col-person:  clamp(110px, 12vw, 160px);
+  --table-col-note:    clamp(110px, 12vw, 200px);
+  --table-col-count:   clamp(90px, 9vw, 130px);
+  --table-col-actions: clamp(50px, 5vw, 70px);
+
+  // Индикатор прогресса
+  --progress-track-width:  36px;
+  --progress-track-height: 4px;
+
+  // Многострочные поля
+  --textarea-min-height:   80px;
+  --textarea-min-height-s: 52px;
+
+  // Списочные элементы и touch-цели
+  --list-item-min-height: 36px;
+  --touch-target-min:     44px;
+
+  // Панели выбора элемента/дефекта
+  --popover-width-s:  220px;
+  --sheet-max-height: 72vh;
+
+  // Ячейка примечания в таблице дефектов
+  --note-cell-max-width: 200px;
+  --note-text-max-width: 180px;
+
+  // Универсальная шкала layout-размеров
+  --layout-11:   11px;
+  --layout-15:   15px;
+  --layout-22:   22px;
+  --layout-26:   26px;
+  --layout-36:   36px;
+  --layout-46:   46px;
+  --layout-72:   72px;
+  --layout-80:   80px;
+  --layout-90:   90px;
+  --layout-95:   95px;
+  --layout-110: 110px;
+  --layout-120: 120px;
+  --layout-130: 130px;
+  --layout-138: 138px;
+  --layout-140: 140px;
+  --layout-150: 150px;
+  --layout-160: 160px;
+  --layout-175: 175px;
+  --layout-180: 180px;
+  --layout-190: 190px;
+  --layout-200: 200px;
+  --layout-220: 220px;
+  --layout-240: 240px;
+  --layout-260: 260px;
+  --layout-280: 280px;
+  --layout-300: 300px;
+  --layout-320: 320px;
+  --layout-340: 340px;
+  --layout-360: 360px;
+  --layout-400: 400px;
+  --layout-440: 440px;
+  --layout-480: 480px;
+  --layout-500: 500px;
+  --layout-600: 600px;
+  --layout-1000: 1000px;
 }

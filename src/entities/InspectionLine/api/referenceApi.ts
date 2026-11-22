@@ -1,19 +1,18 @@
 import { rtkApi } from '@/shared/api/rtkApi';
 import type { Filial, Voltage, Line, Element, DefectType, Phase } from '../model/types';
 
-// Все справочники берутся из seed-файлов (офлайн-first).
-// Изменения структуры (новые линии, SAP-коды) применяются через export-db-to-seed.js
-// и деплой новой версии приложения.
-import filialsData            from '../../../../server/seed/filials.json';
-import voltagesData           from '../../../../server/seed/voltages.json';
-import linesData              from '../../../../server/seed/lines.json';
-import filialVoltageFilterData from '../../../../server/seed/filialVoltageFilter.json';
-import elementsData            from '../../../../server/seed/elements.json';
-import defectTypesData         from '../../../../server/seed/defectTypes.json';
-import phasesData              from '../../../../server/seed/phases.json';
-import phaseElementIdsData     from '../../../../server/seed/phaseElementIds.json';
-import garlandElementIdsData   from '../../../../server/seed/garlandElementIds.json';
-import voltageGarlandCountData from '../../../../server/seed/voltageGarlandCount.json';
+// Все справочники берутся из локальных reference-файлов (офлайн-first).
+// Источник — server/seed; синхронизация: yarn reference:sync.
+import filialsData             from '@/shared/config/reference/filials.json';
+import voltagesData            from '@/shared/config/reference/voltages.json';
+import linesData               from '@/shared/config/reference/lines.json';
+import filialVoltageFilterData from '@/shared/config/reference/filialVoltageFilter.json';
+import elementsData            from '@/shared/config/reference/elements.json';
+import defectTypesData         from '@/shared/config/reference/defectTypes.json';
+import phasesData              from '@/shared/config/reference/phases.json';
+import phaseElementIdsData     from '@/shared/config/reference/phaseElementIds.json';
+import garlandElementIdsData   from '@/shared/config/reference/garlandElementIds.json';
+import voltageGarlandCountData from '@/shared/config/reference/voltageGarlandCount.json';
 
 const referenceApi = rtkApi.injectEndpoints({
   endpoints: (build) => ({

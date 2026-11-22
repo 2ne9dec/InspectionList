@@ -149,12 +149,11 @@ router.get('/elements', async (req, res) => {
 router.get('/defectTypes', async (req, res) => {
   try {
     const rows = await query(
-      'SELECT ID, NAME, SEVERITY, ELEMENT_ID FROM DEFECT_TYPES ORDER BY ID',
+      'SELECT ID, NAME, ELEMENT_ID FROM DEFECT_TYPES ORDER BY ID',
     );
     res.json(rows.map(r => ({
       id:        r.id,
       name:      r.name,
-      severity:  r.severity,
       elementId: r.element_id,
     })));
   } catch (err) {
