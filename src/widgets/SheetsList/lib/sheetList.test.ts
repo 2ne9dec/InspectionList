@@ -81,6 +81,16 @@ describe('sheetList', () => {
     expect(matchesSheetSearch(sheet, 'мозырь')).toBe(false);
   });
 
+  it('ищет по всем осматривавшим и по объединившему', () => {
+    const sheet = makeSheetFull({
+      inspectors: 'Иванов И.И., Петров П.П.',
+      mergedBy: 'Сидоров С.С.',
+    });
+
+    expect(matchesSheetSearch(sheet, 'петров')).toBe(true);
+    expect(matchesSheetSearch(sheet, 'сидоров')).toBe(true);
+  });
+
   it('фильтрует по филиалу, поиску и статусу', () => {
     const rows = [
       makeSheetFull({ id: 1, filialId: 1, status: 'active' }),
@@ -112,6 +122,15 @@ describe('sheetList', () => {
     expect(sortSheets(rows, 'date', 'asc').map((s) => s.id)).toEqual([2, 1]);
     expect(sortSheets(rows, 'inspector', 'asc').map((s) => s.id)).toEqual([2, 1]);
     expect(sortSheets(rows, 'voltage', 'desc').map((s) => s.id)).toEqual([1, 2]);
+  });
+
+  it('сортирует по списку осматривавших, а не только по createdBy', () => {
+    const rows = [
+      makeSheetFull({ id: 1, createdBy: 'Яковлев', inspectors: 'Петров П.П.' }),
+      makeSheetFull({ id: 2, createdBy: 'Яковлев', inspectors: 'Иванов И.И.' }),
+    ];
+
+    expect(sortSheets(rows, 'inspector', 'asc').map((s) => s.id)).toEqual([2, 1]);
   });
 
   it('считает статусы с учётом офлайн-листков', () => {

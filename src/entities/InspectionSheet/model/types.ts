@@ -7,6 +7,10 @@ export interface InspectionSheet {
   lineId: number;
   createdDate: string; // ISO: "2026-05-11"
   createdBy: string;
+  /** Кто осматривал; при объединении — все исходные ФИО через запятую. */
+  inspectors?: string | null;
+  /** Кто объединил листки (только у объединённых). */
+  mergedBy?: string | null;
   status: SheetStatus;
   /** ID листков, из которых был создан этот сводный листок */
   mergedFromIds?: number[] | null;

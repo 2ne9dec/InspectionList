@@ -8,6 +8,7 @@
  *   - DEFECT_RECORDS.CUSTOM_NAME (nullable) — свободное описание дефекта;
  *   - ELEMENTS «Линейная арматура» (ID 31);
  *   - DEFECT_TYPES «Прочий дефект» (ID 136) для этого элемента;
+ *   - INSPECTION_SHEETS.INSPECTORS / MERGED_BY (кто осматривал и кто объединил);
  *   - известные ошибочные даты дефектов линии 187 (2001 -> 2026).
  *
  * Запуск: node server/scripts/apply-schema.js

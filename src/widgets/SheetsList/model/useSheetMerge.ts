@@ -62,7 +62,7 @@ export function useSheetMerge(sheets: InspectionSheetFull[]) {
       const result = await mergeSheets({
         ids: Array.from(selectedIds),
         createdDate: mergeDate,
-        createdBy: mergeBy,
+        mergedBy: mergeBy,
       }).unwrap();
       setSelectedIds(new Set());
       setMergeOpen(false);

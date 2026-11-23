@@ -26,6 +26,28 @@ describe('SheetCard', () => {
     expect(onSelect).toHaveBeenCalledWith(7, true);
   });
 
+  it('показывает всех осматривавших и того, кто объединил', () => {
+    render(
+      <table>
+        <tbody>
+          <SheetCard
+            sheet={makeSheetFull({
+              id: 9,
+              inspectors: 'Иванов И.И., Петров П.П.',
+              mergedBy: 'Сидоров С.С.',
+            })}
+            index={1}
+            onOpen={vi.fn()}
+            showFilial={false}
+          />
+        </tbody>
+      </table>,
+    );
+
+    expect(screen.getByText('Иванов И.И., Петров П.П.')).toBeInTheDocument();
+    expect(screen.getByText('Сидоров С.С.')).toBeInTheDocument();
+  });
+
   it('открывает листок по клику на строку', () => {
     const onOpen = vi.fn();
 

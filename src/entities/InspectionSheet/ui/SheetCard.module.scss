@@ -23,6 +23,13 @@
   max-width: var(--layout-320);
 }
 
+.inspectorCell,
+.mergedCell {
+  max-width: var(--layout-240);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .offlineIcon {
   display: inline-flex;
   margin-left: var(--space-1);

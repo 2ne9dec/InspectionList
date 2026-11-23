@@ -117,6 +117,7 @@ export const SheetsTable = memo((props: SheetsTableProps) => {
           <TableTh className={cls.th}>Линия</TableTh>
           <ThSort label="Дата" dir={sortKey === 'date' ? sortDir : undefined} onClick={() => onSort('date')} />
           <ThSort label="Осматривал" dir={sortKey === 'inspector' ? sortDir : undefined} onClick={() => onSort('inspector')} />
+          <TableTh className={cls.th}>Объединил</TableTh>
           <TableTh className={cls.th}>Активных</TableTh>
           <TableTh className={cls.th}>Устранено</TableTh>
           <TableTh className={cls.th} />

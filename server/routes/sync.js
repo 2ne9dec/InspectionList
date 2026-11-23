@@ -64,10 +64,10 @@ router.post('/sync/batch', requirePermission('defects.create'), async (req, res)
       } else {
         await execute(
           `INSERT INTO INSPECTION_SHEETS
-            (ID, FILIAL_ID, VOLTAGE_ID, LINE_ID, CREATED_BY, CREATED_DATE, STATUS, NOTES)
-          VALUES (?,?,?,?,?,CAST(? AS DATE),?,?)`,
+            (ID, FILIAL_ID, VOLTAGE_ID, LINE_ID, CREATED_BY, INSPECTORS, CREATED_DATE, STATUS, NOTES)
+          VALUES (?,?,?,?,?,?,CAST(? AS DATE),?,?)`,
           [Number(id), Number(filialId), Number(voltageId), Number(lineId),
-          createdBy ?? null, createdDate, status ?? 'active', notes ?? null],
+          createdBy ?? null, createdBy ?? null, createdDate, status ?? 'active', notes ?? null],
         );
       }
 
@@ -233,7 +233,7 @@ router.get('/sync/pull', async (req, res) => {
   const sheetsParams = filialId ? [filialId] : [];
 
   const rawSheets = await query(
-    `SELECT ID, FILIAL_ID, VOLTAGE_ID, LINE_ID, CREATED_BY, CREATED_DATE, STATUS, NOTES FROM INSPECTION_SHEETS ${sheetsWhere}`,
+    `SELECT ID, FILIAL_ID, VOLTAGE_ID, LINE_ID, CREATED_BY, INSPECTORS, MERGED_BY, CREATED_DATE, STATUS, NOTES FROM INSPECTION_SHEETS ${sheetsWhere}`,
     sheetsParams,
   );
 
@@ -253,6 +253,8 @@ router.get('/sync/pull', async (req, res) => {
     voltageId:   s.voltage_id,
     lineId:      s.line_id,
     createdBy:   s.created_by   != null ? s.created_by   : null,
+    inspectors:  s.inspectors   != null ? s.inspectors   : null,
+    mergedBy:    s.merged_by    != null ? s.merged_by    : null,
     createdDate: fmt(s.created_date),
     status:      s.status       != null ? s.status       : 'active',
     notes:       s.notes        != null ? s.notes        : null,

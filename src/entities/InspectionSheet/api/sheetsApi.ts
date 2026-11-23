@@ -73,7 +73,7 @@ const sheetsApi = rtkApi.injectEndpoints({
       ],
     }),
 
-    mergeSheets: build.mutation<InspectionSheet, { ids: number[]; createdDate: string; createdBy: string }>({
+    mergeSheets: build.mutation<InspectionSheet, { ids: number[]; createdDate: string; mergedBy: string }>({
       query: (body) => ({
         url: '/inspectionSheets/merge',
         method: 'POST',

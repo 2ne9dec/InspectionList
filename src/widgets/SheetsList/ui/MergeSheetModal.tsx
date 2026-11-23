@@ -8,17 +8,17 @@ interface MergeSheetModalProps {
   isOpen:        boolean;
   selectedSheets: InspectionSheetFull[];
   date:          string;
-  createdBy:     string;
+  mergedBy:      string;
   loading:       boolean;
   onDateChange:      (v: string) => void;
-  onCreatedByChange: (v: string) => void;
+  onMergedByChange:  (v: string) => void;
   onClose:       () => void;
   onConfirm:     () => void;
 }
 
 export const MergeSheetModal = memo(({
-  isOpen, selectedSheets, date, createdBy, loading,
-  onDateChange, onCreatedByChange, onClose, onConfirm,
+  isOpen, selectedSheets, date, mergedBy, loading,
+  onDateChange, onMergedByChange, onClose, onConfirm,
 }: MergeSheetModalProps) => (
   <Modal
     isOpen={isOpen}
@@ -39,7 +39,7 @@ export const MergeSheetModal = memo(({
       <p className={cls.hint}>Объединяются листки:</p>
       <ul className={cls.sheetList}>
         {selectedSheets.map((s) => (
-          <li key={s.id}>{s.lineName} · {formatDate(s.createdDate, '')} · {s.createdBy}</li>
+          <li key={s.id}>{s.lineName} · {formatDate(s.createdDate, '')} · {s.inspectors ?? s.createdBy}</li>
         ))}
       </ul>
       <p className={cls.danger}>
@@ -53,12 +53,12 @@ export const MergeSheetModal = memo(({
         onChange={onDateChange}
       />
       <Input
-        label='Составил (Ф.И.О.)'
-        name='merge-created-by'
+        label='Объединил (Ф.И.О.)'
+        name='merge-merged-by'
         type='text'
-        value={createdBy}
-        onChange={onCreatedByChange}
-        placeholder='Фамилия И.О.'
+        value={mergedBy}
+        onChange={onMergedByChange}
+        placeholder='Кто объединил'
         autoComplete='off'
       />
     </div>

@@ -61,6 +61,8 @@ export function enrichPendingSheets(
       lineId: p.lineId,
       createdDate: p.createdDate,
       createdBy: p.createdBy,
+      inspectors: p.createdBy,
+      mergedBy: null,
       status: 'pending' as const,
       filialName: filial?.name ?? '—',
       voltageName: voltage?.name ?? '—',
@@ -81,7 +83,9 @@ export function matchesSheetSearch(sheet: InspectionSheetFull, query: string): b
     sheet.lineName.toLowerCase().includes(q) ||
     sheet.filialName.toLowerCase().includes(q) ||
     sheet.voltageName.toLowerCase().includes(q) ||
-    sheet.createdBy.toLowerCase().includes(q)
+    sheet.createdBy.toLowerCase().includes(q) ||
+    (sheet.inspectors ?? '').toLowerCase().includes(q) ||
+    (sheet.mergedBy ?? '').toLowerCase().includes(q)
   );
 }
 
@@ -125,7 +129,9 @@ export function sortSheets(
     let v = 0;
     if (sortKey === 'voltage') v = voltageKv(a.voltageName) - voltageKv(b.voltageName);
     if (sortKey === 'date') v = a.createdDate.localeCompare(b.createdDate);
-    if (sortKey === 'inspector') v = a.createdBy.localeCompare(b.createdBy, 'ru');
+    if (sortKey === 'inspector') {
+      v = (a.inspectors ?? a.createdBy).localeCompare(b.inspectors ?? b.createdBy, 'ru');
+    }
     return sortDir === 'asc' ? v : -v;
   });
 }

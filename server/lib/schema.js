@@ -11,6 +11,7 @@
 
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const { collectInspectors } = require('./sheetInspectors');
 const {
   query, execute, queryOne, allDbKeys,
   MAIN_DB, MULTI_DB, FILIAL_DB_IDS,
@@ -241,6 +242,66 @@ async function ensureKnownDefectDates(dbKey) {
   }
 }
 
+/**
+ * Поля листка: кто осматривал (может быть несколько ФИО) и кто объединил.
+ * Существующие листки получают INSPECTORS = CREATED_BY.
+ */
+async function ensureSheetMetaColumns(dbKey) {
+  if (!(await columnExists('INSPECTION_SHEETS', 'INSPECTORS', dbKey))) {
+    console.log(`[schema] (${dbKey}) add column INSPECTION_SHEETS.INSPECTORS`);
+    await execute('ALTER TABLE INSPECTION_SHEETS ADD INSPECTORS VARCHAR(1000)', [], dbKey);
+  }
+  if (!(await columnExists('INSPECTION_SHEETS', 'MERGED_BY', dbKey))) {
+    console.log(`[schema] (${dbKey}) add column INSPECTION_SHEETS.MERGED_BY`);
+    await execute('ALTER TABLE INSPECTION_SHEETS ADD MERGED_BY VARCHAR(300)', [], dbKey);
+  }
+  await execute(
+    `UPDATE INSPECTION_SHEETS
+        SET INSPECTORS = CREATED_BY
+      WHERE (INSPECTORS IS NULL OR TRIM(INSPECTORS) = '')
+        AND CREATED_BY IS NOT NULL`,
+    [],
+    dbKey,
+  );
+
+  // Уже существующие объединённые листки: CREATED_BY — тот, кто объединил.
+  // Осматривавших восстанавливаем по ФИО из дефектов.
+  const mergedSheets = await query(
+    `SELECT ID, CREATED_BY
+       FROM INSPECTION_SHEETS
+      WHERE MERGED_BY IS NULL
+        AND NOTES IS NOT NULL
+        AND (NOTES STARTING WITH 'Объединение листков'
+             OR NOTES STARTING WITH 'Объединено')`,
+    [],
+    dbKey,
+  );
+  for (const sheet of mergedSheets) {
+    const defectInspectors = await query(
+      `SELECT INSPECTOR_FIND
+         FROM DEFECT_RECORDS
+        WHERE SHEET_ID = ?
+          AND INSPECTOR_FIND IS NOT NULL
+          AND TRIM(INSPECTOR_FIND) <> ''`,
+      [sheet.id],
+      dbKey,
+    );
+    const inspectors = collectInspectors(
+      defectInspectors.map((row) => ({ created_by: row.inspector_find })),
+    );
+    await execute(
+      `UPDATE INSPECTION_SHEETS
+          SET MERGED_BY = ?, INSPECTORS = ?
+        WHERE ID = ?`,
+      [sheet.created_by ?? null, (inspectors.join(', ') || sheet.created_by) ?? null, sheet.id],
+      dbKey,
+    );
+  }
+  if (mergedSheets.length > 0) {
+    console.log(`[schema] (${dbKey}) merged sheets restored: ${mergedSheets.length}`);
+  }
+}
+
 /** SAP-код дефекта: переносим код линии на конкретную опору (только Жлобинские ЭС). */
 async function ensureDefectSapCode(dbKey) {
   if (!(await columnExists('DEFECT_RECORDS', 'SAP_CODE', dbKey))) {
@@ -305,6 +366,7 @@ async function ensureSchema() {
   for (const dbKey of filialDbKeys()) {
     await ensureCustomDefectName(dbKey);
     await ensureDefectSapCode(dbKey);
+    await ensureSheetMetaColumns(dbKey);
     await ensureCustomDefectReference(dbKey);
     await ensureObsoleteLinesRemoved(dbKey);
     await ensureLineNames(dbKey);

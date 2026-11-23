@@ -16,6 +16,7 @@ const { Router } = require('express');
 const { query, execute, queryOne, nextId, withTransaction } = require('../lib/fbDb');
 const { canAccessLine, canAccessFilial, lineWhereClause } = require('../lib/tenancy');
 const { requirePermission } = require('../lib/permissions');
+const { collectInspectors } = require('../lib/sheetInspectors');
 
 /** Доступ к листку: линия доступна и листок из филиала пользователя. */
 function canAccessSheet(req, row) {
@@ -32,6 +33,8 @@ function toSheet(row) {
     voltageId:   row.voltage_id,
     lineId:      row.line_id,
     createdBy:   row.created_by   ?? null,
+    inspectors:  row.inspectors  ?? null,
+    mergedBy:    row.merged_by    ?? null,
     createdDate: row.created_date ?? null,  // CAST AS VARCHAR уже строка
     status:      row.status       ?? 'active',
     notes:       row.notes        ?? null,
@@ -39,11 +42,18 @@ function toSheet(row) {
 }
 
 const SELECT_FIELDS = `
-  ID, FILIAL_ID, VOLTAGE_ID, LINE_ID, CREATED_BY,
+  ID, FILIAL_ID, VOLTAGE_ID, LINE_ID, CREATED_BY, INSPECTORS, MERGED_BY,
   CAST(CREATED_DATE AS VARCHAR(10)) AS CREATED_DATE,
   STATUS, NOTES`;
 
 const SELECT_SHEET = `SELECT${SELECT_FIELDS}\n  FROM INSPECTION_SHEETS`;
+
+/** NEXT VALUE в той же транзакции/базе, без потери контекста филиала. */
+async function txNextId(tx, type) {
+  const seq = type === 'sheets' ? 'GEN_SHEETS_ID' : 'GEN_DEFECTS_ID';
+  const row = await tx.queryOne(`SELECT NEXT VALUE FOR ${seq} AS ID FROM RDB$DATABASE`);
+  return row.id;
+}
 
 // ── GET /inspectionSheets — список листков осмотра ────────────────────────────
 router.get('/inspectionSheets', async (req, res) => {
@@ -141,10 +151,10 @@ router.post('/inspectionSheets', requirePermission('sheets.create'), async (req,
     const id = await nextId('sheets');
     await execute(
       `INSERT INTO INSPECTION_SHEETS
-         (ID, FILIAL_ID, VOLTAGE_ID, LINE_ID, CREATED_BY, CREATED_DATE, STATUS, NOTES)
-       VALUES (?, ?, ?, ?, ?, CAST(? AS DATE), ?, ?)`,
+         (ID, FILIAL_ID, VOLTAGE_ID, LINE_ID, CREATED_BY, INSPECTORS, CREATED_DATE, STATUS, NOTES)
+       VALUES (?, ?, ?, ?, ?, ?, CAST(? AS DATE), ?, ?)`,
       [id, Number(filialId), Number(voltageId), Number(lineId),
-       createdBy ?? null, createdDate, status ?? 'active', notes ?? null],
+       createdBy ?? null, createdBy ?? null, createdDate, status ?? 'active', notes ?? null],
     );
 
     const row = await queryOne(SELECT_SHEET + ' WHERE ID = ?', [id]);
@@ -184,11 +194,15 @@ router.post('/inspectionSheets/:id/clone', requirePermission('sheets.create'), a
 
     await execute(
       `INSERT INTO INSPECTION_SHEETS
-         (ID, FILIAL_ID, VOLTAGE_ID, LINE_ID, CREATED_BY, CREATED_DATE, STATUS, NOTES)
-       VALUES (?, ?, ?, ?, ?, CAST(? AS DATE), 'active', ?)`,
-      // createdBy из запроса (кто делает клон), fallback на оригинал
+         (ID, FILIAL_ID, VOLTAGE_ID, LINE_ID, CREATED_BY, INSPECTORS, MERGED_BY,
+          CREATED_DATE, STATUS, NOTES)
+       VALUES (?, ?, ?, ?, ?, ?, ?, CAST(? AS DATE), 'active', ?)`,
+      // Кто клонировал — в CREATED_BY; кто осматривал — сохраняем из оригинала.
       [newId, orig.filial_id, orig.voltage_id, orig.line_id,
-       createdBy ?? orig.created_by, newDate, newNotes],
+       createdBy ?? orig.created_by,
+       orig.inspectors ?? createdBy ?? orig.created_by,
+       orig.merged_by ?? null,
+       newDate, newNotes],
     );
 
     const row = await queryOne(SELECT_SHEET + ' WHERE ID = ?', [newId]);
@@ -211,7 +225,17 @@ router.patch('/inspectionSheets/:id', requirePermission('sheets.edit'), async (r
     const sets   = [];
     const params = [];
     if (req.body.createdDate !== undefined) { sets.push('CREATED_DATE = CAST(? AS DATE)'); params.push(req.body.createdDate); }
-    if (req.body.createdBy  !== undefined) { sets.push('CREATED_BY = ?');                 params.push(req.body.createdBy); }
+    if (req.body.createdBy  !== undefined) {
+      sets.push('CREATED_BY = ?');
+      params.push(req.body.createdBy);
+      // У обычного листка «Осматривал» = CREATED_BY. У объединённого список
+      // осматривавших не перезаписываем одним именем.
+      const currentInspectors = String(row.inspectors ?? '').trim();
+      if (!currentInspectors || currentInspectors === String(row.created_by ?? '').trim()) {
+        sets.push('INSPECTORS = ?');
+        params.push(req.body.createdBy ?? null);
+      }
+    }
     if (req.body.status !== undefined) { sets.push('STATUS = ?'); params.push(req.body.status); }
     if (req.body.notes  !== undefined) { sets.push('NOTES = ?');  params.push(req.body.notes); }
     if (sets.length === 0) return res.status(400).json({ error: 'Нет полей для обновления' });
@@ -249,9 +273,11 @@ router.delete('/inspectionSheets/:id', requirePermission('sheets.delete'), async
 // ── POST /inspectionSheets/merge — объединить листы ──────────────────────────
 router.post('/inspectionSheets/merge', requirePermission('sheets.merge'), async (req, res) => {
   try {
-    const { ids, createdDate, createdBy } = req.body;
+    const { ids, createdDate, mergedBy, createdBy } = req.body;
     if (!Array.isArray(ids) || ids.length < 2 || !createdDate)
       return res.status(400).json({ error: 'ids (array >= 2) и createdDate обязательны' });
+    // mergedBy — кто объединил. createdBy оставлен для старых клиентов.
+    const merger = mergedBy ?? createdBy ?? null;
 
     // Загружаем исходные листки
     const sources = [];
@@ -272,6 +298,10 @@ router.post('/inspectionSheets/merge', requirePermission('sheets.merge'), async 
       return res.status(400).json({ error: 'Все листки должны быть одной линии' });
 
     const base = sources[0].sheet;
+    // Все, кто осматривал исходные листки (может быть несколько ФИО).
+    const inspectors = collectInspectors(sources.map((s) => s.sheet));
+    const inspectorsText = inspectors.join(', ') || null;
+    const firstInspector = inspectors[0] ?? base.created_by ?? null;
 
     // Выполняем всё в транзакции
     const merged = await withTransaction(async (tx) => {
@@ -289,21 +319,22 @@ router.post('/inspectionSheets/merge', requirePermission('sheets.merge'), async 
         await tx.execute('DELETE FROM INSPECTION_SHEETS WHERE ID = ?', [src.sheet.id]);
       }
 
-      const newId    = await nextId('sheets');
+      const newId    = await txNextId(tx, 'sheets');
       const newNotes = `Объединение листков от ${sources.map(s => s.sheet.created_date).join(', ')}`;
 
       await tx.execute(
         `INSERT INTO INSPECTION_SHEETS
-           (ID, FILIAL_ID, VOLTAGE_ID, LINE_ID, CREATED_BY, CREATED_DATE, STATUS, NOTES)
-         VALUES (?, ?, ?, ?, ?, CAST(? AS DATE), 'active', ?)`,
+           (ID, FILIAL_ID, VOLTAGE_ID, LINE_ID, CREATED_BY, INSPECTORS, MERGED_BY,
+            CREATED_DATE, STATUS, NOTES)
+         VALUES (?, ?, ?, ?, ?, ?, ?, CAST(? AS DATE), 'active', ?)`,
         [newId, base.filial_id, base.voltage_id, base.line_id,
-         createdBy ?? base.created_by, createdDate, newNotes],
+         firstInspector, inspectorsText, merger, createdDate, newNotes],
       );
 
       // Вставляем дефекты всех источников в новый листок
       for (const src of sources) {
         for (const d of src.defects) {
-          const defId = await nextId('defects');
+          const defId = await txNextId(tx, 'defects');
           await tx.execute(
             `INSERT INTO DEFECT_RECORDS
                (ID, SHEET_ID, LINE_ID, POLE_NUMBER, DEFECT_ID, PHASE_ID, ELEMENT_ID,

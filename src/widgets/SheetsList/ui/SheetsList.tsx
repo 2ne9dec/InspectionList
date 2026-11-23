@@ -161,10 +161,10 @@ export const SheetsList = memo(() => {
         isOpen={merge.mergeOpen}
         selectedSheets={merge.selectedSheets}
         date={merge.mergeDate}
-        createdBy={merge.mergeBy}
+        mergedBy={merge.mergeBy}
         loading={merge.merging}
         onDateChange={merge.setMergeDate}
-        onCreatedByChange={merge.setMergeBy}
+        onMergedByChange={merge.setMergeBy}
         onClose={merge.handleCloseMerge}
         onConfirm={merge.handleMerge}
       />
