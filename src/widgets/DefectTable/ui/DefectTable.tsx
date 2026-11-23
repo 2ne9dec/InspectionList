@@ -64,7 +64,6 @@ export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy, onEdit, c
     expandedPoles,
     handleToggleExpand,
     resetExpanded,
-    anyExpanded,
     visibleGroups,
     hasMore,
     handleFixOne,
@@ -109,7 +108,6 @@ export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy, onEdit, c
               <DefectTableHeader
                 sortDir={sortDir}
                 onSortToggle={toggleSort}
-                anyExpanded={anyExpanded}
                 isFixed={isFixedTab}
                 filterElementId={filterElementId}
                 filterDefectTypeId={filterDefectTypeId}
@@ -121,7 +119,6 @@ export const DefectTable = memo(({ sheetId, onRowClick, onFix, onCopy, onEdit, c
               <DefectTableBody
                 groups={visibleGroups}
                 expandedPoles={expandedPoles}
-                anyExpanded={anyExpanded}
                 isFixed={isFixedTab}
                 onToggle={handleToggleExpand}
                 onFix={onFix}

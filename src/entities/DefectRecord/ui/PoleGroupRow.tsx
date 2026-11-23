@@ -15,7 +15,6 @@ interface PoleGroupRowProps {
   index: number;
   records: DefectRecordFull[];
   isExpanded: boolean;
-  anyExpanded: boolean;
   isFixed: boolean;
   onToggle: (key: string) => void;
   onFix: (key: string) => void;
@@ -40,7 +39,6 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
     index,
     records,
     isExpanded,
-    anyExpanded,
     isFixed,
     onToggle,
     onFix,
@@ -69,7 +67,8 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
   );
 
   // +1 за колонку №, +1 за колонку Опора/Пролёты
-  const middleEmptyCells = anyExpanded ? (isFixed ? 6 : 4) : 0;
+  // Колонки детализации всегда присутствуют, чтобы раскрытие не сдвигало таблицу.
+  const middleEmptyCells = isFixed ? 6 : 4;
 
   const groupKebabItems = useMemo(() => {
     const items = [];
@@ -110,7 +109,7 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
         </TableTd>
 
         {/* Элементы (chips) */}
-        <TableTd className={cls.cell}>
+        <TableTd className={`${cls.cell} ${cls.cellElement}`}>
           {!isExpanded && <PoleElementChips elements={uniqueElements} />}
         </TableTd>
 

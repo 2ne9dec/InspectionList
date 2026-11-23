@@ -8,7 +8,6 @@ import { TableHead, TableRow, TableTh } from '@/shared/ui';
 interface DefectTableHeaderProps {
   sortDir: 'asc' | 'desc';
   onSortToggle: () => void;
-  anyExpanded: boolean;
   isFixed: boolean;
   filterElementId: string;
   filterDefectTypeId: string;
@@ -22,7 +21,6 @@ export const DefectTableHeader = memo((props: DefectTableHeaderProps) => {
   const {
     sortDir,
     onSortToggle,
-    anyExpanded,
     isFixed,
     filterElementId,
     filterDefectTypeId,
@@ -48,37 +46,33 @@ export const DefectTableHeader = memo((props: DefectTableHeaderProps) => {
           value={filterElementId}
           options={elements}
           onChange={onElementChange}
-          width={anyExpanded ? 'var(--table-col-element)' : 'auto'}
         />
 
-        {anyExpanded && (
+        {/* Колонки детализации всегда на месте — раскрытие не меняет ширины */}
+        <ThFilter
+          label='Дефект'
+          value={filterDefectTypeId}
+          options={defectTypes}
+          onChange={onDefectTypeChange}
+          width='var(--table-col-defect)'
+        />
+        <TableTh className={`${cls.th} ${cls.colDate}`}>
+          Дата обн.
+        </TableTh>
+        <TableTh className={`${cls.th} ${cls.colPerson}`}>
+          Обнаружил
+        </TableTh>
+        <TableTh className={`${cls.th} ${cls.colNote}`}>
+          Примечание
+        </TableTh>
+        {isFixed && (
           <>
-            <ThFilter
-              label='Дефект'
-              value={filterDefectTypeId}
-              options={defectTypes}
-              onChange={onDefectTypeChange}
-              width='var(--table-col-defect)'
-            />
             <TableTh className={`${cls.th} ${cls.colDate}`}>
-              Дата обн.
+              Дата устр.
             </TableTh>
             <TableTh className={`${cls.th} ${cls.colPerson}`}>
-              Обнаружил
+              Устранил
             </TableTh>
-            <TableTh className={`${cls.th} ${cls.colNote}`}>
-              Примечание
-            </TableTh>
-            {isFixed && (
-              <>
-                <TableTh className={`${cls.th} ${cls.colDate}`}>
-                  Дата устр.
-                </TableTh>
-                <TableTh className={`${cls.th} ${cls.colPerson}`}>
-                  Устранил
-                </TableTh>
-              </>
-            )}
           </>
         )}
 

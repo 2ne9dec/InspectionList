@@ -1,15 +1,15 @@
 .groupRow {
   cursor: pointer;
-  background: var(--color-row-group);
-  transition: background var(--duration-fast);
+  background-color: var(--color-row-group);
+  transition: background-color var(--duration-fast);
 
-  &:hover { background: var(--color-row-hover); }
+  &:hover { background-color: var(--color-row-hover); }
 }
 
 .open {
-  background: var(--color-accent-muted);
+  background-color: var(--color-accent-muted);
 
-  &:hover { background: var(--color-accent-muted); }
+  &:hover { background-color: var(--color-accent-muted); }
 }
 
 .cell {
@@ -33,6 +33,10 @@
   font-size: var(--font-size-xs);
 }
 
+.cellElement {
+  overflow: hidden;
+}
+
 // Метка «пр.» перед номером пролёта
 .spanLabel {
   font-size: var(--font-size-xs);
@@ -46,9 +50,10 @@
 
 .chipList {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: var(--space-1-25);
   align-items: center;
+  max-width: 100%;
 }
 
 .chip {

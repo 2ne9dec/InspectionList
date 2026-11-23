@@ -15,7 +15,10 @@
 
 .table {
   width: 100%;
-  border-collapse: collapse;
+  // separate + нулевой spacing: каждая ячейка рисует свою границу,
+  // поэтому линии не «схлопываются» и не отличаются по толщине.
+  border-collapse: separate;
+  border-spacing: 0;
   table-layout: fixed;
 }
 

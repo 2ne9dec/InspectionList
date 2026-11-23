@@ -7,7 +7,6 @@ interface DefectTableBodyProps {
   /** Видимые группы «место → дефекты». */
   groups: Array<[string, DefectRecordFull[]]>;
   expandedPoles: Set<string>;
-  anyExpanded: boolean;
   isFixed: boolean;
   onToggle: (key: string) => void;
   onFix: (key: string) => void;
@@ -27,7 +26,6 @@ interface DefectTableBodyProps {
 export const DefectTableBody = memo(({
   groups,
   expandedPoles,
-  anyExpanded,
   isFixed,
   onToggle,
   onFix,
@@ -58,7 +56,6 @@ export const DefectTableBody = memo(({
             defectStartIndex={defectStartIndex}
             records={records}
             isExpanded={expandedPoles.has(locationKey)}
-            anyExpanded={anyExpanded}
             isFixed={isFixed}
             onToggle={onToggle}
             onFix={onFix}

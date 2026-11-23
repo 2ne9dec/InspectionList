@@ -73,7 +73,7 @@ export const DefectSubRow = memo(({
       onClick={onRowClick ? () => onRowClick(first) : undefined}
       style={onRowClick ? { cursor: 'pointer' } : undefined}
     >
-      <TableTd className={cls.subCell}>
+      <TableTd className={`${cls.subCell} ${cls.subCellIndex}`}>
         <span className={cls.subIdx}>{defectStartIndex + index + 1}</span>
       </TableTd>
       <TableTd className={cls.subCell} />
