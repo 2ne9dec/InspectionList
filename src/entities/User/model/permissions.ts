@@ -4,7 +4,7 @@ import type { UserRole } from './types';
 export type Permission =
   | 'sheets.create' | 'sheets.edit' | 'sheets.merge' | 'sheets.delete'
   | 'defects.create' | 'defects.edit' | 'defects.fix' | 'defects.delete'
-  | 'journal.conclusion' | 'export.excel' | 'lines.edit';
+  | 'journal.conclusion' | 'export.excel';
 
 export interface PermissionInfo {
   key: Permission;
@@ -15,6 +15,8 @@ export interface PermissionInfo {
 export interface RolePermissionsData {
   permissions: PermissionInfo[];
   editableRoles: UserRole[];
+  /** Права, которые можно дать наблюдателю РУП. */
+  observerAllowed: Permission[];
   roles: Record<string, Permission[]>;
 }
 
@@ -23,8 +25,11 @@ export interface RolePermissionsData {
  * Онлайн права всегда берутся с сервера (их задаёт администратор).
  */
 export const OFFLINE_DEFAULT_PERMISSIONS: Partial<Record<UserRole, Permission[]>> = {
-  director: ['sheets.create', 'sheets.edit', 'sheets.merge', 'sheets.delete', 'defects.create', 'defects.edit', 'defects.fix', 'defects.delete', 'journal.conclusion', 'export.excel'],
-  engineer: ['sheets.create', 'defects.create', 'defects.edit', 'export.excel'],
-  master:   ['sheets.create', 'defects.create', 'defects.edit', 'export.excel'],
-  viewer:   ['sheets.create', 'defects.create', 'defects.edit', 'export.excel'],
+  director_sbpl: ['sheets.create', 'sheets.edit', 'sheets.merge', 'defects.create', 'defects.edit', 'defects.fix', 'journal.conclusion', 'export.excel'],
+  director: ['sheets.create', 'sheets.edit', 'sheets.merge', 'defects.create', 'defects.edit', 'defects.fix', 'journal.conclusion', 'export.excel'],
+  engineer:      ['sheets.create', 'defects.create', 'defects.edit', 'export.excel'],
+  engineer_sbpl: ['sheets.create', 'defects.create', 'defects.edit', 'export.excel'],
+  master:        ['sheets.create', 'defects.create', 'defects.edit', 'export.excel'],
+  electrician:   ['sheets.create', 'defects.create', 'defects.edit', 'export.excel'],
+  observer: ['export.excel'],
 };

@@ -1,5 +1,5 @@
 import { rtkApi } from '@/shared/api/rtkApi';
-import type { DefectRecord, DefectCount, CreateDefectParams, FixDefectParams } from '../model/types';
+import type { DefectRecord, DefectCount, CreateDefectParams, EditDefectParams, FixDefectParams } from '../model/types';
 
 const DEFECT_COUNT_TAG = { type: 'DefectCount' as const, id: 'LIST' };
 
@@ -140,6 +140,18 @@ const defectsApi = rtkApi.injectEndpoints({
       ],
     }),
 
+    editDefect: build.mutation<DefectRecord, EditDefectParams>({
+      query: ({ id, ...body }) => ({
+        url: `/defectRecords/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: (_result, _err, { id }) => [
+        { type: 'Defect' as const, id },
+        { type: 'Defect' as const, id: 'LIST' },
+      ],
+    }),
+
     deleteDefectsBySheet: build.mutation<void, number>({
       query: (sheetId) => ({
         url: `/defectRecordsBySheet/${sheetId}`,
@@ -161,5 +173,6 @@ export const {
   usePatchDefectStatusMutation,
   usePatchDefectMasterMutation,
   usePatchDefectBasicMutation,
+  useEditDefectMutation,
   useDeleteDefectsBySheetMutation,
 } = defectsApi;

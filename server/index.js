@@ -156,12 +156,12 @@ app.use((err, req, res, _next) => {
 // ── Запуск ────────────────────────────────────────────────────────────────────
 async function start() {
   try {
-    console.log('[boot] Подключение к Firebird...');
+    console.log('[boot] Connecting to Firebird...');
     await testConnection();
     console.log('[boot] Firebird OK');
     console.log(MULTI_DB
-      ? `[boot] Базы филиалов: ${FILIAL_DB_IDS.join(', ')}`
-      : '[boot] Режим одной базы');
+      ? `[boot] Filial databases: ${FILIAL_DB_IDS.join(', ')}`
+      : '[boot] Single database mode');
     await ensureUsersDb();
     await ensureSchema();
     await ensureGlobalAdmin();
@@ -174,14 +174,14 @@ async function start() {
         .flat()
         .filter((i) => i.family === 'IPv4' && !i.internal)
         .map((i) => i.address);
-      console.log(`[boot] Сервер запущен: http://0.0.0.0:${PORT}`);
+      console.log(`[boot] Server started: http://0.0.0.0:${PORT}`);
       lanIps
         .filter((ip) => !ip.startsWith('10.255.'))
-        .forEach((ip) => console.log(`[boot] Локальная сеть:  http://${ip}:${PORT}`));
+        .forEach((ip) => console.log(`[boot] LAN: http://${ip}:${PORT}`));
     });
   } catch (err) {
-    console.error('[FATAL] Не удалось запустить сервер:', err.message);
-    console.error('  Проверьте настройки в server/.env');
+    console.error('[FATAL] Failed to start server:', err.message);
+    console.error('  Check server/.env');
     process.exit(1);
   }
 }

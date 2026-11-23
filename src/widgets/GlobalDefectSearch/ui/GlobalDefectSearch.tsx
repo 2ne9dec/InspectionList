@@ -10,6 +10,7 @@ import {
   useGetDefectTypesQuery,
   useGetElementsQuery,
 } from '@/entities/InspectionLine';
+import { Table, TableHead, TableBody, TableRow, TableTh } from '@/shared/ui';
 import { SheetDefectRows } from './SheetDefectRows';
 import cls from './GlobalDefectSearch.module.scss';
 
@@ -75,15 +76,15 @@ export const GlobalDefectSearch = memo(({ defectTypeIds }: GlobalDefectSearchPro
       </div>
 
       <div className={cls.tableWrap}>
-        <table className={cls.table}>
-          <thead>
-            <tr>
-              {['Филиал', 'Напряжение', 'Линия', 'Опора', 'Элемент', 'Дефект', 'Серьёзность', 'Дата', 'Статус'].map((h) => (
-                <th key={h} className={cls.th}>{h}</th>
+        <Table className={cls.table}>
+          <TableHead>
+            <TableRow>
+              {['Филиал', 'Напряжение', 'Линия', 'Опора', 'Элемент', 'Дефект', 'Дата', 'Статус'].map((h) => (
+                <TableTh key={h} className={cls.th}>{h}</TableTh>
               ))}
-            </tr>
-          </thead>
-          <tbody>
+            </TableRow>
+          </TableHead>
+          <TableBody>
             {sheets.map((s) => (
               <SheetDefectRows
                 key={s.id}
@@ -98,8 +99,8 @@ export const GlobalDefectSearch = memo(({ defectTypeIds }: GlobalDefectSearchPro
                 navigate={navigate}
               />
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

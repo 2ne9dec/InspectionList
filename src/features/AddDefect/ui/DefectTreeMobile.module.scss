@@ -1,0 +1,91 @@
+@use 'shared/styles/mixins' as m;
+
+/* ── Mobile bottom sheet (< var(--layout-480)) ─────────────────────────────────────── */
+.backdrop {
+  display: none;
+}
+
+.mobileSheet {
+  display: none;
+}
+
+.sheetHeader {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-2);
+  border-bottom: var(--border-width) solid var(--color-border);
+  min-height: var(--space-9);
+  flex-shrink: 0;
+  gap: var(--space-1);
+}
+
+.sheetTitle {
+  flex: 1;
+  text-align: center;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  font-size: var(--font-size-m);
+  cursor: pointer;
+  padding: var(--space-2) var(--space-3);
+  min-width: var(--space-10);
+  text-align: left;
+  flex-shrink: 0;
+  min-height: var(--touch-target-min);
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xl);
+  cursor: pointer;
+  padding: var(--space-2) var(--space-3);
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: var(--radii);
+  transition: var(--transition-bg);
+
+  &:hover { background: var(--color-row-hover); }
+}
+
+@include m.touch-or-narrow {
+  // Показываем bottom sheet
+  .backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: var(--color-surface-overlay);
+    z-index: calc(var(--z-popover) - 1);
+  }
+
+  .mobileSheet {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-popover); // выше модальных окон (исправление дефекта)
+    background: var(--color-surface-card);
+    border-radius: var(--radii-l) var(--radii-l) 0 0;
+    border: var(--border-width) solid var(--color-border);
+    border-bottom: none;
+    box-shadow: var(--shadow-l);
+    max-height: var(--sheet-max-height);
+    overflow: hidden;
+  }
+}

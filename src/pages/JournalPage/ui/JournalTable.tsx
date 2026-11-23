@@ -1,7 +1,8 @@
-import { memo } from 'react';
+import { memo, useCallback, useEffect, useRef } from 'react';
 import type { JournalRow } from '../model/useJournalFilters';
-import { formatDate } from '@/shared/lib/helpers';
-import cls from './JournalPage.module.scss';
+import { Checkbox, Table, TableBody, TableHead, TableRow, TableTd, TableTh } from '@/shared/ui';
+import { JournalTableRow } from './JournalTableRow';
+import cls from './JournalTable.module.scss';
 
 interface JournalTableProps {
   rows:       JournalRow[];
@@ -14,83 +15,6 @@ interface JournalTableProps {
   readOnly?:   boolean;
 }
 
-/** Одна строка таблицы, мемоизирована по id + выделению */
-const Row = memo(({
-  row,
-  index,
-  selected,
-  onSelect,
-  onEdit: onEditProp,
-  readOnly,
-}: {
-  row:      JournalRow;
-  index:    number;
-  selected: boolean;
-  onSelect: (id: number, checked: boolean) => void;
-  onEdit:   (id: number) => void;
-  readOnly?: boolean;
-}) => {
-  const { d, line, voltage, location } = row;
-  const onEdit = readOnly ? () => {} : onEditProp;
-  const editable = readOnly ? '' : cls.editable;
-  return (
-    <tr className={[d.isFixed ? cls.rowFixed : '', selected ? cls.rowSelected : ''].join(' ').trim()}>
-      <td className={cls.tdCheck} onClick={(e) => e.stopPropagation()}>
-        <input
-          type='checkbox'
-          checked={selected}
-          disabled={!!d.isFixed || readOnly}
-          onChange={(e) => onSelect(d.id, e.target.checked)}
-        />
-      </td>
-      <td className={cls.tdNum}>{index + 1}</td>
-      <td className={cls.tdNowrap}>{voltage?.name ?? '—'}</td>
-      <td className={cls.tdLine}>{line?.name ?? '—'}</td>
-      <td className={cls.tdDate}>{formatDate(d.dateFound)}</td>
-      <td className={cls.tdNowrap}>{d.inspectorFind}</td>
-      <td className={cls.tdLocation}>
-        <div className={cls.clamp} title={location}>{location}</div>
-      </td>
-      <td
-        className={`${cls.tdConclusion} ${editable}`}
-        onClick={() => onEdit(d.id)}
-      >
-        {d.masterConclusion
-          ? <div className={cls.clamp} title={d.masterConclusion}>{d.masterConclusion}</div>
-          : <span className={cls.editHint}>—</span>}
-      </td>
-      <td
-        className={`${cls.tdDate} ${editable}`}
-        onClick={() => onEdit(d.id)}
-      >
-        {(d.resolutionDeadline || d.masterName) ? (
-          <>
-            {formatDate(d.resolutionDeadline)}
-            {d.masterName && <div className={cls.signed}>✍ {d.masterName}</div>}
-          </>
-        ) : <span className={cls.editHint}>—</span>}
-      </td>
-      <td
-        className={`${cls.tdDate} ${editable}`}
-        onClick={() => onEdit(d.id)}
-      >
-        {(d.dateFixed || d.fixWorkVolume) ? (
-          <>
-            {formatDate(d.dateFixed)}
-            {d.fixWorkVolume && <div className={cls.clamp} title={d.fixWorkVolume}>{d.fixWorkVolume}</div>}
-          </>
-        ) : <span className={cls.editHint}>—</span>}
-      </td>
-      <td className={editable} onClick={() => onEdit(d.id)}>
-        {d.inspectorFix
-          ? <div className={cls.clamp} title={d.inspectorFix}>{d.inspectorFix}</div>
-          : <span className={cls.editHint}>—</span>}
-      </td>
-    </tr>
-  );
-});
-Row.displayName = 'JournalTableRow';
-
 export const JournalTable = memo(({
   rows,
   selectedIds,
@@ -99,68 +23,152 @@ export const JournalTable = memo(({
   onSelect,
   onEditRow,
   readOnly,
-}: JournalTableProps) => (
-  <div className={cls.tableWrap}>
-    <table className={cls.table}>
-      <thead>
-        <tr>
-          <th rowSpan={2} className={cls.thCheck}>
-            <input
-              type='checkbox'
-              checked={allSelected}
-              disabled={readOnly}
-              onChange={(e) => onSelectAll(e.target.checked)}
-              aria-label='Выбрать все'
+}: JournalTableProps) => {
+  // Выделение протяжкой: старт на строке, движение — глобальный mousemove.
+  const dragRef = useRef<{
+    value: boolean;
+    moved: boolean;
+    startId: number | null;
+    lastId: number | null;
+  } | null>(null);
+  const suppressClickRef = useRef(false);
+
+  useEffect(() => {
+    const stopDrag = () => {
+      if (dragRef.current?.moved) {
+        // После протяжки не открываем заключение и не переключаем чекбокс.
+        suppressClickRef.current = true;
+        window.setTimeout(() => { suppressClickRef.current = false; }, 300);
+      }
+      dragRef.current = null;
+      document.body.style.userSelect = '';
+    };
+    window.addEventListener('mouseup', stopDrag);
+    return () => {
+      window.removeEventListener('mouseup', stopDrag);
+      document.body.style.userSelect = '';
+    };
+  }, []);
+
+  const handleSelectStart = useCallback((id: number, e: React.MouseEvent) => {
+    if (readOnly || e.button !== 0) return;
+    const row = rows.find((r) => r.d.id === id);
+    if (!row || row.d.isFixed) return;
+
+    suppressClickRef.current = false;
+    dragRef.current = {
+      value: !selectedIds.has(id),
+      moved: false,
+      startId: id,
+      lastId: id,
+    };
+    document.body.style.userSelect = 'none';
+  }, [readOnly, rows, selectedIds]);
+
+  const handleSelectChange = useCallback((id: number, checked: boolean) => {
+    if (suppressClickRef.current) return;
+    onSelect(id, checked);
+  }, [onSelect]);
+
+  const handleEdit = useCallback((id: number) => {
+    if (suppressClickRef.current) return;
+    onEditRow(id);
+  }, [onEditRow]);
+
+  useEffect(() => {
+    const handleMove = (e: MouseEvent) => {
+      const drag = dragRef.current;
+      if (!drag) return;
+
+      const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+      const rowEl = el?.closest<HTMLElement>('[data-journal-id]');
+      if (!rowEl || rowEl.dataset.journalDisabled === '1') return;
+
+      const id = Number(rowEl.dataset.journalId);
+      if (!Number.isFinite(id) || drag.lastId === id) return;
+      drag.lastId = id;
+      drag.moved = true;
+
+      const startIndex = rows.findIndex((r) => r.d.id === drag.startId);
+      const endIndex = rows.findIndex((r) => r.d.id === id);
+      if (startIndex < 0 || endIndex < 0) return;
+
+      // Закрашиваем весь диапазон, пропуская устранённые строки.
+      const from = Math.min(startIndex, endIndex);
+      const to = Math.max(startIndex, endIndex);
+      for (let i = from; i <= to; i += 1) {
+        const row = rows[i];
+        if (!row.d.isFixed && !readOnly) onSelect(row.d.id, drag.value);
+      }
+    };
+
+    window.addEventListener('mousemove', handleMove);
+    return () => window.removeEventListener('mousemove', handleMove);
+  }, [onSelect, readOnly, rows]);
+
+  return (
+    <div className={cls.tableWrap}>
+      <Table className={cls.table}>
+        <TableHead>
+          <TableRow>
+            <TableTh rowSpan={2} className={cls.thCheck}>
+              <Checkbox
+                checked={allSelected}
+                disabled={readOnly}
+                onChange={(e) => onSelectAll(e.target.checked)}
+                aria-label='Выбрать все'
+              />
+            </TableTh>
+            <TableTh rowSpan={2} className={cls.thNum}>№</TableTh>
+            <TableTh rowSpan={2}>Класс напряжения</TableTh>
+            <TableTh rowSpan={2}>Линия</TableTh>
+            <TableTh rowSpan={2}>
+              Дата<br/>обнаружения
+            </TableTh>
+            <TableTh rowSpan={2}>
+              Ф.И.О.<br/>обнаружившего
+            </TableTh>
+            <TableTh rowSpan={2} className={cls.thLocation}>
+              Место обнаружения неисправности
+              <span className={cls.thSub}>(опора/пролёт / фаза / элемент: дефект)</span>
+            </TableTh>
+            <TableTh colSpan={2} className={cls.thGroup}>
+              Заключение мастера по устранению
+            </TableTh>
+            <TableTh colSpan={2} className={cls.thGroup}>
+              Информация об устранении неисправностей
+            </TableTh>
+          </TableRow>
+          <TableRow>
+            <TableTh>Мероприятия по устранению</TableTh>
+            <TableTh>Срок устранения, Ф.И.О.</TableTh>
+            <TableTh>Дата устранения, объём работ</TableTh>
+            <TableTh>Ф.И.О. производителя работ</TableTh>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {rows.length === 0 ? (
+            <TableRow>
+              <TableTd colSpan={11} className={cls.empty}>
+                Нет данных по выбранным фильтрам
+              </TableTd>
+            </TableRow>
+          ) : rows.map((row, i) => (
+            <JournalTableRow
+              key={row.d.id}
+              row={row}
+              index={i}
+              selected={selectedIds.has(row.d.id)}
+              onSelect={handleSelectChange}
+              onEdit={handleEdit}
+              onSelectStart={readOnly ? undefined : handleSelectStart}
+              readOnly={readOnly}
             />
-          </th>
-          <th rowSpan={2} className={cls.thNum}>№</th>
-          <th rowSpan={2}>Класс напряжения</th>
-          <th rowSpan={2}>Линия</th>
-          <th rowSpan={2}>
-            Дата<br/>обнаружения
-          </th>
-          <th rowSpan={2}>
-            Ф.И.О.<br/>обнаружившего
-          </th>
-          <th rowSpan={2} className={cls.thLocation}>
-            Место обнаружения неисправности
-            <span className={cls.thSub}>(опора/пролёт / фаза / элемент: дефект)</span>
-          </th>
-          <th colSpan={2} className={cls.thGroup}>
-            Заключение мастера по устранению
-          </th>
-          <th colSpan={2} className={cls.thGroup}>
-            Информация об устранении неисправностей
-          </th>
-        </tr>
-        <tr>
-          <th>Мероприятия по устранению</th>
-          <th>Срок устранения, Ф.И.О.</th>
-          <th>Дата устранения, объём работ</th>
-          <th>Ф.И.О. производителя работ</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.length === 0 ? (
-          <tr>
-            <td colSpan={11} className={cls.empty}>
-              Нет данных по выбранным фильтрам
-            </td>
-          </tr>
-        ) : rows.map((row, i) => (
-          <Row
-            key={row.d.id}
-            row={row}
-            index={i}
-            selected={selectedIds.has(row.d.id)}
-            onSelect={onSelect}
-            onEdit={onEditRow}
-            readOnly={readOnly}
-          />
-        ))}
-      </tbody>
-    </table>
-  </div>
-));
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+});
 
 JournalTable.displayName = 'JournalTable';

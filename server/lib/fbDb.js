@@ -31,7 +31,7 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 // Проверяем наличие обязательных переменных окружения перед стартом
 if (!process.env.FB_PASSWORD) {
-  console.error('[FATAL] FB_PASSWORD не задан в server/.env — укажите пароль Firebird явно.');
+  console.error('[FATAL] FB_PASSWORD is not set in server/.env - Firebird password required.');
   process.exit(1);
 }
 

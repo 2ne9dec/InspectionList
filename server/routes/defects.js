@@ -18,13 +18,19 @@ const { Router } = require('express');
 const { query, execute, queryOne, nextId } = require('../lib/fbDb');
 const { canAccessLine, canAccessFilial, lineWhereClause } = require('../lib/tenancy');
 const { requirePermission, hasPermission } = require('../lib/permissions');
+const { normalizeIsoDate } = require('../lib/dates');
 
 const NO_DEFECT_ID = 117; // маркер «дефекты отсутствуют» — не считается дефектом
 
 const PATCH_ALLOWED = new Set([
   'isFixed', 'dateFixed', 'inspectorFix', 'inspectorFind', 'notes', 'status',
   'masterConclusion', 'resolutionDeadline', 'masterName', 'fixWorkVolume',
+  'poleNumber', 'spanRange', 'defectId', 'phaseId', 'insulatorCount', 'dateFound',
+  'customName',
 ]);
+
+/** Поля, задаваемые при внесении дефекта: исправляются (право defects.edit), пока дефект не устранён. */
+const CORE_FIELDS = ['poleNumber', 'spanRange', 'defectId', 'phaseId', 'insulatorCount', 'dateFound'];
 
 // JS key -> SQL column для PATCH
 const PATCH_COLS = {
@@ -38,9 +44,103 @@ const PATCH_COLS = {
   resolutionDeadline: 'RESOLUTION_DEADLINE',
   masterName:         'MASTER_NAME',
   fixWorkVolume:      'FIX_WORK_VOLUME',
+  poleNumber:         'POLE_NUMBER',
+  spanRange:          'SPAN_RANGE',
+  defectId:           'DEFECT_ID',
+  phaseId:            'PHASE_ID',
+  insulatorCount:     'INSULATOR_COUNT',
+  dateFound:          'DATE_FOUND',
+  customName:         'CUSTOM_NAME',
 };
 
-const DATE_PATCH_COLS = new Set(['dateFixed', 'resolutionDeadline']);
+const DATE_PATCH_COLS = new Set(['dateFixed', 'resolutionDeadline', 'dateFound']);
+
+/**
+ * Пролёты в едином виде: "47-48" (без пробелов, с обычным дефисом).
+ * Нужно и для поиска дубликатов, и для группировки на клиенте.
+ */
+function normalizeSpan(raw) {
+  if (raw == null) return null;
+  const t = String(raw).trim().replace(/[\u2013\u2014]/g, '-').replace(/\s*-\s*/g, '-');
+  return t || null;
+}
+
+/** Свободное описание дефекта (вид «Линейная арматура»). */
+function normalizeCustomName(raw) {
+  if (raw == null) return null;
+  const t = String(raw).trim().replace(/\s+/g, ' ');
+  // 200 символов с запасом помещаются в VARCHAR(500) Firebird (UTF-8, до 2 байт/символ)
+  return t ? t.slice(0, 200) : null;
+}
+
+/**
+ * Проверка и приведение исправляемых полей дефекта. Возвращает { values } или { error }.
+ * cur — текущая запись (для проверки дубликата с итоговыми значениями).
+ */
+async function validateCoreFields(body, cur, id) {
+  const v = {};
+  if ('poleNumber' in body) {
+    const n = Number(body.poleNumber);
+    if (!Number.isInteger(n) || n < 0 || n > 100000) return { error: 'Неверный номер опоры' };
+    v.poleNumber = n;
+  }
+  if ('spanRange' in body) {
+    const t = normalizeSpan(body.spanRange) ?? '';
+    if (t && !/^\d+(-\d+)?$/.test(t)) return { error: 'Неверно указаны пролёты (пример: 5 или 3-7)' };
+    v.spanRange = t || null;
+  }
+  if ('defectId' in body) {
+    const n = Number(body.defectId);
+    if (!Number.isInteger(n) || !(await queryOne('SELECT ID FROM DEFECT_TYPES WHERE ID = ?', [n])))
+      return { error: 'Неизвестный вид дефекта' };
+    v.defectId = n;
+  }
+  if ('phaseId' in body) {
+    if (body.phaseId == null || body.phaseId === '') v.phaseId = null;
+    else {
+      const n = Number(body.phaseId);
+      if (!Number.isInteger(n) || !(await queryOne('SELECT ID FROM PHASES WHERE ID = ?', [n])))
+        return { error: 'Неизвестная фаза' };
+      v.phaseId = n;
+    }
+  }
+  if ('insulatorCount' in body) {
+    if (body.insulatorCount == null || body.insulatorCount === '') v.insulatorCount = null;
+    else {
+      const n = Number(body.insulatorCount);
+      if (!Number.isInteger(n) || n < 1 || n > 100) return { error: 'Неверное количество изоляторов' };
+      v.insulatorCount = n;
+    }
+  }
+  if ('dateFound' in body) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(body.dateFound ?? ''))) return { error: 'Укажите дату обнаружения' };
+    v.dateFound = String(body.dateFound);
+  }
+
+  // Место: опора (номер > 0, пролётов нет) или пролёты (номер опоры 0)
+  const pole = v.poleNumber ?? Number(cur.pole_number);
+  const span = 'spanRange' in v ? v.spanRange : cur.span_range;
+  if (!span && pole <= 0) return { error: 'Укажите опору или пролёты' };
+
+  // Дубликат: такой же активный дефект на том же месте в листке
+  const defectId = v.defectId ?? Number(cur.defect_id);
+  const phaseId  = 'phaseId' in v ? v.phaseId : (cur.phase_id ?? null);
+  const customName = 'customName' in body
+    ? normalizeCustomName(body.customName)
+    : (cur.custom_name ?? null);
+  const dup = await queryOne(
+    `SELECT ID FROM DEFECT_RECORDS
+     WHERE SHEET_ID = ? AND ID != ? AND POLE_NUMBER = ? AND DEFECT_ID = ?
+       AND (PHASE_ID = ? OR (PHASE_ID IS NULL AND ? IS NULL))
+       AND (SPAN_RANGE = ? OR (SPAN_RANGE IS NULL AND ? IS NULL))
+       AND (CUSTOM_NAME = ? OR (CUSTOM_NAME IS NULL AND ? IS NULL))
+       AND IS_FIXED = 0 AND (STATUS IS NULL OR STATUS != 'rejected')`,
+    [cur.sheet_id, id, pole, defectId, phaseId, phaseId, span ?? null, span ?? null,
+     customName, customName],
+  );
+  if (dup) return { error: 'Такой дефект уже есть на этом месте в листке', status: 409 };
+  return { values: v };
+}
 
 const router = Router();
 
@@ -67,6 +167,8 @@ function toDefect(r) {
     resolutionDeadline: r.resolution_deadline ?? null,
     masterName:         r.master_name         ?? null,
     fixWorkVolume:      r.fix_work_volume     ?? null,
+    customName:         r.custom_name         ?? null,
+    sapCode:            r.sap_code            ?? null,
   };
 }
 
@@ -78,8 +180,18 @@ const SELECT_DEFECT = `
          INSPECTOR_FIX, INSULATOR_COUNT, SPAN_RANGE, NOTES, STATUS,
          MASTER_CONCLUSION,
          CAST(RESOLUTION_DEADLINE AS VARCHAR(10)) AS RESOLUTION_DEADLINE,
-         MASTER_NAME, FIX_WORK_VOLUME
+         MASTER_NAME, FIX_WORK_VOLUME, CUSTOM_NAME, SAP_CODE
   FROM DEFECT_RECORDS`;
+
+/**
+ * SAP-код опоры = SAP-код линии. Заполняем только для Жлобинских ЭС,
+ * в остальных филиалах поле остаётся пустым.
+ */
+async function sapCodeForLine(lineId, filialId) {
+  if (Number(filialId) !== 2 || !lineId) return null;
+  const line = await queryOne('SELECT SAP_CODE FROM LINES WHERE ID = ?', [Number(lineId)]);
+  return line?.sap_code ?? null;
+}
 
 // ── GET /defectCounts — количество дефектов по листам ─────────────────────────────────────────────────────────
 router.get('/defectCounts', async (req, res) => {
@@ -140,15 +252,31 @@ router.post('/defectRecords', requirePermission('defects.create'), async (req, r
     if (!canAccessLine(req, sheet.line_id) || !canAccessFilial(req, sheet.filial_id))
       return res.status(403).json({ error: 'Доступ запрещён' });
 
-    // Дедупликация: sheetId + poleNumber + defectId + phaseId
+    const spanRange  = normalizeSpan(body.spanRange);
+    if (spanRange && !/^\d+(-\d+)?$/.test(spanRange))
+      return res.status(400).json({ error: 'Неверно указаны пролёты (пример: 5 или 3-7)' });
+
+    const dateFound = normalizeIsoDate(body.dateFound);
+    if (body.dateFound != null && body.dateFound !== '' && !dateFound)
+      return res.status(400).json({ error: 'Неверная дата обнаружения (нужно ГГГГ-ММ-ДД)' });
+
+    // Для пролётов опора не используется — это защищает от ложных совпадений с дефектами на опорах
+    const poleNumber = spanRange ? 0 : Number(body.poleNumber);
+    const phaseId    = body.phaseId ? Number(body.phaseId) : null;
+    const customName = normalizeCustomName(body.customName);
+
+    // Дедупликация: листок + место (опора/пролёты) + вид дефекта + фаза + свой текст.
+    // SPAN_RANGE обязательно сравниваем: у всех пролётных дефектов POLE_NUMBER = 0,
+    // иначе дефект, добавленный в одном пролёте, блокировал бы добавление в другом.
     const dup = await queryOne(
       `SELECT ID FROM DEFECT_RECORDS
        WHERE SHEET_ID = ? AND POLE_NUMBER = ? AND DEFECT_ID = ?
          AND (PHASE_ID = ? OR (PHASE_ID IS NULL AND ? IS NULL))
+         AND (SPAN_RANGE = ? OR (SPAN_RANGE IS NULL AND ? IS NULL))
+         AND (CUSTOM_NAME = ? OR (CUSTOM_NAME IS NULL AND ? IS NULL))
          AND IS_FIXED = 0 AND (STATUS IS NULL OR STATUS != 'rejected')`,
-      [sheetId, Number(body.poleNumber), Number(body.defectId),
-       body.phaseId ? Number(body.phaseId) : null,
-       body.phaseId ? Number(body.phaseId) : null],
+      [sheetId, poleNumber, Number(body.defectId),
+       phaseId, phaseId, spanRange, spanRange, customName, customName],
     );
     if (dup) {
       return res.status(409).json({
@@ -159,27 +287,30 @@ router.post('/defectRecords', requirePermission('defects.create'), async (req, r
     }
 
     const id = await nextId('defects');
+    const sapCode = await sapCodeForLine(sheet.line_id, sheet.filial_id);
     await execute(
       `INSERT INTO DEFECT_RECORDS
          (ID, SHEET_ID, LINE_ID, POLE_NUMBER, DEFECT_ID, PHASE_ID, ELEMENT_ID,
           DATE_FOUND, INSPECTOR_FIND, IS_FIXED, DATE_FIXED, INSPECTOR_FIX,
-          INSULATOR_COUNT, SPAN_RANGE, NOTES, STATUS)
+          INSULATOR_COUNT, SPAN_RANGE, NOTES, STATUS, CUSTOM_NAME, SAP_CODE)
        VALUES (?,?,?,?,?,?,?,
                CAST(? AS DATE),?,?,CAST(? AS DATE),?,
-               ?,?,?,?)`,
+               ?,?,?,?,?,?)`,
       [id, sheetId, sheet.line_id,
-       Number(body.poleNumber), Number(body.defectId),
-       body.phaseId   ? Number(body.phaseId)   : null,
+       poleNumber, Number(body.defectId),
+       phaseId,
        body.elementId ? Number(body.elementId) : null,
-       body.dateFound    ?? null,
+       dateFound,
        body.inspectorFind ?? null,
        body.isFixed ? 1 : 0,
        body.dateFixed    ?? null,
        body.inspectorFix ?? null,
        body.insulatorCount != null ? Number(body.insulatorCount) : null,
-       body.spanRange ?? null,
+       spanRange,
        body.notes     ?? null,
-       body.status    ?? null],
+       body.status    ?? null,
+       customName,
+       sapCode],
     );
 
     const row = await queryOne(SELECT_DEFECT + ' WHERE ID = ?', [id]);
@@ -196,7 +327,8 @@ router.post('/defectRecords', requirePermission('defects.create'), async (req, r
  *   isFixed (+ дата, кто устранил)                      → defects.fix
  *   заключение мастера (мероприятия, срок, мастер, объём работ,
  *   дата устранения и производитель работ из журнала)  → journal.conclusion
- *   примечание, обнаружил, статус                      → defects.edit
+ *   примечание, обнаружил, статус, а также место (опора/пролёты),
+ *   вид дефекта, фаза, изоляторы, дата обнаружения     → defects.edit
  */
 function requiredForDefectPatch(body) {
   const has = (k) => k in body;
@@ -204,31 +336,45 @@ function requiredForDefectPatch(body) {
   if (has('isFixed')) need.add('defects.fix');
   if (['masterConclusion', 'resolutionDeadline', 'masterName', 'fixWorkVolume'].some(has)) need.add('journal.conclusion');
   if (!has('isFixed') && ['dateFixed', 'inspectorFix'].some(has)) need.add('journal.conclusion');
-  if (['notes', 'inspectorFind', 'status'].some(has)) need.add('defects.edit');
+  if (['notes', 'inspectorFind', 'status', 'customName', ...CORE_FIELDS].some(has)) need.add('defects.edit');
   return [...need];
 }
 
 router.patch('/defectRecords/:id', async (req, res) => {
   try {
-    const id = Number(req.params.id);
-    const missing = requiredForDefectPatch(req.body ?? {}).find((k) => !hasPermission(req.role, k));
+    const id   = Number(req.params.id);
+    const body = { ...(req.body ?? {}) };
+    if ('customName' in body) body.customName = normalizeCustomName(body.customName);
+    const missing = requiredForDefectPatch(body).find((k) => !hasPermission(req.role, k, req.filialId));
     if (missing) return res.status(403).json({ error: 'Недостаточно прав для этого действия', permission: missing });
 
     // Проверяем доступ через линию дефекта
     const existing = await queryOne(
-      'SELECT d.ID, d.LINE_ID, s.FILIAL_ID FROM DEFECT_RECORDS d LEFT JOIN INSPECTION_SHEETS s ON s.ID = d.SHEET_ID WHERE d.ID = ?', [id],
+      `SELECT d.ID, d.LINE_ID, d.SHEET_ID, d.POLE_NUMBER, d.SPAN_RANGE, d.DEFECT_ID,
+              d.PHASE_ID, d.CUSTOM_NAME, d.IS_FIXED, s.FILIAL_ID
+       FROM DEFECT_RECORDS d LEFT JOIN INSPECTION_SHEETS s ON s.ID = d.SHEET_ID WHERE d.ID = ?`, [id],
     );
     if (!existing) return res.status(404).json({ error: 'Not found' });
     if (!canAccessLine(req, existing.line_id) || !canAccessFilial(req, existing.filial_id))
       return res.status(403).json({ error: 'Доступ запрещён' });
 
+    // Исправление ошибочно внесённого дефекта: только пока он не устранён
+    let core = {};
+    if (CORE_FIELDS.some((k) => k in body)) {
+      if (existing.is_fixed === 1)
+        return res.status(400).json({ error: 'Устранённый дефект изменить нельзя' });
+      const checked = await validateCoreFields(body, existing, id);
+      if (checked.error) return res.status(checked.status ?? 400).json({ error: checked.error });
+      core = checked.values;
+    }
+
     const sets   = [];
     const params = [];
 
     for (const [jsKey, col] of Object.entries(PATCH_COLS)) {
-      if (!(jsKey in req.body)) continue;
+      if (!(jsKey in body)) continue;
       if (!PATCH_ALLOWED.has(jsKey)) continue;
-      const val = req.body[jsKey];
+      const val = jsKey in core ? core[jsKey] : body[jsKey];
 
       if (DATE_PATCH_COLS.has(jsKey)) {
         sets.push(`${col} = CAST(? AS DATE)`);
@@ -244,6 +390,12 @@ router.patch('/defectRecords/:id', async (req, res) => {
 
     if (sets.length === 0)
       return res.status(400).json({ error: 'Нет разрешённых полей' });
+
+    if (Number(existing.filial_id) === 2) {
+      const sapCode = await sapCodeForLine(existing.line_id, existing.filial_id);
+      sets.push('SAP_CODE = ?');
+      params.push(sapCode);
+    }
 
     params.push(id);
     await execute(`UPDATE DEFECT_RECORDS SET ${sets.join(', ')} WHERE ID = ?`, params);
@@ -366,3 +518,7 @@ router.get('/poleDefectStatus', async (req, res) => {
 });
 
 module.exports = router;
+// Чистые хелперы — экспортируем для юнит-тестов, не меняя экспорт middleware.
+module.exports.normalizeSpan = normalizeSpan;
+module.exports.normalizeCustomName = normalizeCustomName;
+module.exports.requiredForDefectPatch = requiredForDefectPatch;

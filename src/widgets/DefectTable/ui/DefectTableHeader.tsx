@@ -3,11 +3,11 @@ import { ThFilter } from '@/shared/ui/ThFilter';
 import { ThSort } from '@/shared/ui/ThSort';
 import type { FilterOption } from '@/shared/ui/ThFilter';
 import cls from './DefectTableHeader.module.scss';
+import { TableHead, TableRow, TableTh } from '@/shared/ui';
 
 interface DefectTableHeaderProps {
   sortDir: 'asc' | 'desc';
   onSortToggle: () => void;
-  anyExpanded: boolean;
   isFixed: boolean;
   filterElementId: string;
   filterDefectTypeId: string;
@@ -21,7 +21,6 @@ export const DefectTableHeader = memo((props: DefectTableHeaderProps) => {
   const {
     sortDir,
     onSortToggle,
-    anyExpanded,
     isFixed,
     filterElementId,
     filterDefectTypeId,
@@ -32,61 +31,57 @@ export const DefectTableHeader = memo((props: DefectTableHeaderProps) => {
   } = props;
 
   return (
-    <thead>
-      <tr>
+    <TableHead>
+      <TableRow>
         {/* Порядковый номер */}
-        <th className={cls.th} style={{ width: 48 }}>
+        <TableTh className={`${cls.th} ${cls.colIndex}`}>
           №
-        </th>
+        </TableTh>
 
         {/* Опора или Пролёты */}
-        <ThSort label='Опора / Пролёты' dir={sortDir} onClick={onSortToggle} width='clamp(130px, 13vw, 170px)' />
+        <ThSort label='Опора / Пролёты' dir={sortDir} onClick={onSortToggle} width='var(--table-col-pole)' />
 
         <ThFilter
           label='Элемент'
           value={filterElementId}
           options={elements}
           onChange={onElementChange}
-          width={anyExpanded ? 'clamp(140px, 14vw, 200px)' : 'auto'}
         />
 
-        {anyExpanded && (
+        {/* Колонки детализации всегда на месте — раскрытие не меняет ширины */}
+        <ThFilter
+          label='Дефект'
+          value={filterDefectTypeId}
+          options={defectTypes}
+          onChange={onDefectTypeChange}
+          width='var(--table-col-defect)'
+        />
+        <TableTh className={`${cls.th} ${cls.colDate}`}>
+          Дата обн.
+        </TableTh>
+        <TableTh className={`${cls.th} ${cls.colPerson}`}>
+          Обнаружил
+        </TableTh>
+        <TableTh className={`${cls.th} ${cls.colNote}`}>
+          Примечание
+        </TableTh>
+        {isFixed && (
           <>
-            <ThFilter
-              label='Дефект'
-              value={filterDefectTypeId}
-              options={defectTypes}
-              onChange={onDefectTypeChange}
-              width='auto'
-            />
-            <th className={cls.th} style={{ width: 'clamp(90px, 10vw, 120px)' }}>
-              Дата обн.
-            </th>
-            <th className={cls.th} style={{ width: 'clamp(110px, 12vw, 160px)' }}>
-              Обнаружил
-            </th>
-            <th className={cls.th} style={{ width: 'clamp(110px, 12vw, 200px)' }}>
-              Примечание
-            </th>
-            {isFixed && (
-              <>
-                <th className={cls.th} style={{ width: 'clamp(90px, 10vw, 120px)' }}>
-                  Дата устр.
-                </th>
-                <th className={cls.th} style={{ width: 'clamp(110px, 12vw, 160px)' }}>
-                  Устранил
-                </th>
-              </>
-            )}
+            <TableTh className={`${cls.th} ${cls.colDate}`}>
+              Дата устр.
+            </TableTh>
+            <TableTh className={`${cls.th} ${cls.colPerson}`}>
+              Устранил
+            </TableTh>
           </>
         )}
 
-        <th className={cls.th} style={{ width: 'clamp(90px, 9vw, 130px)' }}>
+        <TableTh className={`${cls.th} ${cls.colCount}`}>
           Кол-во
-        </th>
-        <th className={cls.th} style={{ width: 'clamp(50px, 5vw, 70px)' }} />
-      </tr>
-    </thead>
+        </TableTh>
+        <TableTh className={`${cls.th} ${cls.colActions}`} />
+      </TableRow>
+    </TableHead>
   );
 });
 DefectTableHeader.displayName = 'DefectTableHeader';

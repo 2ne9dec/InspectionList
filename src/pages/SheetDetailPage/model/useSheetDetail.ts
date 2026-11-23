@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useGetSheetByIdQuery } from '@/entities/InspectionSheet';
 import { useGetFilialsQuery, useGetVoltagesQuery, useGetLinesQuery, useGetDefectTypesQuery, useGetElementsQuery, useGetPhasesQuery } from '@/entities/InspectionLine';
-import { useGetDefectsBySheetQuery } from '@/entities/DefectRecord';
+import { useGetDefectsBySheetQuery, enrichDefects } from '@/entities/DefectRecord';
 import type { InspectionSheetFull } from '@/entities/InspectionSheet';
 import type { DefectRecordFull } from '@/entities/DefectRecord';
 
@@ -37,18 +37,7 @@ export function useSheetDetail(sheetId: number) {
   }, [sheet, filials, voltages, lines]);
 
   const defectsFull = useMemo<DefectRecordFull[]>(
-    () => allDefects.map((d) => {
-      const dt = defectTypes.find((t) => t.id === d.defectId);
-      const el = elements.find((e) => dt && e.id === dt.elementId);
-      const ph = phases.find((p) => p.id === d.phaseId);
-      return {
-        ...d,
-        elementName: el?.name ?? '—',
-        defectName:  dt?.name ?? '—',
-        phaseName:   ph?.name ?? null,
-        severity:    (dt?.severity ?? 'low') as DefectRecordFull['severity'],
-      };
-    }),
+    () => enrichDefects(allDefects, defectTypes, elements, phases),
     [allDefects, defectTypes, elements, phases],
   );
 

@@ -10,5 +10,3 @@ export const LOGIN_FILIALS: ReadonlyArray<{ value: string; label: string }> = [
   { value: 'rup', label: 'РУП «Гомельэнерго»' },
 ];
 
-/** Ключ localStorage, где прежние версии запоминали филиал входа (теперь только очищается). */
-export const LOGIN_FILIAL_KEY = 'login_filial';

@@ -15,15 +15,15 @@
 
 // Крупный display-номер — специфичный для 404-страницы размер
 .code {
-  font-size: 96px;
-  font-weight: 900;
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-black);
   color: var(--color-border);
-  line-height: 1;
+  line-height: var(--line-height-none);
 }
 
 .title {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
 }
 
@@ -34,15 +34,15 @@
 
 .btn {
   margin-top: var(--space-3);
-  padding: 10px 28px;
+  padding: var(--space-2-5) var(--space-6-5);
   background: var(--color-accent);
   color: var(--color-text-on-accent);
   border: none;
   border-radius: var(--radii);
   font-size: var(--font-size-s);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: opacity var(--duration-base);
 
   &:hover {
     opacity: 0.87;

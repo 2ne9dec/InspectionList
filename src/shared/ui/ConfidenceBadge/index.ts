@@ -1,1 +1,0 @@
-export { ConfidenceBadge } from './ConfidenceBadge';

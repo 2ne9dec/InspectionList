@@ -5,8 +5,8 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  background: var(--color-bg-surface-2);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+  border-bottom: var(--border-width) solid var(--color-border);
   flex-shrink: 0;
   flex-wrap: wrap;
 }
@@ -15,8 +15,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  padding: 1px 6px;
+  min-width: var(--space-5);
+  padding: var(--space-px) var(--space-1-5);
   border-radius: var(--radii-full);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
@@ -26,17 +26,6 @@
 .countDanger  { background: var(--color-error); }
 .countSuccess { background: var(--color-success); }
 
-.stats {
-  display: flex;
-  gap: var(--space-3);
-}
-
-.stat {
-  font-size: var(--font-size-s);
-  font-weight: var(--font-weight-semibold);
-  color: var(--sev);
-}
-
 .filterGroup {
   display: flex;
   align-items: center;
@@ -45,7 +34,7 @@
 
 .search {
   margin-left: auto;
-  width: clamp(140px, 20vw, 220px);
+  width: clamp(var(--layout-140), 20vw, var(--layout-220));
 }
 
 @include m.down(tablet) {
@@ -58,6 +47,4 @@
     padding: var(--space-2) var(--space-3);
     gap: var(--space-2);
   }
-  .stats { gap: var(--space-2); }
-  .stat  { font-size: var(--font-size-xs); }
 }

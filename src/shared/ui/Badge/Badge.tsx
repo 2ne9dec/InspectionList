@@ -9,13 +9,13 @@ export type BadgeSize = 's' | 'm';
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant;
   size?: BadgeSize;
-  /** Цвет фона можно задать напрямую — для динамической severity-карты. */
+  /** Цвет фона можно задать напрямую. */
   color?: string;
   children?: ReactNode;
 }
 
 /**
- * Маленький бейдж для статусов, счётчиков, severity-уровней.
+ * Маленький бейдж для статусов и счётчиков.
  */
 export const Badge = memo((props: BadgeProps) => {
   const { variant = 'neutral', size = 'm', color, className, style, children, ...rest } = props;

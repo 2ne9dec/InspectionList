@@ -1,124 +1,30 @@
-import { memo, useCallback, useMemo } from 'react';
-import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import {
-  useGetFilialsQuery,
-  useGetFilialVoltageFilterQuery,
-  useGetLinesQuery,
-  useGetVoltagesQuery,
-} from '@/entities/InspectionLine';
-import { getUserFilialId } from '@/entities/User';
-import { getRouteSheetDetail } from '@/shared/const/router';
+import { memo } from 'react';
 import { Button, FormField, Input, Modal, SelectMenu } from '@/shared/ui';
-import { addPendingSheet } from '@/shared/lib/offline/pendingSheets';
-import { SYNC_EVENT } from '@/shared/lib/sync/useSyncService';
-import { createSheetActions } from '../model/createSheetSlice';
-import {
-  selectCreateSheetCreatedBy,
-  selectCreateSheetCreatedDate,
-  selectCreateSheetIsOpen,
-  selectCreateSheetLineId,
-  selectCreateSheetVoltageId,
-} from '../model/selectors';
+import { useCreateSheetForm } from '../model/useCreateSheetForm';
 import cls from './CreateSheetModal.module.scss';
 
 export const CreateSheetModal = memo(() => {
-  const navigate = useNavigate();
-
-  const isOpen      = useSelector(selectCreateSheetIsOpen);
-  const voltageId   = useSelector(selectCreateSheetVoltageId);
-  const lineId      = useSelector(selectCreateSheetLineId);
-  const createdBy   = useSelector(selectCreateSheetCreatedBy);
-  const createdDate = useSelector(selectCreateSheetCreatedDate);
-  const userFilialId = useSelector(getUserFilialId);
-
-  const { closeModal, setVoltageId, setLineId, setCreatedBy, setCreatedDate } =
-    createSheetActions.useActions();
-
-  const { data: filials  = [] } = useGetFilialsQuery();
-  const { data: voltages = [], isFetching: voltagesFetching } = useGetVoltagesQuery();
-  const { data: lines    = [] } = useGetLinesQuery();
-  const { data: voltageFilter = {} } = useGetFilialVoltageFilterQuery();
-  const effectiveFilialId = userFilialId;
-
-  const filteredVoltages = useMemo(() => {
-    if (!effectiveFilialId) return voltages;
-    const allowed = voltageFilter[String(effectiveFilialId)];
-    return voltages.filter((v) => v.filialId === effectiveFilialId && (!allowed || allowed.includes(v.id)));
-  }, [voltages, effectiveFilialId, voltageFilter]);
-
-  const filteredLines = useMemo(
-    () => (voltageId ? lines.filter((l) => l.voltageId === voltageId) : []),
-    [lines, voltageId],
-  );
-
-  const selectedLine = useMemo(
-    () => lines.find((l) => l.id === lineId),
-    [lines, lineId],
-  );
-
-  const isValid = !!voltageId && !!lineId && createdBy.trim().length > 0 && !!createdDate;
-
-  const voltageOptions = useMemo(
-    () => [
-      { value: '', label: '— выберите напряжение —' },
-      ...filteredVoltages.map((v) => ({ value: String(v.id), label: v.name })),
-    ],
-    [filteredVoltages],
-  );
-  const lineOptions = useMemo(() => {
-    // Разделяем на главные линии и отпайки (имя содержит " / ")
-    const mains    = filteredLines.filter((l) => !l.name.includes(' / '));
-    const branches = filteredLines.filter((l) =>  l.name.includes(' / '));
-
-    const result: { value: string; label: string; triggerLabel?: string; indent?: boolean }[] = [];
-
-    for (const main of mains) {
-      result.push({ value: String(main.id), label: main.name });
-      const prefix = main.name + ' / ';
-      for (const br of branches) {
-        if (br.name.startsWith(prefix)) {
-          result.push({
-            value: String(br.id),
-            label: br.name.slice(prefix.length),
-            triggerLabel: br.name,
-            indent: true,
-          });
-        }
-      }
-    }
-
-    // Отпайки без родителя — добавляем в конец
-    for (const br of branches) {
-      if (!result.some((o) => o.value === String(br.id))) {
-        result.push({ value: String(br.id), label: br.name, indent: true });
-      }
-    }
-
-    return result;
-  }, [filteredLines]);
-
-  const userFilialName = filials.find((f) => f.id === userFilialId)?.name ?? '';
-
-  const handleSubmit = useCallback(() => {
-    const sheetFilialId = effectiveFilialId ?? selectedLine?.filialId ?? null;
-    if (!isValid || !voltageId || !lineId || !sheetFilialId) return;
-
-    // Мгновенно сохраняем локально — не ждём сервер
-    const pending = addPendingSheet({
-      filialId:    sheetFilialId,
-      voltageId:   voltageId!,
-      lineId:      lineId!,
-      createdBy:   createdBy.trim(),
-      createdDate,
-    });
-    closeModal();
-
-    // Фоновая синхронизация — если есть сеть, листок сразу перейдёт на сервер
-    window.dispatchEvent(new Event(SYNC_EVENT));
-
-    setTimeout(() => navigate(getRouteSheetDetail(String(pending.localId))), 50);
-  }, [closeModal, createdBy, createdDate, effectiveFilialId, isValid, lineId, navigate, selectedLine, voltageId]);
+  const {
+    isOpen,
+    voltageId,
+    lineId,
+    createdBy,
+    createdDate,
+    effectiveFilialId,
+    userFilialName,
+    voltagesFetching,
+    voltagesCount,
+    voltageOptions,
+    lineOptions,
+    selectedLine,
+    isValid,
+    handleSubmit,
+    closeModal,
+    setVoltageId,
+    setLineId,
+    setCreatedBy,
+    setCreatedDate,
+  } = useCreateSheetForm();
 
   return (
     <Modal
@@ -138,15 +44,26 @@ export const CreateSheetModal = memo(() => {
       }
     >
       <div className={cls.fields}>
-        <div className={cls.filialBadge}>{userFilialName}</div>
+        {userFilialName && <div className={cls.filialBadge}>{userFilialName}</div>}
+        {!effectiveFilialId && (
+          <div className={cls.info}>
+            Сначала выберите филиал в переключателе в шапке.
+          </div>
+        )}
 
         <FormField label='Напряжение' htmlFor='cs-voltage' required>
           <SelectMenu
             options={voltageOptions}
             value={String(voltageId ?? '')}
             onChange={(v) => setVoltageId(v === '' ? 0 : Number(v))}
-            placeholder={voltagesFetching && voltages.length === 0 ? 'Загрузка...' : '— выберите напряжение —'}
-            disabled={voltagesFetching && voltages.length === 0}
+            placeholder={
+              !effectiveFilialId
+                ? '— сначала выберите филиал —'
+                : voltagesFetching && voltagesCount === 0
+                  ? 'Загрузка...'
+                  : '— выберите напряжение —'
+            }
+            disabled={!effectiveFilialId || (voltagesFetching && voltagesCount === 0)}
           />
         </FormField>
 
@@ -158,6 +75,7 @@ export const CreateSheetModal = memo(() => {
             onChange={(v) => setLineId(v === '' ? 0 : Number(v))}
             placeholder={!voltageId ? '— сначала выберите напряжение —' : '— выберите линию —'}
             disabled={!voltageId}
+            panelWidth='min(720px, calc(100vw - 32px))'
           />
         </FormField>
 
@@ -171,8 +89,13 @@ export const CreateSheetModal = memo(() => {
         )}
 
         <FormField label='Дата осмотра' htmlFor='cs-date' required>
-          <Input id='cs-date' name='createdDate' type='date' value={createdDate}
-onChange={setCreatedDate} />
+          <Input
+            id='cs-date'
+            name='createdDate'
+            type='date'
+            value={createdDate}
+            onChange={setCreatedDate}
+          />
         </FormField>
 
         <FormField label='Осматривал (ФИО)' htmlFor='cs-inspector' required>

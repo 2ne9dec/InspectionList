@@ -33,12 +33,13 @@
 
     /* Алиасы (paths без baseUrl — относительно tsconfig.json, TS 5.x) */
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@tests/*": ["./tests/*"]
     },
 
     /* Типы */
-    "types": ["vite/client"]
+    "types": ["vite/client", "vitest/globals"]
   },
-  "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.d.ts"],
+  "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.d.ts", "./tests/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

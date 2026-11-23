@@ -1,9 +1,7 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import type { DefectRecord } from '@/entities/DefectRecord';
 import { useGetAllDefectsQuery } from '@/entities/DefectRecord';
 import { useGetSheetsQuery } from '@/entities/InspectionSheet';
-import type { Line, Voltage } from '@/entities/InspectionLine';
 import {
   useGetDefectTypesQuery,
   useGetElementsQuery,
@@ -14,46 +12,19 @@ import {
   useGetFilialsQuery,
 } from '@/entities/InspectionLine';
 import { getUserEffectiveFilialId } from '@/entities/User';
+import { buildJournalRows } from '../lib/journalRows';
+import type { JournalRow, JournalStatusFilter } from '../lib/journalRows';
+import { useJournalFilterState } from './useJournalFilterState';
+import { useJournalSelection } from './useJournalSelection';
 
-export type StatusFilter = 'all' | 'active' | 'fixed';
+export type StatusFilter = JournalStatusFilter;
 
-export interface JournalRow {
-  d: DefectRecord;
-  line: Line | undefined;
-  voltage: Voltage | undefined;
-  /** Название филиала (показывается пользователям, видящим все филиалы) */
-  filialName: string;
-  location: string;
-}
+export type { JournalRow } from '../lib/journalRows';
 
 /**
  * Управляет состоянием фильтров, вычисляет строки таблицы и выбором строк.
  * UI-компонент получает готовые rows и коллбэки — сам ничего не считает.
  */
-
-// -- Helpers for pole/span filter
-function parsePoleFilter(filter: string): { min: number; max: number } | null {
-  const f = filter.trim();
-  if (!f) return null;
-  const range = f.match(/^(\d+)\s*[\-\u2013]\s*(\d+)$/);
-  if (range) return { min: parseInt(range[1], 10), max: parseInt(range[2], 10) };
-  const single = f.match(/^(\d+)$/);
-  if (single) { const n = parseInt(single[1], 10); return { min: n, max: n }; }
-  return null;
-}
-
-function matchesSpanRange(spanRange: string | null | undefined, min: number, max: number): boolean {
-  if (!spanRange) return false;
-  const rangeM = spanRange.match(/^(\d+)\s*[\-\u2013]\s*(\d+)$/);
-  if (rangeM) {
-    const sMin = parseInt(rangeM[1], 10);
-    const sMax = parseInt(rangeM[2], 10);
-    return sMin <= max && sMax >= min;
-  }
-  const singleM = spanRange.match(/^(\d+)$/);
-  if (singleM) { const n = parseInt(singleM[1], 10); return n >= min && n <= max; }
-  return false;
-}
 export function useJournalFilters() {
   // Свой филиал или выбранный в переключателе (наблюдатель РУП)
   const userFilialId = useSelector(getUserEffectiveFilialId);
@@ -69,23 +40,18 @@ export function useJournalFilters() {
   const { data: filials = [] } = useGetFilialsQuery();
   const filialNameMap = useMemo(() => new Map(filials.map((f) => [f.id, f.name])), [filials]);
 
-  // ── Фильтры ────────────────────────────────────────────────────────────────────────
-  const [statusFilter,          setStatusFilter]          = useState<StatusFilter>('all');
-  const [voltageFilter,         setVoltageFilter]         = useState('');
-  const [lineFilter,            setLineFilter]            = useState('');
-  const [selectedDefectTypeIds, setSelectedDefectTypeIds] = useState<Set<number>>(new Set());
-  const [inspectorFilter,       setInspectorFilter]       = useState('');
-  const [dateFrom,              setDateFrom]              = useState('');
-  const [dateTo,                setDateTo]                = useState('');
-  const [poleFilter,            setPoleFilter]            = useState('');
+  const filters = useJournalFilterState();
+  const { handleVoltageChange } = filters;
 
-  // ── Выбор строк ────────────────────────────────────────────────────────────────────────
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  // При смене филиала старые напряжение и линия могут стать недопустимыми.
+  const prevFilialRef = useRef(userFilialId);
+  useEffect(() => {
+    if (prevFilialRef.current === userFilialId) return;
+    prevFilialRef.current = userFilialId;
+    handleVoltageChange('');
+  }, [userFilialId, handleVoltageChange]);
 
-  // ── Ручное снятие «ворот» ──────────────────────────────────────────────────────────────────
-  const [showAll, setShowAll] = useState(false);
-
-  // ── Листки текущего филиала ───────────────────────────────────────────────────────────────────────
+  // ── Листки текущего филиала ────────────────────────────────────────────────
   const filialSheets = useMemo(
     () => userFilialId === null
       ? sheets
@@ -93,12 +59,14 @@ export function useJournalFilters() {
     [sheets, userFilialId],
   );
 
-  // Напряжения филиала: свои (VOLTAGES.FILIAL_ID) + дополнительно разрешённые фильтром
+  // Напряжения филиала: только его классы и только разрешённые фильтром
   const filialVoltageIds = useMemo(() => {
     if (userFilialId === null) return null;
-    const ids = new Set<number>(voltages.filter((v) => v.filialId === userFilialId).map((v) => v.id));
-    for (const id of filialVoltageMap[String(userFilialId)] ?? []) ids.add(id);
-    return ids;
+    const allowed = filialVoltageMap[String(userFilialId)];
+    const ids = voltages
+      .filter((v) => v.filialId === userFilialId && (!allowed || allowed.includes(v.id)))
+      .map((v) => v.id);
+    return new Set<number>(ids);
   }, [filialVoltageMap, userFilialId, voltages]);
 
   const filialVoltages = useMemo(
@@ -111,7 +79,7 @@ export function useJournalFilters() {
   const filialLines = useMemo(
     () => filialVoltageIds === null
       ? lines
-      : lines.filter((l) => l.filialId === userFilialId || filialVoltageIds.has(l.voltageId)),
+      : lines.filter((l) => l.filialId === userFilialId && filialVoltageIds.has(l.voltageId)),
     [lines, filialVoltageIds, userFilialId],
   );
 
@@ -123,116 +91,38 @@ export function useJournalFilters() {
   const voltageMap    = useMemo(() => new Map(voltages.map((v) => [v.id, v])),       [voltages]);
 
   const filteredLines = useMemo(() => {
-    if (!voltageFilter) return filialLines;
-    return filialLines.filter((l) => String(l.voltageId) === voltageFilter);
-  }, [filialLines, voltageFilter]);
+    if (!filters.voltageFilter) return filialLines;
+    return filialLines.filter((l) => String(l.voltageId) === filters.voltageFilter);
+  }, [filialLines, filters.voltageFilter]);
 
-  const rows = useMemo<JournalRow[]>(() => {
-    return defects
-      .filter((d) => {
-        const sheet = sheetMap.get(d.sheetId);
-        if (!sheet) return false;
-        if (statusFilter === 'active' && !!d.isFixed)  return false;
-        if (statusFilter === 'fixed'  && !d.isFixed)   return false;
-        if (dateFrom && d.dateFound < dateFrom) return false;
-        if (dateTo   && d.dateFound > dateTo)   return false;
-        if (voltageFilter && String(sheet.voltageId) !== voltageFilter) return false;
-        if (lineFilter    && String(sheet.lineId)    !== lineFilter)    return false;
-        if (selectedDefectTypeIds.size > 0 && !selectedDefectTypeIds.has(d.defectId)) return false;
-        if (inspectorFilter) {
-          if (!d.inspectorFind.toLowerCase().includes(inspectorFilter.toLowerCase())) return false;
-        }
-        if (poleFilter) {
-          const parsed = parsePoleFilter(poleFilter);
-          if (parsed) {
-            const { min, max } = parsed;
-            const poleMatch = d.poleNumber >= min && d.poleNumber <= max;
-            const spanMatch = matchesSpanRange(d.spanRange, min, max);
-            if (!poleMatch && !spanMatch) return false;
-          }
-        }
-        return true;
-      })
-      .map((d) => {
-        const sheet      = sheetMap.get(d.sheetId)!;
-        const defectType = defectTypeMap.get(d.defectId);
-        const element    = defectType ? elementMap.get(defectType.elementId) : undefined;
-        const phase      = d.phaseId  ? phaseMap.get(d.phaseId)              : undefined;
-        const line       = lineMap.get(sheet.lineId);
-        const voltage    = voltageMap.get(sheet.voltageId);
-        const location   = [
-          d.spanRange  ? `Пр. ${d.spanRange}`  : d.poleNumber ? `Оп. ${d.poleNumber}` : null,
-          phase?.name  ?? null,
-          element && defectType ? `${element.name}: ${defectType.name}` : defectType?.name ?? null,
-        ].filter(Boolean).join(' / ');
-        const filialName = filialNameMap.get(sheet.filialId) ?? '—';
-        return { d, line, voltage, filialName, location };
-      })
-      .sort((a, b) => (a.d.dateFound < b.d.dateFound ? 1 : -1));
-  }, [
-    defects, statusFilter, dateFrom, dateTo, voltageFilter, lineFilter,
-    selectedDefectTypeIds, inspectorFilter, poleFilter, sheetMap, defectTypeMap, elementMap,
-    phaseMap, lineMap, voltageMap, filialNameMap,
-  ]);
-
-  const selectableIds = useMemo(() => rows.filter((r) => !r.d.isFixed).map((r) => r.d.id), [rows]);
-
-  const allSelected = selectableIds.length > 0
-    && selectableIds.every((id) => selectedIds.has(id));
-
-  const handleSelectAll = useCallback((checked: boolean) => {
-    setSelectedIds(checked ? new Set(selectableIds) : new Set());
-  }, [selectableIds]);
-
-  const handleSelect = useCallback((id: number, checked: boolean) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (checked) { next.add(id); } else { next.delete(id); }
-      return next;
-    });
-  }, []);
-
-  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
-
-  const hasFilters = Boolean(
-    statusFilter !== 'all' || voltageFilter || lineFilter
-    || selectedDefectTypeIds.size > 0 || inspectorFilter || poleFilter || dateFrom || dateTo,
+  const rows = useMemo<JournalRow[]>(
+    () => buildJournalRows(
+      defects,
+      { sheetMap, defectTypeMap, elementMap, phaseMap, lineMap, voltageMap, filialNameMap },
+      {
+        statusFilter: filters.statusFilter,
+        dateFrom: filters.dateFrom,
+        dateTo: filters.dateTo,
+        voltageFilter: filters.voltageFilter,
+        lineFilter: filters.lineFilter,
+        selectedDefectTypeIds: filters.selectedDefectTypeIds,
+        inspectorFilter: filters.inspectorFilter,
+        poleFilter: filters.poleFilter,
+      },
+    ),
+    [
+      defects, filters.statusFilter, filters.dateFrom, filters.dateTo, filters.voltageFilter,
+      filters.lineFilter, filters.selectedDefectTypeIds, filters.inspectorFilter, filters.poleFilter,
+      sheetMap, defectTypeMap, elementMap, phaseMap, lineMap, voltageMap, filialNameMap,
+    ],
   );
 
-  const isGated = !showAll;
+  const selection = useJournalSelection(rows);
 
   const filialDefectCount = useMemo(
     () => defects.filter((d) => sheetMap.has(d.sheetId)).length,
     [defects, sheetMap],
   );
-
-  const resetFilters = useCallback(() => {
-    setStatusFilter('all');
-    setVoltageFilter('');
-    setLineFilter('');
-    setSelectedDefectTypeIds(new Set());
-    setInspectorFilter('');
-    setPoleFilter('');
-    setDateFrom('');
-    setDateTo('');
-    setShowAll(false);
-  }, []);
-
-  const handleShowAll = useCallback(() => setShowAll(true), []);
-
-  const handleSetStatusFilter    = useCallback((v: StatusFilter) => { setStatusFilter(v);              setShowAll(false); }, []);
-  const handleSetLineFilter      = useCallback((v: string)       => { setLineFilter(v);               setShowAll(false); }, []);
-  const handleSetInspectorFilter = useCallback((v: string)       => { setInspectorFilter(v);          setShowAll(false); }, []);
-  const handleSetPoleFilter      = useCallback((v: string)       => { setPoleFilter(v);               setShowAll(false); }, []);
-  const handleSetDateFrom        = useCallback((v: string)       => { setDateFrom(v);                 setShowAll(false); }, []);
-  const handleSetDateTo          = useCallback((v: string)       => { setDateTo(v);                   setShowAll(false); }, []);
-  const handleSetDefectTypeIds   = useCallback((ids: Set<number>) => { setSelectedDefectTypeIds(ids); setShowAll(false); }, []);
-
-  const handleVoltageChange = useCallback((value: string) => {
-    setVoltageFilter(value);
-    setLineFilter('');
-    setShowAll(false);
-  }, []);
 
   return {
     defects,
@@ -242,30 +132,7 @@ export function useJournalFilters() {
     voltages: filialVoltages,
     filteredLines,
     rows,
-    selectedIds,
-    allSelected,
-    handleSelect,
-    handleSelectAll,
-    clearSelection,
-    statusFilter,
-    voltageFilter,
-    lineFilter,
-    selectedDefectTypeIds,
-    inspectorFilter,
-    dateFrom,
-    dateTo,
-    hasFilters,
-    isGated,
-    handleShowAll,
-    setStatusFilter: handleSetStatusFilter,
-    handleVoltageChange,
-    setLineFilter: handleSetLineFilter,
-    setSelectedDefectTypeIds: handleSetDefectTypeIds,
-    setInspectorFilter: handleSetInspectorFilter,
-    poleFilter,
-    setPoleFilter: handleSetPoleFilter,
-    setDateFrom: handleSetDateFrom,
-    setDateTo: handleSetDateTo,
-    resetFilters,
+    ...selection,
+    ...filters,
   };
 }

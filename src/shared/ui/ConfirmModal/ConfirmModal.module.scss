@@ -11,56 +11,56 @@
 
 .dialog {
   background: var(--color-surface-modal);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radii-l, 12px);
-  padding: 24px;
-  width: min(400px, 90vw);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radii-l);
+  padding: var(--space-6);
+  width: min(var(--layout-400), 90vw);
   box-shadow: var(--shadow-xl);
-  animation: slideUp 0.15s ease;
+  animation: slideUp var(--duration-base) var(--ease-standard);
 }
 
 .title {
-  font-size: var(--font-size-l, 16px);
-  font-weight: var(--font-weight-bold, 700);
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-2);
 }
 
 .description {
-  font-size: var(--font-size-m, 14px);
+  font-size: var(--font-size-m);
   color: var(--color-text-secondary);
-  margin: 0 0 20px;
-  line-height: 1.5;
+  margin: 0 0 var(--space-5);
+  line-height: var(--line-height-base);
 }
 
 .actions {
   display: flex;
-  gap: 10px;
+  gap: var(--space-2-5);
   justify-content: flex-end;
 }
 
 .cancelBtn {
-  padding: 8px 18px;
+  padding: var(--space-2) var(--space-4-5);
   background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radii, 8px);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radii);
   color: var(--color-text-secondary);
-  font-size: var(--font-size-m, 14px);
+  font-size: var(--font-size-m);
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color var(--duration-base), border-color var(--duration-base);
 
   &:hover { color: var(--color-text-primary); border-color: var(--color-border-strong); }
 }
 
 .confirmBtn {
-  padding: 8px 18px;
+  padding: var(--space-2) var(--space-4-5);
   border: none;
-  border-radius: var(--radii, 8px);
-  font-size: var(--font-size-m, 14px);
-  font-weight: var(--font-weight-semibold, 600);
+  border-radius: var(--radii);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   color: var(--color-text-on-accent);
-  transition: filter 0.15s;
+  transition: filter var(--duration-base);
 
   &:hover { filter: brightness(0.9); }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -76,6 +76,6 @@
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(var(--space-2-5)); }
   to   { opacity: 1; transform: translateY(0); }
 }

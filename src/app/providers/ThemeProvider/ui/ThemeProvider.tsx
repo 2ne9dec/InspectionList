@@ -8,13 +8,13 @@ function readInitialTheme(): Theme {
   if (typeof window === 'undefined') return Theme.DARK;
   try {
     const stored = localStorage.getItem(LOCALSTORAGE_THEME_KEY);
+    // Сохранённый выбор пользователя важнее системной темы.
     if (stored === Theme.LIGHT || stored === Theme.DARK) return stored;
   } catch {
     // localStorage может быть недоступен в режиме инкогнито
   }
-  return window.matchMedia?.('(prefers-color-scheme: light)').matches
-    ? Theme.LIGHT
-    : Theme.DARK;
+  // По умолчанию — всегда тёмная тема, независимо от prefers-color-scheme.
+  return Theme.DARK;
 }
 
 const initialTheme = readInitialTheme();

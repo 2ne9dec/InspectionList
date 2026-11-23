@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import type { CreateDefectParams } from '@/entities/DefectRecord';
 
 /**
  * Хранилище дефектов, созданных в офлайн-режиме.
  * Привязаны к localSheetId (отрицательный ID офлайн-листка).
  * Синхронизируются с сервером после успешной отправки родительского листка.
+ *
+ * Тип параметров локальный (не импортируем entities), чтобы shared не зависел
+ * от верхних слоёв FSD. Структурно совместим с CreateDefectParams.
  */
 
 const STORAGE_KEY = 'pending_defects_v1';
@@ -13,7 +15,20 @@ const CHANGED_EVENT = 'pendingDefectsChanged';
 // Счётчик для гарантированно уникальных localId (Date.now() может совпасть в цикле)
 let _idSeq = 0;
 
-export interface PendingDefect extends Omit<CreateDefectParams, 'sheetId'> {
+export interface PendingDefectParams {
+  poleNumber: number;
+  defectId: number;
+  phaseId: number | null;
+  dateFound: string;
+  inspectorFind: string;
+  notes?: string | null;
+  insulatorCount?: number | null;
+  spanRange?: string | null;
+  garlandNumber?: number | null;
+  customName?: string | null;
+}
+
+export interface PendingDefect extends PendingDefectParams {
   /** Уникальный локальный ID дефекта (отрицательный timestamp). */
   localId: number;
   /** localId родительского офлайн-листка. */
@@ -39,7 +54,7 @@ export function getPendingDefects(localSheetId: number): PendingDefect[] {
 
 /** Добавляет дефект в очередь. */
 export function addPendingDefect(
-  params: Omit<CreateDefectParams, 'sheetId'> & { localSheetId: number },
+  params: PendingDefectParams & { localSheetId: number },
 ): PendingDefect {
   const defect: PendingDefect = {
     ...params,

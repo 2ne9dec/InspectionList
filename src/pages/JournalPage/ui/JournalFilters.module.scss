@@ -1,0 +1,129 @@
+@use 'shared/styles/mixins' as m;
+
+/* ── Фильтры + выбор (одна строка) ─────────────────────────────────── */
+.filterBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding-bottom: var(--space-2);
+  flex-shrink: 0;
+}
+
+// Ширина триггеров SelectMenu в строке фильтров
+.filterSelect     { width: var(--layout-150); flex-shrink: 0; }
+// Линия растягивается на доступное место, но не сжимается меньше var(--layout-160)
+.filterSelectLine { flex: 1 1 auto; min-width: var(--layout-160); max-width: var(--layout-500); }
+
+.dateInput {
+  width: var(--layout-130);
+  flex: 0 0 auto;
+}
+
+.textInput {
+  width: var(--layout-130);
+  flex: 0 0 auto;
+}
+
+.poleField {
+  width: var(--layout-130);
+  flex: 0 0 auto;
+}
+
+.defectFilterBtn {
+  height: var(--control-height-m);
+  padding: 0 var(--space-2);
+  background: var(--color-bg-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radii);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+  width: var(--layout-160);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  &:hover { border-color: var(--color-accent); }
+}
+
+.defectFilterBtnActive {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent);
+}
+
+.defectFilterLabel {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.defectFilterClear {
+  flex-shrink: 0;
+  font-size: var(--font-size-body-lg);
+  line-height: var(--line-height-none);
+  color: var(--color-text-secondary);
+  padding: 0 var(--space-0-5);
+  cursor: pointer;
+  &:hover { color: var(--color-error); }
+}
+
+.defectFilterChevron {
+  flex-shrink: 0;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+  line-height: var(--line-height-none);
+}
+
+.dateSep {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+}
+
+/* Группа дат — никогда не разрывается на разные строки */
+.dateGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.resetBtn {
+  height: var(--control-height-m);
+  padding: 0 var(--space-3);
+  background: transparent;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radii);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+  cursor: pointer;
+  &:hover { border-color: var(--color-accent); color: var(--color-accent); }
+}
+
+/* Скрытая кнопка сброса — резервируем место на десктопе, скрываем на планшете */
+.resetBtnHidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+@include m.down(contentWide) {
+  /* Линия — адаптивная, сжимается до var(--layout-120) */
+  .filterSelectLine { min-width: var(--layout-120); max-width: var(--layout-260); }
+  /* Убираем невидимую кнопку из потока — иначе она уйдёт на 2-ю строку */
+  .resetBtnHidden   { display: none; }
+  .filterSelect     { width: var(--layout-130); }
+  .textInput        { width: var(--layout-110); }
+  .defectFilterBtn  { width: var(--layout-140); }
+  .dateInput        { width: var(--layout-138); }
+}
+
+@include m.down(desktopSm) {
+  .filterSelectLine { width: 100%; flex: 1 1 100%; }
+  .filterSelect     { width: calc(50% - var(--space-1)); flex: 1 1 auto; }
+
+  /* Скрываем «Обнаружил» — экономим место */
+  .poleField { display: none; }
+}

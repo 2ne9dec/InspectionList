@@ -44,6 +44,7 @@ export const SelectMenu = memo(({
           disabled={disabled}
           aria-haspopup='listbox'
           aria-expanded={open}
+          title={selected ? (selected.triggerLabel ?? selected.label) : placeholder}
         >
           <span className={cls.label}>{selected ? (selected.triggerLabel ?? selected.label) : placeholder}</span>
           <span className={cls.arrow} aria-hidden>▾</span>

@@ -1,5 +1,6 @@
 /build
 /dist
+/deploy
 /node_modules
 /server/node_modules
 .idea

@@ -3,7 +3,7 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 600px; // горизонтальный скролл на маленьких экранах
+  min-width: var(--layout-600); // горизонтальный скролл на маленьких экранах
 }
 
 .th {
@@ -14,7 +14,7 @@
   letter-spacing: var(--letter-spacing-wide);
   color: var(--color-text-secondary);
   background: var(--color-bg-surface-2);
-  border-bottom: 2px solid var(--color-border);
+  border-bottom: var(--border-width-strong) solid var(--color-border);
   white-space: nowrap;
   text-align: left;
   position: sticky;
@@ -22,6 +22,13 @@
   z-index: var(--z-sticky);
 }
 
+.colSelect {
+  width: var(--table-col-select);
+  min-width: var(--table-col-select);
+  padding-left: 0;
+  padding-right: 0;
+}
+
 @include m.between(tablet, desktop) {
-  .table { min-width: 520px; }
+  .table { min-width: var(--table-min-width); }
 }

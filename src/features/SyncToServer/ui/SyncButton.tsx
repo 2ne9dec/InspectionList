@@ -3,7 +3,8 @@ import { useAppDispatch } from '@/shared/lib/hooks';
 import { rtkApi } from '@/shared/api/rtkApi';
 import { Button, Input, Modal, VStack, Text } from '@/shared/ui';
 import { getApiUrl, setApiUrl } from '@/shared/lib/api/apiUrl';
-import { SYNC_EVENT } from '@/shared/lib/sync/useSyncService';
+import { SYNC_EVENT } from '@/shared/const/events';
+import { IconSettings } from '@/shared/ui/Icons';
 import cls from './SyncButton.module.scss';
 
 type SyncStatus = 'idle' | 'loading' | 'success' | 'error';
@@ -63,8 +64,14 @@ export const SyncButton = memo(() => {
         {label}
       </Button>
 
-      <Button variant='ghost' size='s' onClick={handleOpenSettings}>
-        ⚙
+      <Button
+        variant='ghost'
+        size='s'
+        onClick={handleOpenSettings}
+        aria-label='Настройки адреса сервера'
+        title='Настройки адреса сервера'
+      >
+        <IconSettings size={15} aria-hidden />
       </Button>
 
       <Modal

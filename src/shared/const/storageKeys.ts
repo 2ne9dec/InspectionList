@@ -4,6 +4,7 @@ export const STORAGE_KEYS = {
   TOKEN:     'defect_tracker_token', // JWT access token
   VIEW_FILIAL: 'defect_tracker_view_filial', // филиал, выбранный наблюдателем РУП
   INSPECTOR: 'defect_tracker_inspector', // последнее введённое ФИО
+  OFFLINE_AUTH: 'defect_tracker_offline_auth', // кэш для входа без сервера
   THEME:     'theme',
 } as const;
 

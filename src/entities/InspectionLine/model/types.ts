@@ -1,4 +1,4 @@
-import type { Severity } from '@/shared/const/severity';
+
 export interface Filial {
   id: number;
   name: string;
@@ -45,7 +45,8 @@ export interface DefectType {
   id: number;
   name: string;
   elementId: number;
-  severity: Severity;
+  /** Дефект вводится свободным текстом (например, «Линейная арматура»). */
+  custom?: boolean;
 }
 
 export interface Phase {

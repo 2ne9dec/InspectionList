@@ -1,10 +1,6 @@
 import { memo } from 'react';
-import { Button, Modal } from '@/shared/ui';
+import { Button, FormField, Input, Modal, Textarea } from '@/shared/ui';
 import cls from './MasterConclusionModal.module.scss';
-
-function openPicker(e: React.MouseEvent<HTMLInputElement>) {
-  (e.currentTarget as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
-}
 
 interface MasterConclusionModalProps {
   isOpen:      boolean;
@@ -57,61 +53,45 @@ export const MasterConclusionModal = memo((
         </p>
       )}
 
-      <div className={cls.field}>
-        <label htmlFor='mc-conclusion' className={cls.label}>Мероприятия по устранению</label>
-        <textarea id='mc-conclusion' name='mc-conclusion'
+      <FormField label='Мероприятия по устранению' htmlFor='mc-conclusion'>
+        <Textarea id='mc-conclusion' name='mc-conclusion'
           className={cls.textarea} rows={2}
           value={conclusion} onChange={(e) => setConclusion(e.target.value)}
           placeholder='Описание мероприятий…'
         />
+      </FormField>
+
+      <div className={cls.row2}>
+        <FormField label='Срок устранения' htmlFor='mc-deadline'>
+          <Input id='mc-deadline' name='mc-deadline' type='date'
+            value={deadline} onChange={setDeadline} />
+        </FormField>
+        <FormField label='Эл. подпись мастера (Ф.И.О.)' htmlFor='mc-master-name'>
+          <Input id='mc-master-name' name='mc-master-name' autoComplete='off'
+            value={masterName} title={masterName || undefined}
+            onChange={setMasterName} placeholder='Фамилия И.О.' />
+        </FormField>
       </div>
 
       <div className={cls.row2}>
-        <div className={cls.field}>
-          <label htmlFor='mc-deadline' className={cls.label}>Срок устранения</label>
-          <input id='mc-deadline' name='mc-deadline'
-            className={`${cls.input} ${cls.dateField}`} type='date'
-            value={deadline} onChange={(e) => setDeadline(e.target.value)}
-            onClick={openPicker}
-          />
-        </div>
-        <div className={cls.field}>
-          <label htmlFor='mc-master-name' className={cls.label}>Эл. подпись мастера (Ф.И.О.)</label>
-          <input id='mc-master-name' name='mc-master-name'
-            className={cls.input} type='text' autoComplete='off'
-            value={masterName} onChange={(e) => setMasterName(e.target.value)}
-            placeholder='Фамилия И.О.'
-          />
-        </div>
+        <FormField label='Дата устранения' htmlFor='mc-date-fixed'>
+          <Input id='mc-date-fixed' name='mc-date-fixed' type='date'
+            value={dateFixed} onChange={setDateFixed} />
+        </FormField>
+        <FormField label='Ф.И.О. производителя работ' htmlFor='mc-inspector-fix'>
+          <Input id='mc-inspector-fix' name='mc-inspector-fix' autoComplete='off'
+            value={inspectorFix} title={inspectorFix || undefined}
+            onChange={setInspectorFix} placeholder='Фамилия И.О.' />
+        </FormField>
       </div>
 
-      <div className={cls.row2}>
-        <div className={cls.field}>
-          <label htmlFor='mc-date-fixed' className={cls.label}>Дата устранения</label>
-          <input id='mc-date-fixed' name='mc-date-fixed'
-            className={`${cls.input} ${cls.dateField}`} type='date'
-            value={dateFixed} onChange={(e) => setDateFixed(e.target.value)}
-            onClick={openPicker}
-          />
-        </div>
-        <div className={cls.field}>
-          <label htmlFor='mc-inspector-fix' className={cls.label}>Ф.И.О. производителя работ</label>
-          <input id='mc-inspector-fix' name='mc-inspector-fix'
-            className={cls.input} type='text' autoComplete='off'
-            value={inspectorFix} onChange={(e) => setInspectorFix(e.target.value)}
-            placeholder='Фамилия И.О.'
-          />
-        </div>
-      </div>
-
-      <div className={cls.field}>
-        <label htmlFor='mc-work-volume' className={cls.label}>Объём выполненных работ</label>
-        <textarea id='mc-work-volume' name='mc-work-volume'
+      <FormField label='Объём выполненных работ' htmlFor='mc-work-volume'>
+        <Textarea id='mc-work-volume' name='mc-work-volume'
           className={cls.textarea} rows={2}
           value={workVolume} onChange={(e) => setWorkVolume(e.target.value)}
           placeholder='Описание работ…'
         />
-      </div>
+      </FormField>
     </div>
   </Modal>
 ));

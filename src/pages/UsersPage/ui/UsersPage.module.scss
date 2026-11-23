@@ -17,7 +17,7 @@
 
 .title {
   font-size: var(--font-size-l);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .count {
@@ -36,14 +36,14 @@
   flex-shrink: 0;
 }
 
-.search       { width: 280px; max-width: 100%; }
-.filialSelect { width: 220px; }
+.search       { width: var(--layout-280); max-width: 100%; }
+.filialSelect { width: var(--layout-220); }
 
 .tableWrap {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radii-l);
   background: var(--color-bg-surface);
 }
@@ -56,28 +56,29 @@
   th {
     position: sticky;
     top: 0;
-    z-index: 1;
+    z-index: var(--z-raised);
     text-align: left;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     padding: var(--space-2) var(--space-3);
     background: var(--color-bg-surface-2);
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: var(--border-width) solid var(--color-border);
     white-space: nowrap;
   }
 
   td {
     padding: var(--space-2) var(--space-3);
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: var(--border-width) solid var(--color-border);
     vertical-align: middle;
   }
 
   tbody tr:last-child td { border-bottom: none; }
 }
 
+.rowNum  { width: var(--table-col-index); color: var(--color-text-secondary); }
 .mono    { font-family: var(--font-family-mono, monospace); }
 .me      { color: var(--color-text-secondary); font-family: var(--font-family-main); }
 .muted   { color: var(--color-text-secondary); }
-.actions { width: 40px; text-align: right; }
+.actions { width: var(--space-8); text-align: right; }
 
 .empty {
   text-align: center;
@@ -89,7 +90,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 200px;
+  min-height: var(--layout-200);
 }
 
 .passRow {
@@ -104,14 +105,14 @@
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radii);
   color: var(--color-error);
-  border: 1px solid var(--color-error);
+  border: var(--border-width) solid var(--color-error);
   font-size: var(--font-size-s);
 }
 
 .formNote {
   font-size: var(--font-size-s);
   color: var(--color-text-secondary);
-  line-height: 1.4;
+  line-height: var(--line-height-copy);
 }
 
 /* ── Вкладки и права ролей ─────────────────────────────── */
@@ -133,7 +134,7 @@
 .rolesHint {
   font-size: var(--font-size-s);
   color: var(--color-text-secondary);
-  line-height: 1.4;
+  line-height: var(--line-height-copy);
 }
 
 .roleCol {
@@ -143,7 +144,7 @@
 }
 
 .groupRow td {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   background: var(--color-bg-surface-2);
 }
 

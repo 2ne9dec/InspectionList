@@ -5,9 +5,20 @@ import {
   type FetchArgs,
   type FetchBaseQueryError,
 } from '@reduxjs/toolkit/query/react';
-import type { StateSchema } from '@/app/providers/StoreProvider';
 import { STORAGE_KEYS } from '@/shared/const/storageKeys';
 import { getApiUrl } from '@/shared/lib/api/apiUrl';
+
+/** Минимальный срез состояния для заголовков (shared не зависит от app). */
+interface ApiRootState {
+  user?: {
+    authData?: {
+      id?: string | number | null;
+      token?: string | null;
+      filialId?: number | null;
+    } | null;
+    viewFilialId?: number | null;
+  };
+}
 
 /**
  * Корневой RTK Query API.
@@ -23,7 +34,7 @@ const dynamicBaseQuery: BaseQueryFn<
   const raw = fetchBaseQuery({
     baseUrl,
     prepareHeaders: (headers, { getState }) => {
-      const state = getState() as StateSchema;
+      const state = getState() as ApiRootState;
       const user  = state.user?.authData;
 
       const token = user?.token ?? sessionStorage.getItem(STORAGE_KEYS.TOKEN);

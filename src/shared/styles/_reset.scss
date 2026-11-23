@@ -13,6 +13,8 @@
 /* Скрыть нативные стрелки у number-инпутов */
 input[type='number']::-webkit-outer-spin-button,
 input[type='number']::-webkit-inner-spin-button {
+  /* stylelint-disable-next-line property-no-vendor-prefix */
+  -webkit-appearance: none;
   appearance: none;
   margin: 0;
 }
@@ -81,8 +83,8 @@ h1, h2, h3, h4, h5, h6 {
 
 // WebKit-скроллбары
 *::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
 }
 *::-webkit-scrollbar-track {
   background: var(--color-scrollbar-track);

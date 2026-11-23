@@ -1,5 +1,3 @@
-import type { Severity } from '@/shared/const/severity';
-
 export interface DefectRecord {
   id: number;
   sheetId: number;
@@ -15,18 +13,35 @@ export interface DefectRecord {
   insulatorCount?: number | null;
   spanRange?: string | null;
   garlandNumber?: number | null;
+  /** Свободное описание дефекта (вид «Линейная арматура»). */
+  customName?: string | null;
   createdAt?: string | null;
   masterConclusion?: string | null;
   resolutionDeadline?: string | null;
   masterName?: string | null;
   fixWorkVolume?: string | null;
+  /** SAP-код опоры (код линии из LineVision). Только для Жлобинских ЭС. */
+  sapCode?: string | null;
 }
 
 export interface DefectRecordFull extends DefectRecord {
   elementName: string;
   defectName: string;
   phaseName: string | null;
-  severity: Severity;
+}
+
+/** Исправление ошибочно внесённого дефекта (пока он не устранён). */
+export interface EditDefectParams {
+  id: number;
+  poleNumber: number;
+  spanRange: string | null;
+  defectId: number;
+  phaseId: number | null;
+  insulatorCount: number | null;
+  dateFound: string;
+  inspectorFind: string;
+  /** Свободное описание дефекта (вид «Линейная арматура»). */
+  customName?: string | null;
 }
 
 export interface CreateDefectParams {
@@ -40,6 +55,8 @@ export interface CreateDefectParams {
   insulatorCount?: number | null;
   spanRange?: string | null;
   garlandNumber?: number | null;
+  /** Свободное описание дефекта (вид «Линейная арматура»). */
+  customName?: string | null;
 }
 
 export interface FixDefectParams {

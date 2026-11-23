@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import cls from './ProgressRing.module.scss';
 
 interface ProgressRingProps {
   /** Процент 0–100 */
@@ -18,48 +19,42 @@ export const ProgressRing = memo(({
   pct,
   size = 48,
   strokeWidth = 4,
-  color = '#22c55e',
+  color = 'var(--color-success)',
   label,
 }: ProgressRingProps) => {
   const r      = (size - strokeWidth) / 2;
   const circ   = 2 * Math.PI * r;
   const offset = circ * (1 - Math.min(pct, 100) / 100);
 
+  const vars = {
+    '--ring-size': `${size}px`,
+    '--ring-stroke': strokeWidth,
+    '--ring-color': color,
+    '--ring-circumference': circ,
+    '--ring-offset': offset,
+  } as React.CSSProperties;
+
   return (
-    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        {/* Трек */}
+    <div className={cls.root} style={vars}>
+      <svg className={cls.svg} viewBox={`0 0 ${size} ${size}`} aria-hidden="true" focusable="false">
         <circle
-          cx={size / 2} cy={size / 2} r={r}
-          fill="none"
-          stroke="var(--color-border, rgba(148,163,184,.2))"
+          className={cls.track}
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
           strokeWidth={strokeWidth}
         />
-        {/* Дуга прогресса */}
         <circle
-          cx={size / 2} cy={size / 2} r={r}
-          fill="none"
-          stroke={color}
+          className={cls.arc}
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
           strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circ}
-          strokeDashoffset={offset}
-          style={{ transition: 'stroke-dashoffset 0.5s ease' }}
         />
       </svg>
-      {/* Текст в центре */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        fontSize: size < 52 ? '0.58rem' : '0.65rem',
-        fontWeight: 600,
-        color: 'var(--color-text-primary, #f1f5f9)',
-        lineHeight: 1.1,
-        textAlign: 'center',
-      }}>
+      <div className={`${cls.text} ${size < 52 ? cls.small : cls.medium}`}>
         <span>{pct}%</span>
-        {label && <span style={{ fontSize: '0.5rem', color: 'var(--color-text-secondary, #94a3b8)', fontWeight: 400 }}>{label}</span>}
+        {label && <span className={cls.label}>{label}</span>}
       </div>
     </div>
   );

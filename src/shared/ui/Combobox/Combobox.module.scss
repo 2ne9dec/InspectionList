@@ -7,13 +7,13 @@
   width: 100%;
   height: var(--control-height-m);
   background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radii);
   transition: var(--transition-border), var(--transition-shadow);
 
   &:focus-within {
     border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px var(--color-accent-muted);
+    box-shadow: var(--shadow-focus);
   }
 }
 
@@ -44,14 +44,14 @@
   right: var(--space-3);
   pointer-events: none;
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--font-size-2xs);
 }
 
 .invalid {
   border-color: var(--color-error);
 
   &:focus-within {
-    box-shadow: 0 0 0 3px var(--color-error-muted);
+    box-shadow: var(--shadow-focus-error);
   }
 }
 
@@ -63,10 +63,10 @@
 .panel {
   position: fixed;
   z-index: var(--z-popover);
-  max-height: 280px;
+  max-height: var(--layout-280);
   overflow-y: auto;
   background: var(--color-surface-card);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radii);
   box-shadow: var(--shadow-l);
   padding: var(--space-1);

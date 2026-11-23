@@ -2,9 +2,9 @@
 
 .Tabs {
   display: inline-flex;
-  gap: 3px;
+  gap: var(--space-0-75);
   background: var(--color-bg-surface-2);
-  padding: 3px;
+  padding: var(--space-0-75);
   border-radius: var(--radii);
 }
 

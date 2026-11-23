@@ -16,8 +16,12 @@ export function usePermissions() {
 
   return useMemo(() => {
     let set: Set<Permission>;
-    if (!auth || auth.role === 'observer') set = new Set();
-    else if (auth.role === 'admin') set = new Set(['sheets.create', 'sheets.edit', 'sheets.merge', 'sheets.delete', 'defects.create', 'defects.edit', 'defects.fix', 'defects.delete', 'journal.conclusion', 'export.excel', 'lines.edit'] as Permission[]);
+    if (!auth) set = new Set();
+    else if (auth.role === 'admin') {
+      set = new Set<Permission>(['sheets.create', 'sheets.edit', 'sheets.merge', 'defects.create', 'defects.edit', 'defects.fix', 'defects.delete', 'journal.conclusion', 'export.excel']);
+      // Удалять листки может только администратор системы (без филиала)
+      if (auth.filialId == null) set.add('sheets.delete');
+    }
     else if (data) set = new Set(data.permissions);
     else if (isError) set = new Set(OFFLINE_DEFAULT_PERMISSIONS[auth.role] ?? []);
     else set = new Set();

@@ -3,10 +3,12 @@
 // ============================================================================
 
 :root {
+  --radii-2xs:   2px;
+  --radii-3xs:   3px;
   --radii-xs:    4px;
   --radii-s:     6px;
   --radii:       8px;   // default
   --radii-l:    12px;
-  --radii-xl:   16px;
   --radii-full: 9999px; // pills
+  --radii-circle: 50%;
 }

@@ -1,10 +1,11 @@
 import { memo, useMemo, useRef, useState } from 'react';
 import type { DefectType, Element } from '@/entities/InspectionLine';
-import { SEVERITY_LABELS } from '@/entities/InspectionLine';
 import { Portal } from '@/shared/ui';
 import { useOutsideClick } from '@/shared/lib/hooks';
 import { capitalizeFirst as cap } from '@/shared/lib/helpers';
-import cls from './DefectTreePopup.module.scss';
+import { DefectTreeDesktop } from './DefectTreeDesktop';
+import { DefectTreeMobile } from './DefectTreeMobile';
+import mcls from './DefectTreeMobile.module.scss';
 
 interface DefectTreePopupProps {
   elements: ReadonlyArray<Element>;
@@ -108,69 +109,27 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
     return (
       <Portal>
         <div
-          className={cls.backdrop}
+          className={mcls.backdrop}
           onTouchStart={(e) => {
             e.preventDefault(); // блокируем реакцию на реальный тач (не срабатывает на синтетических mouse событиях)
             onClose();
           }}
         />
-        <div ref={mobileRef} className={cls.mobileSheet}>
-          {mobileStep === 'elem' ? (
-            <>
-              <div className={cls.sheetHeader}>
-                <span className={cls.spacer} />
-                <span className={cls.sheetTitle}>Выберите элемент</span>
-                <button type="button" className={cls.closeBtn} onClick={onClose} aria-label="Закрыть">X</button>
-              </div>
-              <div className={cls.colList}>
-                {sortedElements.map((el) => (
-                  <button
-                    key={el.id}
-                    type="button"
-                    className={cls.elemItem + (activeId === el.id ? ' ' + cls.active : '')}
-                    onClick={() => handleElemTap(el)}
-                  >
-                    <span className={cls.elemName}>{cap(el.name)}</span>
-                    <span className={cls.elemCount}>{countByElement[el.id] ?? 0}</span>
-                    <span className={cls.arrow} aria-hidden>&rsaquo;</span>
-                  </button>
-                ))}
-              </div>
-            </>
-          ) : (
-            <>
-              <div className={cls.sheetHeader}>
-                <button
-                  type="button"
-                  className={cls.backBtn}
-                  onClick={() => setMobileStep('elem')}
-                >
-                  &lsaquo; Назад
-                </button>
-                <span className={cls.sheetTitle}>{activeElemName}</span>
-                <button type="button" className={cls.closeBtn} onClick={onClose} aria-label="Закрыть">X</button>
-              </div>
-              <div className={cls.colList}>
-                {filteredDefects.map((defect) => (
-                  <button
-                    key={defect.id}
-                    type="button"
-                    className={`${cls.defectItem}${multiSelect && selectedIds?.has(defect.id) ? ' ' + cls.defectItemSelected : ''}`}
-                    onClick={() => handleDefectClick(defect)}
-                  >
-                    <span className={cls.bar} data-severity={defect.severity} />
-                    <span className={cls.defectName}>{cap(defect.name)}</span>
-                    <span className={cls.sev} data-severity={defect.severity}>
-                      {SEVERITY_LABELS[defect.severity]}
-                    </span>
-                    {multiSelect && (
-                      <span className={`${cls.check}${selectedIds?.has(defect.id) ? ' ' + cls.checkActive : ''}`} aria-hidden>✓</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
+        <div ref={mobileRef} className={mcls.mobileSheet}>
+          <DefectTreeMobile
+            elements={sortedElements}
+            defects={filteredDefects}
+            activeId={activeId}
+            step={mobileStep}
+            activeElemName={activeElemName}
+            countByElement={countByElement}
+            multiSelect={multiSelect}
+            selectedIds={selectedIds}
+            onElemTap={handleElemTap}
+            onBack={() => setMobileStep('elem')}
+            onDefectClick={handleDefectClick}
+            onClose={onClose}
+          />
         </div>
       </Portal>
     );
@@ -178,56 +137,20 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
 
   return (
     <Portal>
-      <div
-        ref={leftRef}
-        className={cls.elemPanel}
-        style={{ top: anchor.top, left: anchor.left }}
-      >
-        <div className={cls.colHeader}>Элемент</div>
-        <div className={cls.colList}>
-          {sortedElements.map((el) => (
-            <button
-              key={el.id}
-              type="button"
-              className={cls.elemItem + (activeId === el.id ? ' ' + cls.active : '')}
-              onMouseEnter={(e) => handleElemHover(el, e)}
-            >
-              <span className={cls.elemName}>{cap(el.name)}</span>
-              <span className={cls.elemCount}>{countByElement[el.id] ?? 0}</span>
-              <span className={cls.arrow} aria-hidden>&rsaquo;</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {rightPos !== null && activeId !== null && (
-        <div
-          ref={rightRef}
-          className={cls.defectPanel}
-          style={{ top: rightPos.top, left: rightPos.left }}
-        >
-          <div className={cls.colHeader}>Дефект</div>
-          <div className={cls.colList}>
-            {filteredDefects.map((defect) => (
-              <button
-                key={defect.id}
-                type="button"
-                className={`${cls.defectItem}${multiSelect && selectedIds?.has(defect.id) ? ' ' + cls.defectItemSelected : ''}`}
-                onClick={() => handleDefectClick(defect)}
-              >
-                <span className={cls.bar} data-severity={defect.severity} />
-                <span className={cls.defectName}>{cap(defect.name)}</span>
-                <span className={cls.sev} data-severity={defect.severity}>
-                  {SEVERITY_LABELS[defect.severity]}
-                </span>
-                {multiSelect && (
-                  <span className={`${cls.check}${selectedIds?.has(defect.id) ? ' ' + cls.checkActive : ''}`} aria-hidden>✓</span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      <DefectTreeDesktop
+        leftRef={leftRef}
+        rightRef={rightRef}
+        anchor={anchor}
+        elements={sortedElements}
+        activeId={activeId}
+        countByElement={countByElement}
+        rightPos={rightPos}
+        defects={filteredDefects}
+        multiSelect={multiSelect}
+        selectedIds={selectedIds}
+        onElemHover={handleElemHover}
+        onDefectClick={handleDefectClick}
+      />
     </Portal>
   );
 });

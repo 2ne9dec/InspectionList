@@ -1,0 +1,75 @@
+// ── Sub-rows (дефекты внутри раскрытой опоры) ───────────────────────────────
+.subRow {
+  background-color: var(--color-bg-surface);
+  transition: background-color var(--duration-fast);
+
+  &:hover { background-color: var(--color-row-hover); }
+}
+
+// Акцентная полоска не должна быть border-left у tr: она сдвигает всю строку
+// относительно шапки и группы. Рисуем её внутри первой ячейки.
+.subCellIndex {
+  box-shadow: inset var(--space-0-75) 0 0 var(--color-accent);
+}
+
+.subCell {
+  padding: var(--space-1-75) var(--space-2);
+  font-size: var(--font-size-s);
+  color: var(--color-text-primary);
+  vertical-align: middle;
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.subIdx {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-size-m);
+  height: var(--icon-size-m);
+  background: var(--color-bg-surface-2);
+  border-radius: var(--radii-circle);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.subActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.phaseTag {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: var(--space-px) var(--space-1-75);
+  background: var(--color-accent-muted);
+  color: var(--color-accent);
+  border-radius: var(--radii-s);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.subCellNote {
+  padding: var(--space-1-75) var(--space-2);
+  font-size: var(--font-size-s);
+  color: var(--color-text-primary);
+  vertical-align: middle;
+  border-bottom: var(--border-width) solid var(--color-border);
+  max-width: var(--note-cell-max-width);
+  overflow: hidden;
+}
+
+.noteCell {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: var(--note-text-max-width);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+}
+
+.noteCellEmpty {
+  color: var(--color-text-muted);
+}

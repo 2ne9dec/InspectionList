@@ -1,6 +1,7 @@
 export type { User, UserSchema, UserRole, UserProfile } from './model/types';
 export type { Permission, PermissionInfo, RolePermissionsData } from './model/permissions';
 export { usePermissions, useCan } from './model/useCan';
+export { authenticateOffline, hasOfflineCredentials, saveOfflineCredentials, getOfflineUsernames } from './model/offlineAuth';
 export { useGetMyPermissionsQuery, useGetRolePermissionsQuery, useSaveRolePermissionsMutation } from './api/permissionsApi';
 export { userReducer, userActions } from './model/userSlice';
 export {
@@ -10,7 +11,7 @@ export {
 } from './model/selectors';
 export {
   getRoleLabel, getRoleDescription, READ_ONLY_ROLES, MANAGER_ROLES,
-  FILIAL_ASSIGNABLE_ROLES, GLOBAL_ASSIGNABLE_ROLES, ROLES_WITHOUT_FILIAL,
+  FILIAL_ASSIGNABLE_ROLES, GLOBAL_ASSIGNABLE_ROLES, ROLES_WITHOUT_FILIAL, DIRECTOR_ASSIGNABLE, ROLE_ORDER,
 } from './model/roles';
 export type {
   UpdateUserParams, ChangePasswordParams, CreateUserParams, AdminUpdateUserParams, ResetPasswordParams,

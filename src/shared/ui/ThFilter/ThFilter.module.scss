@@ -6,7 +6,7 @@
   top: 0;
   z-index: var(--z-sticky);
   background: var(--color-bg-surface-2);
-  border-bottom: 2px solid var(--color-border);
+  border-bottom: var(--border-width-strong) solid var(--color-border);
   text-align: left;
   cursor: pointer;
 }
@@ -49,7 +49,7 @@
 }
 
 .arrow {
-  font-size: 8px;
+  font-size: var(--font-size-4xs);
   opacity: 0.6;
   flex-shrink: 0;
 }
@@ -58,12 +58,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  width: var(--space-4);
+  height: var(--space-4);
   background: var(--color-error);
   color: var(--color-text-on-accent);
   border-radius: var(--radii-full);
-  font-size: 9px;
+  font-size: var(--font-size-3xs);
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -72,10 +72,10 @@
   position: fixed;
   z-index: var(--z-popover);
   background: var(--color-surface-card);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radii);
   box-shadow: var(--shadow-l);
-  width: 240px;
+  width: var(--layout-240);
   overflow: hidden;
 }
 
@@ -84,7 +84,7 @@
   padding: var(--space-2) var(--space-3);
   background: var(--color-bg-surface);
   border: none;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width) solid var(--color-border);
   color: var(--color-text-primary);
   font-size: var(--font-size-s);
   outline: none;
@@ -95,7 +95,7 @@
 }
 
 .list {
-  max-height: 240px;
+  max-height: var(--layout-240);
   overflow-y: auto;
   padding: var(--space-1);
 }

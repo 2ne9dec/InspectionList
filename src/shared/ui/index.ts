@@ -5,11 +5,14 @@
 export { Button } from './Button';
 export type { ButtonProps, ButtonVariant, ButtonSize } from './Button';
 
-export { IconButton } from './IconButton';
-export type { IconButtonProps } from './IconButton';
-
 export { Input } from './Input';
 export type { InputProps, InputSize } from './Input';
+
+export { Textarea } from './Textarea';
+export type { TextareaProps } from './Textarea';
+
+export { Checkbox } from './Checkbox';
+export type { CheckboxProps } from './Checkbox';
 
 export { PasswordInput } from './PasswordInput';
 export type { PasswordInputProps } from './PasswordInput';
@@ -30,9 +33,6 @@ export { FormField } from './FormField';
 export type { FormFieldProps } from './FormField';
 
 // Контейнеры / layout
-export { Card } from './Card';
-export type { CardProps, CardVariant, CardPadding } from './Card';
-
 export { Flex, HStack, VStack } from './Stack';
 export type {
   FlexProps, FlexJustify, FlexAlign, FlexDirection, FlexGap, FlexWrap,
@@ -62,21 +62,13 @@ export type { LoaderProps } from './Loader';
 export { Spinner } from './Spinner';
 export type { SpinnerProps, SpinnerSize } from './Spinner';
 
-export { Skeleton } from './Skeleton';
-export type { SkeletonProps } from './Skeleton';
-
 export { EmptyState } from './EmptyState';
 export type { EmptyStateProps } from './EmptyState';
 
 export { Badge } from './Badge';
 export type { BadgeProps, BadgeVariant, BadgeSize } from './Badge';
 
-// Доменные визуалы (severity)
-export { SeverityDot } from './SeverityDot';
-export type { SeverityDotProps } from './SeverityDot';
-export { SeverityBadge } from './SeverityBadge';
-export { ConfidenceBadge } from './ConfidenceBadge';
-export type { SeverityBadgeProps } from './SeverityBadge';
+
 
 // Типография
 export { Text } from './Text';
@@ -90,6 +82,11 @@ export type { ThFilterProps, FilterOption } from './ThFilter';
 // Вкладки
 export { Tabs } from './Tabs';
 export type { TabsProps, TabItem } from './Tabs';
+
+export { Table, TableHead, TableBody, TableRow, TableTh, TableTd } from './Table';
+
+export { SegmentedControl } from './SegmentedControl';
+export type { SegmentedOption } from './SegmentedControl';
 
 export { ProgressRing } from './ProgressRing';
 

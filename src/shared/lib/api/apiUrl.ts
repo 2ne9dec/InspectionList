@@ -18,14 +18,18 @@ const STORAGE_KEY = 'api_server_url';
  * а не реальным сервером. Такой origin нельзя использовать как baseUrl API.
  */
 function isCapacitorOrigin(origin: string): boolean {
-  return (
+  if (
     origin.startsWith('capacitor://') ||
-    origin.startsWith('file://')       ||
-    origin === 'null'                  ||
-    origin === 'capacitor://localhost' ||
-    origin === 'http://localhost'      ||  // Capacitor androidScheme: 'http'
-    origin === 'https://localhost'
-  );
+    origin.startsWith('file://') ||
+    origin === 'null'
+  ) return true;
+
+  try {
+    const { hostname } = new URL(origin);
+    return hostname === 'localhost' || hostname === '127.0.0.1';
+  } catch {
+    return false;
+  }
 }
 
 /** Безопасно извлекает origin из строки URL (не бросает исключений). */
