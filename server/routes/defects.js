@@ -18,6 +18,7 @@ const { Router } = require('express');
 const { query, execute, queryOne, nextId } = require('../lib/fbDb');
 const { canAccessLine, canAccessFilial, lineWhereClause } = require('../lib/tenancy');
 const { requirePermission, hasPermission } = require('../lib/permissions');
+const { normalizeIsoDate } = require('../lib/dates');
 
 const NO_DEFECT_ID = 117; // маркер «дефекты отсутствуют» — не считается дефектом
 
@@ -254,6 +255,11 @@ router.post('/defectRecords', requirePermission('defects.create'), async (req, r
     const spanRange  = normalizeSpan(body.spanRange);
     if (spanRange && !/^\d+(-\d+)?$/.test(spanRange))
       return res.status(400).json({ error: 'Неверно указаны пролёты (пример: 5 или 3-7)' });
+
+    const dateFound = normalizeIsoDate(body.dateFound);
+    if (body.dateFound != null && body.dateFound !== '' && !dateFound)
+      return res.status(400).json({ error: 'Неверная дата обнаружения (нужно ГГГГ-ММ-ДД)' });
+
     // Для пролётов опора не используется — это защищает от ложных совпадений с дефектами на опорах
     const poleNumber = spanRange ? 0 : Number(body.poleNumber);
     const phaseId    = body.phaseId ? Number(body.phaseId) : null;
@@ -294,7 +300,7 @@ router.post('/defectRecords', requirePermission('defects.create'), async (req, r
        poleNumber, Number(body.defectId),
        phaseId,
        body.elementId ? Number(body.elementId) : null,
-       body.dateFound    ?? null,
+       dateFound,
        body.inspectorFind ?? null,
        body.isFixed ? 1 : 0,
        body.dateFixed    ?? null,

@@ -22,6 +22,11 @@ const CUSTOM_ELEMENT_NAME = 'Линейная арматура';
 
 /** Дублирующие участки, которых нет отдельными линиями в LineVision. */
 const OBSOLETE_LINE_IDS = [455, 456];
+
+/** Известная ошибка: у линии «Красный Берег - Малевичи» даты попали в 2001 год. */
+const BAD_DATE_LINE_ID = 187;
+const BAD_DATE_YEAR = 2001;
+const BAD_DATE_SHIFT_YEARS = 25;
 const CUSTOM_DEFECT_ID    = 136;
 const CUSTOM_DEFECT_NAME  = 'Свой дефект';
 
@@ -196,6 +201,46 @@ async function ensureObsoleteLinesRemoved(dbKey) {
   }
 }
 
+/**
+ * Известная ошибка дат: дефекты линии 187 (Красный Берег - Малевичи)
+ * записались как 2001-04-24/25 вместо 2026-04-24/25. Исправляем автоматически
+ * при запуске, чтобы не править каждую строку вручную.
+ */
+async function ensureKnownDefectDates(dbKey) {
+  const targetFilial = /^\d+$/.test(String(dbKey)) ? Number(dbKey) : null;
+  if (targetFilial != null && targetFilial !== 2) return;
+
+  let rows;
+  try {
+    rows = await query(
+      `SELECT d.ID
+         FROM DEFECT_RECORDS d
+         JOIN INSPECTION_SHEETS s ON s.ID = d.SHEET_ID
+        WHERE d.LINE_ID = ?
+          AND s.FILIAL_ID = 2
+          AND EXTRACT(YEAR FROM d.DATE_FOUND) = ?`,
+      [BAD_DATE_LINE_ID, BAD_DATE_YEAR],
+      dbKey,
+    );
+  } catch (err) {
+    if (/Table unknown/i.test(err.message)) return;
+    throw err;
+  }
+
+  for (const row of rows) {
+    await execute(
+      `UPDATE DEFECT_RECORDS
+          SET DATE_FOUND = DATEADD(${BAD_DATE_SHIFT_YEARS} YEAR TO DATE_FOUND)
+        WHERE ID = ?`,
+      [row.id],
+      dbKey,
+    );
+  }
+  if (rows.length > 0) {
+    console.log(`[schema] (${dbKey}) fixed ${rows.length} defect dates (${BAD_DATE_YEAR} -> ${BAD_DATE_YEAR + BAD_DATE_SHIFT_YEARS})`);
+  }
+}
+
 /** SAP-код дефекта: переносим код линии на конкретную опору (только Жлобинские ЭС). */
 async function ensureDefectSapCode(dbKey) {
   if (!(await columnExists('DEFECT_RECORDS', 'SAP_CODE', dbKey))) {
@@ -266,6 +311,7 @@ async function ensureSchema() {
     await ensureLineSapCodes(dbKey);
     await ensureLinePoles(dbKey);
     await ensureDefectSapCodes(dbKey);
+    await ensureKnownDefectDates(dbKey);
   }
 
   // Разрешения на удалённые дубликаты линий больше не нужны.
