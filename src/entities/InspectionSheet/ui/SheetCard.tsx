@@ -92,8 +92,8 @@ export const SheetCard = memo((props: SheetCardProps) => {
       <TableTd className={cls.cell}>{sheet.voltageName}</TableTd>
       <TableTd className={`${cls.cell} ${cls.lineCell}`}>{sheet.lineName}</TableTd>
       <TableTd className={cls.cell}>{formatDate(sheet.createdDate)}</TableTd>
-      <TableTd className={`${cls.cell} ${cls.inspectorCell}`} title={sheet.inspectors ?? sheet.createdBy}>
-        {sheet.inspectors ?? sheet.createdBy}
+      <TableTd className={`${cls.cell} ${cls.inspectorCell}`} title={sheet.inspectors || sheet.createdBy}>
+        {sheet.inspectors || sheet.createdBy}
       </TableTd>
       <TableTd className={`${cls.cell} ${cls.mergedCell}`} title={sheet.mergedBy ?? undefined}>
         {sheet.mergedBy ?? ''}

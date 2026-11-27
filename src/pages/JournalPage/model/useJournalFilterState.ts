@@ -77,6 +77,11 @@ export function useJournalFilterState() {
     || selectedDefectTypeIds.size > 0 || inspectorFilter || poleFilter || dateFrom || dateTo,
   );
 
+  // Гейт нужен только для пустого журнала: при входе показываем общее число
+  // дефектов, а сами строки грузим по кнопке «Показать». Как только выбран
+  // любой фильтр, результаты показываем сразу.
+  const isGated = !showAll && !hasFilters;
+
   return {
     statusFilter,
     voltageFilter,
@@ -87,7 +92,7 @@ export function useJournalFilterState() {
     dateTo,
     poleFilter,
     hasFilters,
-    isGated: !showAll,
+    isGated,
     handleShowAll,
     resetFilters,
     setStatusFilter,

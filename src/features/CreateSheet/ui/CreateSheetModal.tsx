@@ -53,6 +53,7 @@ export const CreateSheetModal = memo(() => {
 
         <FormField label='Напряжение' htmlFor='cs-voltage' required>
           <SelectMenu
+            id='cs-voltage'
             options={voltageOptions}
             value={String(voltageId ?? '')}
             onChange={(v) => setVoltageId(v === '' ? 0 : Number(v))}

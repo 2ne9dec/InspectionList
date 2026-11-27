@@ -11,6 +11,8 @@ export interface DefectPickerProps {
   selectedElement: Element | undefined;
   /** Введённый вручную текст для дефекта с признаком custom. */
   customValue?: string;
+  /** id кнопки-триггера — нужен для связки с <label htmlFor>. */
+  id?: string;
   onSelect: (defect: DefectType) => void;
   onClear: () => void;
 }
@@ -20,7 +22,7 @@ export interface DefectPickerHandle {
 }
 
 export const DefectPicker = memo(forwardRef<DefectPickerHandle, DefectPickerProps>((props, ref) => {
-  const { elements, defectTypes, selectedDefect, selectedElement, customValue, onSelect, onClear } = props;
+  const { elements, defectTypes, selectedDefect, selectedElement, customValue, id, onSelect, onClear } = props;
 
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState({ top: 0, left: 0 });
@@ -45,6 +47,7 @@ export const DefectPicker = memo(forwardRef<DefectPickerHandle, DefectPickerProp
     <div className={cls.wrap}>
       <button
         ref={btnRef}
+        id={id}
         type="button"
         className={cls.btn + (selectedDefect ? ' ' + cls.btnSelected : '')}
         onClick={handleToggle}

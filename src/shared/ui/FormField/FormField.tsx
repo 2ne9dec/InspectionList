@@ -1,4 +1,4 @@
-import { memo, useId } from 'react';
+import { memo } from 'react';
 import type { ReactNode } from 'react';
 import { classNames } from '@/shared/lib/classNames/classNames';
 import cls from './FormField.module.scss';
@@ -14,8 +14,11 @@ export interface FormFieldProps {
   error?: ReactNode;
   /** Подсказка под полем. */
   hint?: ReactNode;
-  /** ID контрола — связывается с label. Если не задан — сгенерируется. */
-  htmlFor?: string;
+  /**
+   * ID контрола — обязательно, чтобы `<label for>` указывал на существующий
+   * элемент. Контрол внутри должен иметь такой же id.
+   */
+  htmlFor: string;
   className?: string;
   children: ReactNode;
 }
@@ -26,12 +29,10 @@ export interface FormFieldProps {
  */
 export const FormField = memo((props: FormFieldProps) => {
   const { label, required, optional, error, hint, htmlFor, className, children } = props;
-  const reactId = useId();
-  const id = htmlFor ?? reactId;
 
   return (
     <div className={classNames(cls.FormField, { [cls.hasError]: !!error }, [className])}>
-      <label htmlFor={id} className={cls.label}>
+      <label htmlFor={htmlFor} className={cls.label}>
         <span>{label}</span>
         {required && <span className={cls.required} aria-hidden>*</span>}
         {optional && <span className={cls.optional}>(необяз.)</span>}

@@ -40,7 +40,7 @@ export const SheetInfoBar = memo(({
       </span>
       <span className={cls.metaSep}>|</span>
       <span className={cls.metaItem}>
-        {formatDate(sheet.createdDate)} · {sheet.inspectors ?? sheet.createdBy}
+        {formatDate(sheet.createdDate)} · {sheet.inspectors || sheet.createdBy}
         {sheet.mergedBy ? ` · Объединил: ${sheet.mergedBy}` : ''}
       </span>
     </div>

@@ -130,7 +130,7 @@ export function sortSheets(
     if (sortKey === 'voltage') v = voltageKv(a.voltageName) - voltageKv(b.voltageName);
     if (sortKey === 'date') v = a.createdDate.localeCompare(b.createdDate);
     if (sortKey === 'inspector') {
-      v = (a.inspectors ?? a.createdBy).localeCompare(b.inspectors ?? b.createdBy, 'ru');
+      v = (a.inspectors || a.createdBy).localeCompare(b.inspectors || b.createdBy, 'ru');
     }
     return sortDir === 'asc' ? v : -v;
   });

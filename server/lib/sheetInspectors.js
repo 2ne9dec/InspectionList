@@ -26,7 +26,8 @@ function collectInspectors(sheets) {
   const seen = new Set();
   const result = [];
   for (const sheet of sheets ?? []) {
-    const source = sheet?.inspectors ?? sheet?.INSPECTORS ?? sheet?.created_by ?? sheet?.createdBy;
+    const source = [sheet?.inspectors, sheet?.INSPECTORS, sheet?.created_by, sheet?.createdBy]
+      .find((value) => value != null && String(value).trim() !== '');
     for (const name of splitInspectors(source)) {
       if (seen.has(name)) continue;
       seen.add(name);

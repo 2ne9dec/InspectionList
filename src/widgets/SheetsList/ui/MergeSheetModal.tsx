@@ -39,7 +39,7 @@ export const MergeSheetModal = memo(({
       <p className={cls.hint}>Объединяются листки:</p>
       <ul className={cls.sheetList}>
         {selectedSheets.map((s) => (
-          <li key={s.id}>{s.lineName} · {formatDate(s.createdDate, '')} · {s.inspectors ?? s.createdBy}</li>
+          <li key={s.id}>{s.lineName} · {formatDate(s.createdDate, '')} · {s.inspectors || s.createdBy}</li>
         ))}
       </ul>
       <p className={cls.danger}>

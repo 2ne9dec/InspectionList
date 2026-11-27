@@ -76,8 +76,21 @@ export const PoleGroupRow = memo((props: PoleGroupRowProps) => {
       items.push({ id: 'fix', label: 'Устранить все', onClick: () => onFix(locationKey) });
     }
     if (canCopy) items.push({ id: 'copy', label: 'Копировать', onClick: () => onCopy(locationKey) });
-    // В группе один дефект — его можно исправить прямо отсюда
-    if (editable && records.length === 1) items.push({ id: 'edit', label: 'Исправить дефект', onClick: () => onEdit?.(records[0]) });
+    // Исправление доступно для каждого дефекта группы, а не только когда он один.
+    // На опоре обычно несколько дефектов — раньше пункт «Исправить дефект»
+    // из-за этого пропадал, хотя для пролётов (один дефект) был виден.
+    if (editable) {
+      for (const record of records) {
+        const suffix = records.length > 1
+          ? `: ${record.defectName}${record.phaseName ? ` (${record.phaseName})` : ''}`
+          : '';
+        items.push({
+          id: `edit-${record.id}`,
+          label: `Исправить дефект${suffix}`,
+          onClick: () => onEdit?.(record),
+        });
+      }
+    }
     if (canDelete) items.push({
       id: 'delete',
       label: 'Удалить все',

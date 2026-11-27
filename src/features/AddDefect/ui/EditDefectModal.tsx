@@ -84,8 +84,9 @@ export const EditDefectModal = memo((props: EditDefectModalProps) => {
           locationInvalid={locationInvalid}
         />
 
-        <FormField label='Элемент / дефект'>
+        <FormField label='Элемент / дефект' htmlFor='edit-defect'>
           <DefectPicker
+            id='edit-defect'
             elements={elements}
             defectTypes={defectTypes}
             selectedDefect={selectedDefect}

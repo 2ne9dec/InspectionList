@@ -73,14 +73,18 @@ export const DefectTreePopup = memo((props: DefectTreePopupProps) => {
     onSelectionChange?.(next);
   };
 
-  /** Клик по дефекту — единственный / множественный выбор */
+  /**
+   * Клик по дефекту: выбираем его и сразу закрываем поповер.
+   * В multiSelect выбор сохраняется; чтобы добавить ещё один дефект,
+   * поповер открывают повторно — так фильтр применяется сразу.
+   */
   const handleDefectClick = (defect: DefectType) => {
     if (multiSelect) {
       handleToggle(defect);
     } else {
       onSelect(defect);
-      onClose();
     }
+    onClose();
   };
 
   const handleElemHover = (el: Element, e: React.MouseEvent<HTMLButtonElement>) => {
